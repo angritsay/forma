@@ -18,13 +18,22 @@ import { newestActivation } from '@/app/features/marathon/gameAccess';
 import { getMySubscription } from '@/lib/api/subscriptions';
 import type { Subscription } from '@/lib/api/types';
 import { clearDraft } from '@/app/screens/onboarding/draft';
+import { clearAssessmentDraft } from '@/app/features/assessment/draft';
+import { clearSummaryDraft } from '@/app/features/player/summary/saveDraft';
 import { forgetMyRef } from '@/lib/referral/mine';
+import { useActiveWorkoutStore } from './activeWorkout';
 import { useFlags } from './flags';
 import { useLocale } from './locale';
 
 export type { Profile, ProfilePatch };
 
-export type SessionStatus = 'booting' | 'signed_out' | 'signed_in';
+/**
+ * `offline`: boot could not reach the auth server to learn who is signed in. It is not
+ * `signed_out` — sending somebody with a perfectly good session to the sign-in form because the
+ * lift has no signal is how a workout in progress got lost — so the guards show «Нет соединения»
+ * with a retry, and let a workout already on the device go on (RouteGuards).
+ */
+export type SessionStatus = 'booting' | 'offline' | 'signed_out' | 'signed_in';
 
 export interface SessionUser {
   id: string;
@@ -37,6 +46,19 @@ export interface SessionState {
   profile: Profile | null;
   /** Ids of courses the user owns (active purchases). */
   entitlements: string[];
+  /**
+   * Whether `entitlements` and `subscription` were ever read for this user. False after a failed
+   * first read: then the empty list means «unknown», not «owns nothing», and no screen may show a
+   * paywall or the club's pitch on it (`purchasesUnknown`, `PurchasesUnknown`).
+   */
+  entitlementsLoaded: boolean;
+  /** The last failed entitlements read; cleared by the next one that succeeds. */
+  entitlementsError?: AuthError;
+  /**
+   * The signed-in session ended without the athlete asking (a refresh token revoked or expired).
+   * The sign-in screen says so instead of greeting them like a stranger; cleared on sign-in.
+   */
+  sessionEnded: boolean;
   /**
    * When the newest owned course was activated, ISO — the clock the club's free week runs on
    * (src/app/features/marathon/gameAccess.ts). Kept here rather than recomputed per screen
@@ -71,12 +93,28 @@ let inflight: { userId: string; promise: Promise<void> } | null = null;
  * `signed_in` back into the store when its requests finally resolve.
  */
 let epoch = 0;
+/** Set while the athlete signs out on purpose, so the auth event is not read as a dropped session. */
+let signingOut = false;
+
+/**
+ * The workout on the device belongs to whoever started it. Another account signing in on the same
+ * phone must not resume — or save into its own history — somebody else's session.
+ */
+function dropForeignWorkout(userId: string): void {
+  const active = useActiveWorkoutStore.getState().session;
+  if (active?.userId && active.userId !== userId) {
+    useActiveWorkoutStore.getState().abandon();
+    clearSummaryDraft();
+  }
+}
 
 const SIGNED_OUT = {
   status: 'signed_out' as const,
   user: null,
   profile: null,
   entitlements: [] as string[],
+  entitlementsLoaded: false,
+  entitlementsError: undefined as AuthError | undefined,
   newestPurchaseAt: null as string | null,
   subscription: null as Subscription | null,
 };
@@ -136,6 +174,7 @@ export const useSession = create<SessionState>((set, get) => {
     if (previous && previous.id !== user.id) forgetMyRef();
     const promise = (async () => {
       set({ user, error: undefined });
+      dropForeignWorkout(user.id);
       // Feature flags (0049) load beside the profile and never hold it up: `load` cannot reject,
       // and every flag reads off until it lands.
       void useFlags.getState().load();
@@ -147,10 +186,25 @@ export const useSession = create<SessionState>((set, get) => {
       // The user signed out (or a new session started) while the requests were in flight.
       if (startedAt !== epoch) return;
       const profile = profileRes.status === 'fulfilled' ? profileRes.value : null;
+      // Another user's list is not this one's: a failed read for a new user starts from unknown.
+      const sameUser = previous?.id === user.id;
       const entitlements =
-        entRes.status === 'fulfilled' ? entRes.value.map((e) => e.courseId) : get().entitlements;
+        entRes.status === 'fulfilled'
+          ? entRes.value.map((e) => e.courseId)
+          : sameUser
+            ? get().entitlements
+            : [];
       const newestPurchaseAt =
-        entRes.status === 'fulfilled' ? newestActivation(entRes.value) : get().newestPurchaseAt;
+        entRes.status === 'fulfilled'
+          ? newestActivation(entRes.value)
+          : sameUser
+            ? get().newestPurchaseAt
+            : null;
+      // Both halves of «what do they own»: the courses and the subscription the club runs on.
+      const purchases = [entRes, subRes];
+      const failedPurchase = purchases.find((r) => r.status === 'rejected');
+      const entitlementsLoaded = !failedPurchase || (sameUser && get().entitlementsLoaded);
+      const entitlementsError = failedPurchase ? toAuthError(failedPurchase.reason) : undefined;
       const subscription = subRes.status === 'fulfilled' ? subRes.value : get().subscription;
       const error = profileRes.status === 'rejected' ? toAuthError(profileRes.reason) : undefined;
       set({
@@ -158,9 +212,12 @@ export const useSession = create<SessionState>((set, get) => {
         user,
         profile,
         entitlements,
+        entitlementsLoaded,
+        entitlementsError,
         newestPurchaseAt,
         subscription,
         error,
+        sessionEnded: false,
       });
       if (profile) syncLocale(profile);
     })().finally(() => {
@@ -180,7 +237,11 @@ export const useSession = create<SessionState>((set, get) => {
         if (event === 'INITIAL_SESSION') return; // boot() handles the initial session
         if (event === 'SIGNED_OUT' || !session) {
           endSession();
-          if (s.status !== 'signed_out') set({ ...SIGNED_OUT, error: undefined });
+          // Nobody pressed «Выйти»: the session was dropped under a signed-in athlete.
+          const dropped = s.status === 'signed_in' && !signingOut;
+          if (s.status !== 'signed_out') {
+            set({ ...SIGNED_OUT, error: undefined, sessionEnded: dropped || s.sessionEnded });
+          }
           return;
         }
         const user = toUser(session);
@@ -191,6 +252,12 @@ export const useSession = create<SessionState>((set, get) => {
         }
       }, 0);
     });
+    // Back online after a boot that could not reach the server: ask again without a tap.
+    if (typeof window !== 'undefined') {
+      window.addEventListener('online', () => {
+        if (get().status === 'offline') void get().boot();
+      });
+    }
     useLocale.subscribe((cur, prev) => {
       if (cur.locale === prev.locale) return;
       const s = get();
@@ -206,10 +273,16 @@ export const useSession = create<SessionState>((set, get) => {
   return {
     ...SIGNED_OUT,
     status: 'booting',
+    sessionEnded: false,
 
     boot: async () => {
       wire();
-      set({ status: 'booting', error: undefined });
+      /*
+       * A retry from `offline` stays `offline` until it has an answer. Flipping to `booting` would
+       * swap the workout that goes on offline (RouteGuards' local routes) for the boot screen —
+       * unmounting, and so pausing, the player — only to put it back a moment later.
+       */
+      set({ status: get().status === 'offline' ? 'offline' : 'booting', error: undefined });
       try {
         const session = await getSession();
         if (!session) {
@@ -219,8 +292,14 @@ export const useSession = create<SessionState>((set, get) => {
         }
         await loadUser(toUser(session));
       } catch (e) {
+        const error = toAuthError(e);
+        if (error.code === 'network') {
+          // Not signed out — unknown. The stored session stays; «Повторить» asks again.
+          set({ status: 'offline', error });
+          return;
+        }
         endSession();
-        set({ ...SIGNED_OUT, error: toAuthError(e) });
+        set({ ...SIGNED_OUT, error });
       }
     },
 
@@ -239,9 +318,22 @@ export const useSession = create<SessionState>((set, get) => {
     refreshEntitlements: async () => {
       // A flag switched on in the admin shows up on the next return to the app, like a purchase.
       void useFlags.getState().load();
-      const [rows, subscription] = await Promise.all([listEntitlements(), getMySubscription()]);
+      let rows: Awaited<ReturnType<typeof listEntitlements>>;
+      let subscription: Subscription | null;
+      try {
+        [rows, subscription] = await Promise.all([listEntitlements(), getMySubscription()]);
+      } catch (e) {
+        set({ entitlementsError: toAuthError(e) });
+        throw e;
+      }
       const entitlements = rows.map((r) => r.courseId);
-      set({ entitlements, newestPurchaseAt: newestActivation(rows), subscription });
+      set({
+        entitlements,
+        entitlementsLoaded: true,
+        entitlementsError: undefined,
+        newestPurchaseAt: newestActivation(rows),
+        subscription,
+      });
       return entitlements;
     },
 
@@ -256,6 +348,16 @@ export const useSession = create<SessionState>((set, get) => {
 
     signOut: async () => {
       clearDraft();
+      /*
+       * What this device holds for the account goes with it: the workout in progress (it would
+       * otherwise open, or be saved, under whoever signs in next), and the unsaved summary and
+       * self-test drafts. Only on a sign-out asked for — a dropped session keeps them for the
+       * same athlete coming back.
+       */
+      useActiveWorkoutStore.getState().abandon();
+      clearSummaryDraft();
+      clearAssessmentDraft();
+      signingOut = true;
       // Invalidate before the request: a profile load already in flight must not sign the user
       // back in when it resolves.
       endSession();
@@ -263,8 +365,23 @@ export const useSession = create<SessionState>((set, get) => {
         await apiSignOut();
       } finally {
         endSession();
-        set({ ...SIGNED_OUT, error: undefined });
+        set({ ...SIGNED_OUT, error: undefined, sessionEnded: false });
+        // The auth event is delivered on a timer (see `wire`); let it land before clearing.
+        setTimeout(() => {
+          signingOut = false;
+        }, 0);
       }
     },
   };
 });
+
+/**
+ * What the account owns could not be read yet. Screens that would otherwise sell — the unlock
+ * sheet, the club's pitch, a course card with a price — show `PurchasesUnknown` instead: a paywall
+ * in front of somebody who has paid is the worst thing a blip can produce.
+ */
+export function purchasesUnknown(
+  s: Pick<SessionState, 'status' | 'entitlementsLoaded'> = useSession.getState(),
+): boolean {
+  return s.status === 'signed_in' && !s.entitlementsLoaded;
+}

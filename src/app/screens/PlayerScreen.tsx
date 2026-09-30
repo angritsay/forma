@@ -89,6 +89,9 @@ import { TapToPause } from '@/app/features/player/TapToPause';
 import { signMediaUrls } from '@/lib/api/storage';
 import { courseTileVars } from '@/lib/ui/tile';
 import { useWakeLock } from '@/app/features/player/useWakeLock';
+import { useBackgroundPause } from '@/app/features/player/backgroundPause';
+import { useTelegramBackOverride } from '@/app/hooks/useTelegramBack';
+import { preloadScreen } from '@/app/screens/registry';
 import { useT } from '@/app/hooks/useT';
 import {
   useActiveWorkoutStore,
@@ -413,6 +416,32 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
   useEffect(() => {
     setClosingConfirmation(true);
     return () => setClosingConfirmation(false);
+  }, []);
+
+  /*
+   * Telegram's header back button asks the same question as the player's own «×»: it used to
+   * go back one entry and walk straight out of a running workout with the clock still going.
+   */
+  const askLeave = useCallback(() => setLeaveOpen(true), []);
+  useTelegramBackOverride(askLeave);
+
+  /*
+   * Leaving the player by any road — a tab, a link, the system back gesture — pauses the session,
+   * so the clock does not run on behind a screen nobody is looking at. A finished session ignores
+   * it (`setPaused` does nothing once `finishedAt` is set).
+   */
+  useEffect(() => () => useActiveWorkoutStore.getState().setPaused(true), []);
+
+  // Hidden for more than a minute: paused as of the end of that minute (backgroundPause.ts).
+  useBackgroundPause(paused);
+
+  /*
+   * The two screens a workout ends on, fetched while it runs: the summary, and home behind it. A
+   * workout done out of signal otherwise stopped on a screen the phone had never downloaded.
+   */
+  useEffect(() => {
+    preloadScreen('SummaryScreen');
+    preloadScreen('CoursesScreen');
   }, []);
 
   /*

@@ -23,7 +23,7 @@
  * inside its window function and hands back 2 and 3 where the demo's scorer shares a place.
  */
 import { useCallback, useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Pill } from '@/components/ui/Pill';
@@ -45,6 +45,48 @@ import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
 
 type WeekChoice = 'this' | 'last';
 
+/**
+ * No board to draw: the clubs did not load (said as that, with «Повторить»), or there is no club
+ * this athlete is in (with the way to the club tab, where joining happens).
+ */
+export function MarathonBoardEmpty({
+  failed,
+  offline,
+  onRetry,
+  onOpenClub,
+}: {
+  failed: boolean;
+  offline: boolean;
+  onRetry: () => void;
+  onOpenClub: () => void;
+}) {
+  const { t } = useT();
+  if (failed) {
+    return (
+      <EmptyState
+        title={t('app.marathonErrorTitle')}
+        description={offline ? t('common.errorOffline') : t('common.errorGeneric')}
+        action={
+          <Button variant="gradient" size="lg" onClick={onRetry}>
+            {t('common.retry')}
+          </Button>
+        }
+      />
+    );
+  }
+  return (
+    <EmptyState
+      title={t('app.marathonBoardNoClubTitle')}
+      description={t('app.marathonBoardNoClubBody')}
+      action={
+        <Button variant="gradient" size="lg" onClick={onOpenClub}>
+          {t('app.marathonBoardNoClubCta')}
+        </Button>
+      }
+    />
+  );
+}
+
 export default function MarathonBoardScreen() {
   const tr = useT();
   const { t } = tr;
@@ -57,9 +99,11 @@ export default function MarathonBoardScreen() {
 
   const thisWeek = marathon?.week ?? 1;
   const week = choice === 'this' ? thisWeek : Math.max(thisWeek - 1, 1);
+  const navigate = useNavigate();
   const {
     data: rows,
     status,
+    error: scoresError,
     reload,
   } = useMarathonScores(marathon?.id ?? null, marathon ? week : null);
 
@@ -108,10 +152,27 @@ export default function MarathonBoardScreen() {
 
   const header = <TopBar back title={t('app.marathonTitle')} />;
 
-  if (marathonStatus === 'loading' || !marathon) {
+  if (marathonStatus === 'loading') {
     return (
       <Screen header={header}>
         <ScreenLoader />
+      </Screen>
+    );
+  }
+
+  /*
+   * The two ends the board used to spin through forever: the list of clubs did not load, or it
+   * loaded and there is no club to show a board for. Each says what it is and gives the next step.
+   */
+  if (marathonStatus === 'error' || !marathon) {
+    return (
+      <Screen header={header}>
+        <MarathonBoardEmpty
+          failed={marathonStatus === 'error'}
+          offline={clubs.error?.code === 'network'}
+          onRetry={clubs.reload}
+          onOpenClub={() => navigate('/marathon')}
+        />
       </Screen>
     );
   }
@@ -156,6 +217,11 @@ export default function MarathonBoardScreen() {
             ) : status === 'error' ? (
               <EmptyState
                 title={t('app.marathonErrorTitle')}
+                description={
+                  scoresError?.code === 'network'
+                    ? t('common.errorOffline')
+                    : t('common.errorGeneric')
+                }
                 action={
                   <Button variant="gradient" size="lg" onClick={reload}>
                     {t('common.retry')}

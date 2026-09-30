@@ -21,8 +21,18 @@ export const app = {
   errorBody: 'The app hit an unexpected error. Reload the page — your progress is saved.',
   errorReload: 'Reload',
   errorTryAgain: 'Try again',
+  errorChunkOffline:
+    'This part of the app couldn’t load without internet. Get back online and tap “Retry” — nothing is lost.',
   errorLoadProfileTitle: 'Couldn’t load your profile',
-  errorLoadProfileBody: 'Check your connection and try again.',
+  errorLoadProfileBody:
+    'Try again. If it still fails, open the details below and send them to support.',
+  offlineTitle: 'No connection',
+  offlineBody:
+    'Couldn’t check your sign-in. Get back online and tap “Retry” — you’ll stay signed in.',
+  purchasesUnknownTitle: 'Couldn’t check your purchases',
+  purchasesUnknownBody:
+    'Without it we can’t tell what’s unlocked for you. Your purchases are safe — tap “Retry”.',
+  authSessionEnded: 'Your session ended — sign in again.',
   errorNotConfiguredTitle: 'Backend is not configured',
   errorNotConfiguredBody:
     'The app needs a Supabase project. Set these environment variables and rebuild the site.',
@@ -141,7 +151,7 @@ export const app = {
   assessDoneHubTitle: 'Test taken',
   assessDoneHubBody:
     'The numbers are recorded and your load is built from them. They cannot be rewritten — the next measurement will be a new one, when we ask for it.',
-  onbSaveError: 'Couldn’t save your profile. Check the connection and try again.',
+  onbSaveError: 'Couldn’t save your profile. Try again.',
 
   // Home
   /*
@@ -161,7 +171,7 @@ export const app = {
   homeDeckStart: 'Start',
   homeDeckContinue: 'Continue',
   homeErrorTitle: 'Couldn’t load your progress',
-  homeErrorBody: 'Check the connection and try again.',
+  homeErrorBody: 'It’s safe, it just didn’t load. Try again.',
 
   // Course path
   pathProgressLabel: 'Course progress',
@@ -201,7 +211,7 @@ export const app = {
   pathMilestoneBody: 'A checkpoint on the path. Mark it reached and carry on.',
   pathMilestoneDone: 'Milestone reached',
   pathMilestoneMark: 'Mark as reached',
-  pathSaveError: 'Couldn’t save. Check the connection and try again.',
+  pathSaveError: 'Couldn’t save. Try again.',
   // --- The first workout is free (0019) --------------------------------------
   // The promise is short and checkable: one workout, no card. Anything longer goes unread, and
   // anything vaguer ("try the course") promises more than is given.
@@ -279,8 +289,14 @@ export const app = {
   nodeStart: 'Start workout',
   nodeReplaceTitle: 'Another workout is unfinished',
   nodeReplaceBody:
-    'Starting this one drops the workout in progress and everything logged in it. Finish it from the home screen instead?',
-  nodeStartError: 'Couldn’t start the session. Check the connection and try again.',
+    'Starting this one drops the other workout and everything logged in it. You can go back to it first.',
+  nodeReplaceSaveThat: 'Save that one',
+  nodeReplaceResumeThat: 'Resume that one',
+  nodeReplaceStartThis: 'Start this one',
+  nodeStartError: 'Couldn’t start the session. Try again.',
+  nodeStartOffline: 'No connection, so the workout didn’t start. Get back online and tap again.',
+  nodeProgressErrorTitle: 'Couldn’t load your progress',
+  nodeProgressErrorBody: 'It’s safe, it just didn’t reach your phone. Tap “Retry”.',
   nodeLocked: 'Finish the previous workouts to unlock this one.',
   nodeNotFound: 'Workout not found',
   nodeProfileMissingTitle: 'Finish setting up your profile',
@@ -410,6 +426,15 @@ export const app = {
   summarySaving: 'Saving…',
   summarySaveError: 'Couldn’t save the results. They are safe on this device — try again.',
   summarySavedTitle: 'Saved',
+  summarySaveDailyLimit:
+    'You already have 4 workouts today, so this one won’t count. You can skip saving it.',
+  summarySaveGone: 'This workout is no longer on the server, so it can’t be saved.',
+  summarySaveAuth: 'Your sign-in expired. Sign in again — the results will wait on this device.',
+  summaryDiscard: 'Don’t save',
+  summaryDiscardTitle: 'Skip saving this workout?',
+  summaryDiscardBody: 'The results will be removed from this device and the workout won’t count.',
+  summaryDiscardBodySaved:
+    'The workout itself is already recorded and counts — only what hadn’t saved yet will be lost.',
   summaryAdaptTitle: 'Next time',
   summaryVolumeDelta: '{delta}% volume',
   summaryVolumeSame: 'Same volume',
@@ -438,6 +463,7 @@ export const app = {
   shareInstagramSaved: 'Image saved — open a story and pick it',
   shareSaved: 'Image saved',
   shareRenderFailed: 'Could not draw the story',
+  shareRenderFailedBody: 'The picture didn’t draw. Share the text instead, or try again.',
   shareFailed: 'Could not share. Try again.',
   summaryNotFoundTitle: 'Session not found',
   summaryNotFoundBody: 'We couldn’t find this workout. It may have been saved from another device.',
@@ -1167,6 +1193,11 @@ export const app = {
   duoMateAuto: 'Matched for this week',
   duoMateChosen: 'The two of you, by invitation',
   duoLeave: 'Leave the pair',
+  duoLeaveTitle: 'Leave the pair?',
+  duoLeaveBodyAuto:
+    'You won’t have a partner this week — we’ll match you with someone new on Monday.',
+  duoLeaveBodyChosen:
+    'You and your friend will no longer be a pair — we’ll match you with someone on Monday.',
   duoNoneBody:
     'On Monday we will match you with someone — and again every week after. Or invite a friend yourself: then you stay together until you decide otherwise.',
   duoInvite: 'Invite a friend',
@@ -1240,6 +1271,8 @@ export const app = {
   marathonProofAttachAgain: 'Replace the photo or clip',
   marathonProofTooBig:
     'That file is over {n} MB. Film a shorter one — 10–15 seconds is usually enough.',
+  marathonProofClosed: 'This round is closed, so proof is no longer accepted.',
+  marathonProofTooLarge: 'The file is too large. Pick a smaller photo or shoot a shorter clip.',
   marathonProofVoided: 'Not counted: {reason}',
   marathonProofCoachOnly: 'Only the coach sees this',
   marathonProofCoachNote: 'Sergey watched it',
@@ -1249,6 +1282,10 @@ export const app = {
   marathonProofResent: 'Sent again — Sergey will take another look',
   // The board
   marathonBoardEmpty: 'Nobody has scored yet',
+  marathonBoardNoClubTitle: 'No table yet',
+  marathonBoardNoClubBody:
+    'You’re not in the club yet, so there’s no table for you. Take a look at the Club tab.',
+  marathonBoardNoClubCta: 'Open the club',
   marathonBoardYou: 'You',
 
   // --- Marathon admin --------------------------------------------------------
@@ -1601,6 +1638,12 @@ export const app = {
   assessBannerHint: '5 movements, 3 minutes — just answer',
   assessBannerCta: 'Take it',
   assessBannerLater: 'Not now',
+  assessCloseTitle: 'Leave the test?',
+  assessCloseBody: 'The numbers you’ve already given ({n}) won’t be saved.',
+  assessCloseConfirm: 'Leave',
+  assessCloseStay: 'Stay',
+  assessRecordsFailed:
+    'Your profile is saved, but {n} personal records didn’t go through. Tap “Retry”.',
   assessNoProfile: 'Finish the questions first',
   // --- coach tab --------------------------------------------------------------
   bookLeadTimePill: 'Book up to {n} minutes before',

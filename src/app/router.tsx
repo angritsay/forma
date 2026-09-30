@@ -17,7 +17,12 @@ import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from 're
 import { attachReferral } from '@/lib/api/referral';
 import { AppShell, FocusShell } from './components/AppShell';
 import { BootScreen } from './components/BootScreen';
-import { RedirectIfAuthed, RequireAuth, RequireOnboarded } from './components/RouteGuards';
+import {
+  RedirectIfAuthed,
+  RedirectIfOnboarded,
+  RequireAuth,
+  RequireOnboarded,
+} from './components/RouteGuards';
 import { useTelegramBack } from './hooks/useTelegramBack';
 import { useLocale } from './store/locale';
 import { useSession } from './store/session';
@@ -168,7 +173,9 @@ export function AppRoutes() {
               <Route path="/auth" element={<AuthScreen />} />
             </Route>
             <Route element={<RequireAuth />}>
-              <Route path="/onboarding/*" element={<OnboardingScreen />} />
+              <Route element={<RedirectIfOnboarded />}>
+                <Route path="/onboarding/*" element={<OnboardingScreen />} />
+              </Route>
               {/*
                * The physical test, which used to be the last step of onboarding and is asked for
                * after a couple of workouts now. It is **here** rather than in the tabbed section

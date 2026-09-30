@@ -87,3 +87,11 @@ export function storyFileName(seed: string, template: StoryTemplateId): string {
   const id = /^[A-Za-z0-9_-]{1,64}$/.test(seed) ? seed : hashSeed(seed).toString(36);
   return `${id}-${template}.png`;
 }
+
+/**
+ * Whether a target cannot work without the picture. The chat message and the system share carry
+ * the line and the link on their own, so a picture that failed to draw leaves them usable.
+ */
+export function needsPicture(target: ShareTarget): boolean {
+  return target === 'instagram' || target === 'telegramStory' || target === 'save';
+}

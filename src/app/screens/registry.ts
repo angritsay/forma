@@ -61,8 +61,29 @@ export function getScreen(name: ScreenName): LazyExoticComponent<ComponentType> 
     const loader = modules[`./${name}.tsx`];
     // Unreachable while `routes.test.ts` passes: every registered name has its module.
     if (!loader) throw new Error(`screen module missing: ${name}`);
-    component = lazy(loader);
+    /*
+     * A failed load is not cached. `lazy()` remembers a rejected import for good, so a screen that
+     * failed to arrive offline would fail again on «Повторить» even with the signal back; dropping
+     * it here makes the next render ask for the file afresh.
+     */
+    component = lazy(() =>
+      loader().catch((e: unknown) => {
+        cache.delete(name);
+        throw e;
+      }),
+    );
     cache.set(name, component);
   }
   return component;
+}
+
+/**
+ * Fetch a screen's code ahead of need. The player warms the summary and the home screen, so the
+ * end of a workout done out of signal does not stop on a screen the phone never downloaded.
+ * Failures are ignored: the real navigation will try again and show its own state.
+ */
+export function preloadScreen(name: ScreenName): void {
+  const loader = modules[`./${name}.tsx`];
+  if (!loader) return;
+  loader().catch(() => undefined);
 }

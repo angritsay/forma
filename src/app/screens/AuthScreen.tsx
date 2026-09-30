@@ -46,6 +46,11 @@ import {
 } from '@/lib/api/auth';
 import { AUTH_FILM } from '@content/site/media';
 import { consumeNext } from '@/app/features/entry/next';
+import {
+  clearPendingCode,
+  readPendingCode,
+  savePendingCode,
+} from '@/app/features/entry/pendingCode';
 import type { TKey, TParams } from '@/i18n/index';
 
 const RESEND_SEC = 60;
@@ -237,6 +242,7 @@ export default function AuthScreen() {
   const { t, locale } = useT();
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>('email');
+  const sessionEnded = useSession((s) => s.sessionEnded);
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
@@ -346,6 +352,8 @@ export default function AuthScreen() {
       setStep('code');
       setSends((n) => n + 1);
       codeSentAt.current = Date.now();
+      // The round trip to the mail app may reload the page; the code step survives it.
+      savePendingCode({ email: clean, sentAt: codeSentAt.current });
       wrongCodes.current = 0;
       countdown.restart();
     } catch (e) {
@@ -362,15 +370,18 @@ export default function AuthScreen() {
       setError(null);
       try {
         await verifyCode(email, value);
+        clearPendingCode();
         await useSession.getState().boot();
-        const profile = useSession.getState().profile;
         /*
          * A deep link that sent them to sign in lands where it pointed (features/entry/next.ts).
-         * Not yet onboarded, it stays set aside: onboarding takes it back when it finishes.
+         *
+         * Whether they still need onboarding is `RequireOnboarded`'s call, not this screen's. It
+         * used to be decided here from `profile?.onboardedAt`, and a profile that merely failed to
+         * load read as «not onboarded» — onboarding then saved over a real profile. The guard
+         * tells the two apart (a retry for the failed load), and when it does send somebody to
+         * onboarding it sets the destination aside again, so the link is not lost either way.
          */
-        navigate(profile?.onboardedAt ? (consumeNext() ?? '/') : '/onboarding', {
-          replace: true,
-        });
+        navigate(consumeNext() ?? '/', { replace: true });
       } catch (e) {
         const failure = toAuthError(e);
         if (failure.reason === 'invalid_code') wrongCodes.current += 1;
@@ -397,7 +408,17 @@ export default function AuthScreen() {
     if (handed.current) return;
     handed.current = true;
     const value = takeHandedEmail();
-    if (!value) return;
+    if (!value) {
+      // Back from the mail app after a reload: the code step, as it was, while the code lives.
+      const pending = readPendingCode(OTP_TTL_SEC);
+      if (!pending) return;
+      setEmail(pending.email);
+      setStep('code');
+      setSends(1);
+      codeSentAt.current = pending.sentAt;
+      countdown.resume(RESEND_SEC - (Date.now() - pending.sentAt) / 1000);
+      return;
+    }
     setEmail(value);
     if (checkEmail(normalizeEmail(value)).ok) void send(value);
     // `send` is recreated every render; this runs on mount only, by design.
@@ -415,6 +436,7 @@ export default function AuthScreen() {
   };
 
   const changeEmail = () => {
+    clearPendingCode();
     setStep('email');
     setCode('');
     setError(null);
@@ -466,6 +488,12 @@ export default function AuthScreen() {
       >
         <Logo className="text-[15px]" />
 
+        {sessionEnded ? (
+          /* A live session dropped under them: said as that, not as a first visit. */
+          <p role="status" className="text-center text-[15px] leading-snug text-paper">
+            {t('app.authSessionEnded')}
+          </p>
+        ) : null}
         {step === 'email' ? (
           <form onSubmit={onSubmitEmail} className="flex w-full flex-col gap-4" noValidate>
             <Input

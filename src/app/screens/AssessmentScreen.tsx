@@ -28,11 +28,13 @@
  * against. A record that fails to save must not cost the profile that has already been written,
  * so those are settled, not awaited-or-thrown.
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { isNetworkError } from '@/lib/api/errors';
 import { useBackOr } from '@/app/hooks/useBackOr';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { IconButton } from '@/components/ui/IconButton';
+import { Modal } from '@/components/ui/Modal';
 import { HeroField } from '@/components/ui/HeroField';
 import { Pill } from '@/components/ui/Pill';
 import { Screen } from '@/components/ui/Screen';
@@ -50,6 +52,7 @@ import type { PrescribedItem } from '@/lib/training/types';
 import {
   answersComplete,
   assessmentBenchmarks,
+  recordAssessmentBenchmarks,
   emptyAnswers,
   withAssessment,
   type AssessmentAnswers,
@@ -58,9 +61,17 @@ import { recordBenchmark } from '@/lib/api/benchmarks';
 import { computeFitnessIndex } from '@/lib/training/assessment';
 import { useSession } from '@/app/store/session';
 import { ASSESSMENT_MOVES, ASSESSMENT_TOTAL_MIN } from '@content/site/assessment';
+import {
+  answeredCount,
+  clearAssessmentDraft,
+  firstUnanswered,
+  readAssessmentDraft,
+  writeAssessmentDraft,
+  type AssessmentPhase,
+} from '@/app/features/assessment/draft';
 import { Question } from './onboarding/Question';
 
-type Phase = 'intro' | 'running' | 'done';
+type Phase = AssessmentPhase;
 
 /**
  * The «×» row is the top of the page, so it is the page's ground rather than glass — the same
@@ -75,9 +86,14 @@ export default function AssessmentScreen() {
   const { t, l, locale } = useT();
   const toast = useToast();
   const trainingProfile = useSession((s) => s.profile?.trainingProfile ?? null);
-  const [phase, setPhase] = useState<Phase>('intro');
-  const [answers, setAnswers] = useState<AssessmentAnswers>(emptyAnswers);
+  // A run the phone reloaded in the middle of comes back where it was (draft.ts).
+  const restored = useRef(readAssessmentDraft()).current;
+  const [phase, setPhase] = useState<Phase>(restored?.phase ?? 'intro');
+  const [answers, setAnswers] = useState<AssessmentAnswers>(restored?.answers ?? emptyAnswers);
   const [saving, setSaving] = useState(false);
+  /** Benchmark keys that did not save after the profile did; the done screen offers them again. */
+  const [failedKeys, setFailedKeys] = useState<string[]>(restored?.failedKeys ?? []);
+  const [confirmClose, setConfirmClose] = useState(false);
   /*
    * Уже сданное. Два источника — профиль и замеры, — потому что пять движений сохраняются в два
    * разных места; сводит их `recordedMoves`.
@@ -125,8 +141,30 @@ export default function AssessmentScreen() {
     : null;
 
   // Opened from a link, there is no previous screen to return to: close to home instead.
-  const close = useBackOr('/');
+  const leave = useBackOr('/');
   const complete = useMemo(() => answersComplete(answers), [answers]);
+  const counted = answeredCount(answers);
+
+  /*
+   * Set once the test is closed on purpose. The state updates that come with closing (the last
+   * `setFailedKeys`) render once more before the screen goes, and that render must not write
+   * back the draft just removed — a test found «done» on the next visit could be saved twice.
+   */
+  const closed = useRef(false);
+  useEffect(() => {
+    if (closed.current) return;
+    writeAssessmentDraft({ phase, answers, ...(failedKeys.length > 0 ? { failedKeys } : {}) });
+  }, [phase, answers, failedKeys]);
+
+  /** Close on purpose: the draft goes with it. */
+  const closeNow = () => {
+    setConfirmClose(false);
+    closed.current = true;
+    clearAssessmentDraft();
+    leave();
+  };
+  // Numbers already given are asked about before they are thrown away.
+  const close = () => (counted > 0 && failedKeys.length === 0 ? setConfirmClose(true) : closeNow());
 
   const setCount = (exerciseId: string, reps: number) =>
     setAnswers((a) => ({ ...a, counts: { ...a.counts, [exerciseId]: reps } }));
@@ -142,17 +180,31 @@ export default function AssessmentScreen() {
         fitnessIndex: fitness.index,
         fitnessLevel: fitness.level,
       });
-      await Promise.allSettled(
-        Object.entries(assessmentBenchmarks(answers)).map(([key, reps]) =>
-          recordBenchmark(key, reps, 'reps'),
-        ),
-      );
-      close();
-    } catch {
-      toast.show({ kind: 'error', title: t('app.onbSaveError') });
-    } finally {
+    } catch (e) {
+      toast.show({
+        kind: 'error',
+        title: isNetworkError(e) ? t('common.errorOffline') : t('app.onbSaveError'),
+      });
       setSaving(false);
+      return;
     }
+    await recordRecords(assessmentBenchmarks(answers));
+  };
+
+  /** Write benchmark records; close when all landed, stay and say how many did not otherwise. */
+  const recordRecords = async (entries: Record<string, number>) => {
+    setSaving(true);
+    const failed = await recordAssessmentBenchmarks(entries, (key, reps) =>
+      recordBenchmark(key, reps, 'reps'),
+    );
+    setSaving(false);
+    setFailedKeys(failed);
+    if (failed.length === 0) closeNow();
+  };
+
+  const retryRecords = () => {
+    const all = assessmentBenchmarks(answers);
+    void recordRecords(Object.fromEntries(failedKeys.map((k) => [k, all[k]!])));
   };
 
   if (phase === 'running') {
@@ -163,9 +215,23 @@ export default function AssessmentScreen() {
         onKneesChange={(onKnees) => setAnswers((a) => ({ ...a, onKnees }))}
         onDone={() => setPhase('done')}
         onCancel={() => setPhase('intro')}
+        startIndex={firstUnanswered(answers)}
       />
     );
   }
+
+  const closeModal = (
+    <Modal
+      open={confirmClose}
+      onClose={() => setConfirmClose(false)}
+      title={t('app.assessCloseTitle')}
+      description={t('app.assessCloseBody', { n: formatNumber(locale, counted) })}
+      confirmLabel={t('app.assessCloseConfirm')}
+      cancelLabel={t('app.assessCloseStay')}
+      danger
+      onConfirm={closeNow}
+    />
+  );
 
   const header = (
     /* The gutter the content uses, and the «×» pulled out by its own padding so the mark sits on
@@ -198,21 +264,48 @@ export default function AssessmentScreen() {
         className={FLAT_HEADER}
         header={header}
         footer={
-          <div className="flex flex-col gap-2">
-            <Button
-              variant="action"
-              size="lg"
-              fullWidth
-              loading={saving}
-              disabled={!complete}
-              onClick={() => void save()}
-            >
-              {t('common.save')}
-            </Button>
-            <Button variant="ghost" fullWidth onClick={() => setPhase('running')}>
-              {t('app.onbAssessRetake')}
-            </Button>
-          </div>
+          failedKeys.length > 0 ? (
+            /*
+             * The profile is saved; some personal records are not. Said as that — how many, and
+             * that the rest is safe — with a retry for just those, and a way out that leaves them.
+             */
+            <div className="flex flex-col gap-2">
+              <p role="alert" className="text-center text-sm text-danger">
+                {t('app.assessRecordsFailed', {
+                  n: formatNumber(locale, failedKeys.length),
+                })}
+              </p>
+              <Button variant="action" size="lg" fullWidth loading={saving} onClick={retryRecords}>
+                {t('common.retry')}
+              </Button>
+              <Button variant="ghost" fullWidth onClick={closeNow}>
+                {t('common.close')}
+              </Button>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              <Button
+                variant="action"
+                size="lg"
+                fullWidth
+                loading={saving}
+                disabled={!complete}
+                onClick={() => void save()}
+              >
+                {t('common.save')}
+              </Button>
+              <Button
+                variant="ghost"
+                fullWidth
+                onClick={() => {
+                  setAnswers((a) => ({ ...a, counts: {} }));
+                  setPhase('running');
+                }}
+              >
+                {t('app.onbAssessRetake')}
+              </Button>
+            </div>
+          )
         }
       >
         <div className="flex flex-col gap-6 py-7">
@@ -238,6 +331,7 @@ export default function AssessmentScreen() {
             })}
           </ul>
         </div>
+        {closeModal}
       </Screen>
     );
   }
@@ -317,6 +411,7 @@ export default function AssessmentScreen() {
         <p className="text-[13px] leading-relaxed text-muted-2">{t('app.assessRepeats')}</p>
       </div>
       <ExercisePreview item={previewItem} onClose={() => setPreview(null)} />
+      {closeModal}
     </Screen>
   );
 }

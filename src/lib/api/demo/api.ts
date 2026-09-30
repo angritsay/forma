@@ -410,6 +410,15 @@ export async function getCourseState(courseId: string): Promise<CourseStateRow |
   });
 }
 
+/** Insert-only twin of `upsertCourseState` (see `createCourseState` in ../courseState.ts). */
+export async function createCourseState(
+  courseId: string,
+  patch: CourseStatePatch,
+): Promise<CourseStateRow> {
+  const existing = await getCourseState(courseId);
+  return existing ?? upsertCourseState(courseId, patch);
+}
+
 export async function upsertCourseState(
   courseId: string,
   patch: CourseStatePatch,

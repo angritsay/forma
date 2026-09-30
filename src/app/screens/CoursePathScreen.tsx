@@ -11,6 +11,7 @@
  * display line in two weights («ДЕНЬ 4 из 28»), and the weeks are the bands the days sit under.
  */
 import { useEffect, useMemo, useState } from 'react';
+import { isNetworkError } from '@/lib/api/errors';
 import { useNavigate, useParams } from 'react-router';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -42,9 +43,10 @@ import {
   useProgress,
   useProgressLoader,
 } from '@/app/store/progress';
-import { useSession } from '@/app/store/session';
+import { purchasesUnknown, useSession } from '@/app/store/session';
 import { courseVisible, nodeAccess } from '@/app/features/courses/courseAccess';
 import { UnlockSheet } from '@/app/features/courses/UnlockSheet';
+import { PurchasesUnknown } from '@/app/components/PurchasesUnknown';
 
 export default function CoursePathScreen() {
   useProgressLoader();
@@ -55,8 +57,10 @@ export default function CoursePathScreen() {
   const course = findCourse(id);
   const entitlements = useSession((s) => s.entitlements);
   const profile = useSession((s) => s.profile);
+  const unknownPurchases = useSession(purchasesUnknown);
   const status = useProgress((s) => s.status);
   const loading = useProgress((s) => s.loading);
+  const progressError = useProgress((s) => s.error);
   const setActiveCourse = useProgress((s) => s.setActiveCourse);
   const row = useCourseStateRow(course?.id);
   /*
@@ -97,6 +101,18 @@ export default function CoursePathScreen() {
     // нет: проба не тратится (0022), и попробовавшему по-прежнему есть что открыть отсюда.
     if (course && courseVisible(course, owned)) setActiveCourse(course.id);
   }, [course, owned, setActiveCourse]);
+
+  /*
+   * Not known to be theirs because what they own could not be read: not «not found» and not the
+   * price — the retry (`purchasesUnknown`).
+   */
+  if (course && !owned && unknownPurchases) {
+    return (
+      <Screen header={<TopBar back="/courses" title={l(courseTitle(course))} />}>
+        <PurchasesUnknown />
+      </Screen>
+    );
+  }
 
   // Off sale and not theirs: the same «not found» as a mistyped id (`courseVisible`).
   if (!course || !courseVisible(course, owned)) {
@@ -165,8 +181,11 @@ export default function CoursePathScreen() {
           : t('app.pathMilestoneDone');
       toast.show({ kind: 'success', title });
       setSheetNode(null);
-    } catch {
-      toast.show({ kind: 'error', title: t('app.pathSaveError') });
+    } catch (e) {
+      toast.show({
+        kind: 'error',
+        title: isNetworkError(e) ? t('common.errorOffline') : t('app.pathSaveError'),
+      });
     } finally {
       setBusy(false);
     }
@@ -179,7 +198,9 @@ export default function CoursePathScreen() {
     body = (
       <EmptyState
         title={t('app.homeErrorTitle')}
-        description={t('app.homeErrorBody')}
+        description={
+          progressError?.code === 'network' ? t('common.errorOffline') : t('app.homeErrorBody')
+        }
         action={
           <Button
             variant="action"

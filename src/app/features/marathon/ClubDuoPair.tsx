@@ -34,6 +34,9 @@ import { useToast } from '@/components/ui/Toast';
 import { breakClubDuo, createClubInvite, getClubDuoStatus } from '@/lib/api/marathon';
 import type { ClubDuoStatus } from '@/lib/api/types';
 import { appHref } from '@/lib/util/paths';
+import { isNetworkError } from '@/lib/api/errors';
+import { telegramShareUrl } from '@/lib/share/targets';
+import { isTelegram, openExternal } from '@/lib/telegram/webapp';
 import { useT } from '@/app/hooks/useT';
 import { LINKS } from '@content/site/links';
 import { inviteLink, shareFailure } from './duoInvite';
@@ -90,12 +93,39 @@ export function useClubDuoPair({
 
   useEffect(load, [load]);
 
+  /*
+   * The token is made before the tap, not during it. `navigator.share` must be called inside the
+   * gesture, and a request awaited first used up that gesture: on iOS the share sheet then simply
+   * did not open, and the button «did nothing». Unpaired and without a link yet, the link is
+   * created as soon as the row is read (the same token comes back on every later call, 0034).
+   */
+  const [token, setToken] = useState<string | null>(null);
+  const unpaired = row !== null && !row.teamId;
+  const known = row?.inviteToken ?? null;
+  useEffect(() => {
+    if (!unpaired || known) return;
+    let alive = true;
+    createClubInvite()
+      .then((t) => {
+        if (alive) setToken(t);
+      })
+      // No link yet is not a failure to show: the tap makes it and says what went wrong then.
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, [unpaired, known]);
+
   const share = useCallback(async () => {
     setBusy(true);
     try {
-      const token = row?.inviteToken ?? (await createClubInvite());
-      const url = inviteUrl(token);
-      if (!row?.inviteToken) load();
+      const ready = known ?? token;
+      const url = inviteUrl(ready ?? (await createClubInvite()));
+      /*
+       * Inside Telegram, Telegram's own «send to a chat» sheet: the web share there is the
+       * system's, which does not know the chats the invite is meant for.
+       */
+      if (isTelegram() && openExternal(telegramShareUrl(url, t('app.duoInviteTitle')))) return;
       if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
         await navigator.share({ title: t('app.duoInviteTitle'), url });
         return;
@@ -110,7 +140,7 @@ export function useClubDuoPair({
     } finally {
       setBusy(false);
     }
-  }, [row?.inviteToken, load, t, toast]);
+  }, [known, token, t, toast]);
 
   const leave = useCallback(async () => {
     if (!row?.teamId) return;
@@ -119,8 +149,11 @@ export function useClubDuoPair({
       await breakClubDuo(row.teamId);
       load();
       onChanged?.();
-    } catch {
-      toast.show({ kind: 'error', title: t('common.errorGeneric') });
+    } catch (e) {
+      toast.show({
+        kind: 'error',
+        title: t(isNetworkError(e) ? 'common.errorOffline' : 'common.errorGeneric'),
+      });
     } finally {
       setBusy(false);
     }

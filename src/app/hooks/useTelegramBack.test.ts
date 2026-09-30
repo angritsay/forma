@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { isRootRoute } from './useTelegramBack';
+import { describe, expect, it, vi } from 'vitest';
+import { backTarget, isRootRoute, runBack } from './useTelegramBack';
 
 describe('isRootRoute', () => {
   it('treats the tabs and the entry flows as starting points', () => {
@@ -26,5 +26,19 @@ describe('isRootRoute', () => {
     ]) {
       expect(isRootRoute(path)).toBe(false);
     }
+  });
+});
+
+describe('what a press does', () => {
+  it('steps back through the app, or home from a screen opened by a link', () => {
+    expect(backTarget('k3j2x1')).toBe(-1);
+    expect(backTarget('default')).toBe('/');
+    expect(backTarget(undefined)).toBe('/');
+  });
+
+  it('runs the handler a screen claimed it with (the player’s leave dialog)', () => {
+    const fallback = vi.fn();
+    runBack(fallback);
+    expect(fallback).toHaveBeenCalledTimes(1);
   });
 });

@@ -17,8 +17,12 @@ import { useEffect, useMemo } from 'react';
 import { create } from 'zustand';
 import { findCourse, hasCourse } from '@/content/catalogue';
 import { listBenchmarks } from '@/lib/api/benchmarks';
-import { listCourseStates, upsertCourseState as apiUpsertCourseState } from '@/lib/api/courseState';
-import { toAppError, type AppError } from '@/lib/api/errors';
+import {
+  createCourseState as apiCreateCourseState,
+  listCourseStates,
+  upsertCourseState as apiUpsertCourseState,
+} from '@/lib/api/courseState';
+import { AppError, toAppError } from '@/lib/api/errors';
 import { listRecentSessions, listTrainedCourses } from '@/lib/api/sessions';
 import { getMyTotals } from '@/lib/api/stats';
 import type { BenchmarkSeries, CourseStateRow, MyTotals, WorkoutSessionRow } from '@/lib/api/types';
@@ -51,6 +55,11 @@ export interface ProgressState {
   /** User id the data belongs to. */
   loadedFor?: string;
   loadedAt?: number;
+  /**
+   * User id whose course-state list was actually read. Only then does a missing row mean «never
+   * started»; after a failed read it means nothing, and `ensureCourseState` refuses to guess.
+   */
+  statesReadFor?: string;
   courseStates: Record<string, CourseStateRow>;
   recentSessions: WorkoutSessionRow[];
   /** Курсы с хотя бы одной завершённой тренировкой — источник правды о потраченной пробе (0019). */
@@ -67,7 +76,11 @@ export interface ProgressState {
   reset: () => void;
   putCourseState: (row: CourseStateRow) => void;
   putSession: (row: WorkoutSessionRow) => void;
-  /** Existing course state, or a fresh row with the profile's starting scale. */
+  /**
+   * Existing course state, or a fresh row with the profile's starting scale. The fresh row is only
+   * created after the list was read and the course is really missing from it, and it is created
+   * insert-only; if the list could not be read this throws instead of starting over at day one.
+   */
   ensureCourseState: (courseId: string) => Promise<CourseStateRow>;
   /** Mark a node completed (rest days, milestones) and advance the current index. */
   completeNode: (courseId: string, nodeId: string) => Promise<CourseStateRow>;
@@ -223,6 +236,7 @@ const EMPTY_DATA = {
   error: undefined,
   loadedFor: undefined,
   loadedAt: undefined,
+  statesReadFor: undefined as string | undefined,
   courseStates: {} as Record<string, CourseStateRow>,
   recentSessions: [] as WorkoutSessionRow[],
   trainedCourseIds: [] as string[],
@@ -266,7 +280,10 @@ export const useProgress = create<ProgressState>((set, get) => {
       loadedFor: userId,
       loadedAt: Date.now(),
     };
-    if (states.status === 'fulfilled') next.courseStates = keyBy(states.value, (r) => r.courseId);
+    if (states.status === 'fulfilled') {
+      next.courseStates = keyBy(states.value, (r) => r.courseId);
+      next.statesReadFor = userId;
+    }
     if (sessions.status === 'fulfilled') next.recentSessions = sessions.value;
     if (benchmarks.status === 'fulfilled') next.benchmarks = benchmarks.value;
     if (totals.status === 'fulfilled') next.totals = totals.value;
@@ -339,10 +356,21 @@ export const useProgress = create<ProgressState>((set, get) => {
       }),
 
     ensureCourseState: async (courseId) => {
+      const userId = useSession.getState().user?.id;
       if (get().status !== 'ready') await get().load();
-      const existing = get().courseStates[courseId];
+      else if (get().statesReadFor !== userId) await get().refresh();
+      const s = get();
+      const existing = s.courseStates[courseId];
       if (existing) return existing;
-      const row = await apiUpsertCourseState(courseId, {
+      /*
+       * A row missing from a list that never arrived is not a course nobody started. Writing the
+       * starting row here used to reset people to day one on a flaky network; now the caller gets
+       * the load's own error and shows it with a retry.
+       */
+      if (!userId || s.statesReadFor !== userId) {
+        throw s.error ?? new AppError('unknown', 'course_states_unread');
+      }
+      const row = await apiCreateCourseState(courseId, {
         scale: startingScale(useSession.getState().profile),
         currentNodeIndex: 0,
         completedNodeIds: [],

@@ -14,6 +14,8 @@ export interface Countdown {
   reset: () => void;
   /** Back to the full duration and start immediately. */
   restart: () => void;
+  /** Run with `sec` left — a countdown picked up after a reload; zero or less is already done. */
+  resume: (sec: number) => void;
 }
 
 export function useCountdown(totalSec: number): Countdown {
@@ -52,6 +54,12 @@ export function useCountdown(totalSec: number): Countdown {
     setRemainingMs(totalMs);
     setRunning(true);
   }, [totalMs]);
+  const resume = useCallback((sec: number) => {
+    const left = Math.max(0, sec * 1000);
+    endAt.current = Date.now() + left;
+    setRemainingMs(left);
+    setRunning(left > 0);
+  }, []);
 
   return {
     remainingSec: Math.ceil(remainingMs / 1000),
@@ -61,5 +69,6 @@ export function useCountdown(totalSec: number): Countdown {
     pause,
     reset,
     restart,
+    resume,
   };
 }

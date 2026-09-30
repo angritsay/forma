@@ -13,6 +13,7 @@
  * one place the rules live (`lib/training/levels.ts`).
  */
 import { useMemo } from 'react';
+import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { HeroField, KeyTitle } from '@/components/ui/HeroField';
 import { ProgressBar } from '@/components/ui/ProgressBar';
@@ -30,6 +31,8 @@ export default function AchievementsScreen() {
   useProgressLoader();
   const { t, locale } = useT();
   const status = useProgress((s) => s.status);
+  const loading = useProgress((s) => s.loading);
+  const error = useProgress((s) => s.error);
   const sessions = useProgress((s) => s.recentSessions);
   const benchmarks = useProgress((s) => s.benchmarks);
   const totals = useProgress((s) => s.totals);
@@ -61,6 +64,33 @@ export default function AchievementsScreen() {
     return (
       <Screen header={header} contentClassName="pt-4">
         <ScreenLoader />
+      </Screen>
+    );
+  }
+
+  /*
+   * The progress did not load, so every achievement would read as not taken — thirteen «no»s
+   * for somebody who has earned half of them. Said as a failure, with the retry.
+   */
+  if (status === 'error') {
+    return (
+      <Screen header={header} contentClassName="pt-2">
+        <EmptyState
+          title={t('app.homeErrorTitle')}
+          description={
+            error?.code === 'network' ? t('common.errorOffline') : t('app.homeErrorBody')
+          }
+          action={
+            <Button
+              variant="action"
+              size="lg"
+              loading={loading}
+              onClick={() => void useProgress.getState().refresh()}
+            >
+              {t('common.retry')}
+            </Button>
+          }
+        />
       </Screen>
     );
   }
