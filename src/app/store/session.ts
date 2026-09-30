@@ -277,7 +277,12 @@ export const useSession = create<SessionState>((set, get) => {
 
     boot: async () => {
       wire();
-      set({ status: 'booting', error: undefined });
+      /*
+       * A retry from `offline` stays `offline` until it has an answer. Flipping to `booting` would
+       * swap the workout that goes on offline (RouteGuards' local routes) for the boot screen —
+       * unmounting, and so pausing, the player — only to put it back a moment later.
+       */
+      set({ status: get().status === 'offline' ? 'offline' : 'booting', error: undefined });
       try {
         const session = await getSession();
         if (!session) {

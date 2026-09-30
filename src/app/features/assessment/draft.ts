@@ -21,6 +21,11 @@ export type AssessmentPhase = 'intro' | 'running' | 'done';
 export interface AssessmentDraft {
   phase: AssessmentPhase;
   answers: AssessmentAnswers;
+  /**
+   * The profile is saved and these benchmark keys are not. Kept so a reload offers the retry for
+   * just these, rather than «Сохранить» again — which would record the ones that landed twice.
+   */
+  failedKeys?: string[];
 }
 
 type StorageLike = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
@@ -49,7 +54,14 @@ export function readAssessmentDraft(store = sessionStore()): AssessmentDraft | n
     for (const [k, n] of Object.entries(a.counts)) {
       if (typeof n === 'number' && Number.isFinite(n) && n >= 0) counts[k] = n;
     }
-    return { phase: v.phase, answers: { counts, onKnees: a.onKnees === true } };
+    const failedKeys = Array.isArray(v.failedKeys)
+      ? v.failedKeys.filter((k): k is string => typeof k === 'string')
+      : [];
+    return {
+      phase: v.phase,
+      answers: { counts, onKnees: a.onKnees === true },
+      ...(failedKeys.length > 0 ? { failedKeys } : {}),
+    };
   } catch {
     return null;
   }

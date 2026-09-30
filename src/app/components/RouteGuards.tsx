@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -27,7 +27,7 @@ function useLocalWorkoutRoute(): boolean {
 }
 
 /** Boot could not reach the server: «Нет соединения», and the one thing to do about it. */
-export function OfflineScreen({ onRetry }: { onRetry: () => void }) {
+export function OfflineScreen({ onRetry, busy = false }: { onRetry: () => void; busy?: boolean }) {
   const { t } = useT();
   return (
     <div className="flex min-h-dvh items-center justify-center px-5">
@@ -35,7 +35,7 @@ export function OfflineScreen({ onRetry }: { onRetry: () => void }) {
         title={t('app.offlineTitle')}
         description={t('app.offlineBody')}
         action={
-          <Button variant="action" size="lg" onClick={onRetry}>
+          <Button variant="action" size="lg" loading={busy} onClick={onRetry}>
             {t('common.retry')}
           </Button>
         }
@@ -46,7 +46,12 @@ export function OfflineScreen({ onRetry }: { onRetry: () => void }) {
 
 function Offline() {
   const boot = useSession((s) => s.boot);
-  return <OfflineScreen onRetry={() => void boot()} />;
+  const [busy, setBusy] = useState(false);
+  const retry = () => {
+    setBusy(true);
+    void boot().finally(() => setBusy(false));
+  };
+  return <OfflineScreen onRetry={retry} busy={busy} />;
 }
 
 interface FromState {
@@ -160,7 +165,12 @@ export function RequireOnboarded() {
 export function RedirectIfOnboarded() {
   const profile = useSession((s) => s.profile);
   const error = useSession((s) => s.error);
-  const onboardedOnEntry = useRef(Boolean(profile?.onboardedAt)).current;
+  /*
+   * Onboarded *and* holding the answers the wizard collects. A profile marked onboarded without a
+   * training profile is exactly who the course preview sends here («Заверши настройку профиля»);
+   * bouncing it home would leave it with no way to finish.
+   */
+  const onboardedOnEntry = useRef(Boolean(profile?.onboardedAt && profile.trainingProfile)).current;
   if (onboardedOnEntry) return <Navigate to="/" replace />;
   if (!profile && error) return <ProfileLoadError />;
   return <Outlet />;

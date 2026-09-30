@@ -433,6 +433,8 @@ export const app = {
   summaryDiscard: 'Don’t save',
   summaryDiscardTitle: 'Skip saving this workout?',
   summaryDiscardBody: 'The results will be removed from this device and the workout won’t count.',
+  summaryDiscardBodySaved:
+    'The workout itself is already recorded and counts — only what hadn’t saved yet will be lost.',
   summaryAdaptTitle: 'Next time',
   summaryVolumeDelta: '{delta}% volume',
   summaryVolumeSame: 'Same volume',

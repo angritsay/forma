@@ -36,6 +36,18 @@ describe('assessment draft', () => {
     expect(readAssessmentDraft(store)).toEqual({ phase: 'running', answers });
   });
 
+  it('keeps the records that failed after the profile saved', () => {
+    const store = memory();
+    const answers = { counts: { [first.exerciseId]: 12 }, onKnees: false };
+    writeAssessmentDraft({ phase: 'done', answers, failedKeys: ['b'] }, store);
+    expect(readAssessmentDraft(store)?.failedKeys).toEqual(['b']);
+    store.setItem(
+      ASSESSMENT_DRAFT_KEY,
+      JSON.stringify({ phase: 'done', answers, failedKeys: [1, 'c'] }),
+    );
+    expect(readAssessmentDraft(store)?.failedKeys).toEqual(['c']);
+  });
+
   it('is gone after a deliberate close or a save', () => {
     const store = memory();
     writeAssessmentDraft({ phase: 'done', answers: emptyAnswers() }, store);

@@ -587,7 +587,7 @@ function LocalSummary({
         open={confirmDiscard}
         onClose={() => setConfirmDiscard(false)}
         title={t('app.summaryDiscardTitle')}
-        description={t('app.summaryDiscardBody')}
+        description={t(rowDone ? 'app.summaryDiscardBodySaved' : 'app.summaryDiscardBody')}
         confirmLabel={t('app.summaryDiscard')}
         cancelLabel={t('common.cancel')}
         danger

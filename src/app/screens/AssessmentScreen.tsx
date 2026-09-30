@@ -92,7 +92,7 @@ export default function AssessmentScreen() {
   const [answers, setAnswers] = useState<AssessmentAnswers>(restored?.answers ?? emptyAnswers);
   const [saving, setSaving] = useState(false);
   /** Benchmark keys that did not save after the profile did; the done screen offers them again. */
-  const [failedKeys, setFailedKeys] = useState<string[]>([]);
+  const [failedKeys, setFailedKeys] = useState<string[]>(restored?.failedKeys ?? []);
   const [confirmClose, setConfirmClose] = useState(false);
   /*
    * Уже сданное. Два источника — профиль и замеры, — потому что пять движений сохраняются в два
@@ -145,13 +145,21 @@ export default function AssessmentScreen() {
   const complete = useMemo(() => answersComplete(answers), [answers]);
   const counted = answeredCount(answers);
 
+  /*
+   * Set once the test is closed on purpose. The state updates that come with closing (the last
+   * `setFailedKeys`) render once more before the screen goes, and that render must not write
+   * back the draft just removed — a test found «done» on the next visit could be saved twice.
+   */
+  const closed = useRef(false);
   useEffect(() => {
-    writeAssessmentDraft({ phase, answers });
-  }, [phase, answers]);
+    if (closed.current) return;
+    writeAssessmentDraft({ phase, answers, ...(failedKeys.length > 0 ? { failedKeys } : {}) });
+  }, [phase, answers, failedKeys]);
 
   /** Close on purpose: the draft goes with it. */
   const closeNow = () => {
     setConfirmClose(false);
+    closed.current = true;
     clearAssessmentDraft();
     leave();
   };

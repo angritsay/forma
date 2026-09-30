@@ -71,6 +71,18 @@ describe('offline boot', () => {
     expect(useSession.getState().status).toBe('offline');
   });
 
+  it('a retry from offline never passes through booting (the local player stays mounted)', async () => {
+    getSession.mockRejectedValue(new AppError('network', 'Failed to fetch'));
+    await useSession.getState().boot();
+    const seen: string[] = [];
+    const stop = useSession.subscribe((s) => seen.push(s.status));
+    getSession.mockResolvedValue(session('u1'));
+    await useSession.getState().boot();
+    stop();
+    expect(seen).not.toContain('booting');
+    expect(useSession.getState().status).toBe('signed_in');
+  });
+
   it('still opens the player and the summary of a workout on the device', () => {
     const s = workout('u1');
     expect(localWorkoutRoute('/play', s)).toBe(true);

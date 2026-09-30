@@ -453,6 +453,9 @@ export const app = {
   summaryDiscard: 'Не сохранять',
   summaryDiscardTitle: 'Не сохранять тренировку?',
   summaryDiscardBody: 'Итоги пропадут с этого устройства, и в зачёт она не пойдёт.',
+  // Строка тренировки уже на сервере: в зачёт она пошла, пропадёт только недосохранённое.
+  summaryDiscardBodySaved:
+    'Сама тренировка уже записана и в зачёт пошла — пропадёт только то, что не успело сохраниться.',
   summaryAdaptTitle: 'В следующий раз',
   summaryVolumeDelta: '{delta}% объёма',
   summaryVolumeSame: 'Объём без изменений',
@@ -1703,7 +1706,7 @@ export const app = {
   assessBannerCta: 'Пройти',
   assessBannerLater: 'Не сейчас',
   assessCloseTitle: 'Бросить тест?',
-  assessCloseBody: 'Числа, которые ты уже назвал ({n}), не сохранятся.',
+  assessCloseBody: 'Уже записанные числа ({n}) не сохранятся.',
   assessCloseConfirm: 'Бросить',
   assessCloseStay: 'Остаться',
   assessRecordsFailed:
