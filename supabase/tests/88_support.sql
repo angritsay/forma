@@ -198,13 +198,19 @@ declare v_count int; begin
   select count(*) into v_count from public.admin_outbox
    where topic = 'sessions' and kind = 'session_booked'
      and params ->> 'email' = 'support@example.com';
-  assert v_count = 1, 'оплаченная бронь — ровно одно «Выбрали время», а не ' || v_count;
-  -- Сама оплата пишет своё «Оплачено» (session_paid) — это другое сообщение, и оно тоже одно.
-  -- Кроме этих двух — ничего: ни второго «Выбрали время» на повтор, ни «не нашли бронь».
+  assert v_count = 1, 'оплаченная бронь — ровно одно сообщение о брони, а не ' || v_count;
+  -- 0056: оплата, подтвердившая бронь, не пишет своего «Оплачено» (session_paid) отдельно —
+  -- её ещё не отправленная строка снимается, а сумму несёт сообщение о брони. Одно на оплату.
+  -- Кроме него — ничего: ни второго сообщения на повтор, ни «не нашли бронь».
   select count(*) into v_count from public.admin_outbox
    where topic = 'sessions' and kind = 'session_paid'
      and params ->> 'email' = 'support@example.com';
-  assert v_count = 1, 'одна оплата — одно «Оплачено», а не ' || v_count;
+  assert v_count = 0, 'оплата брони не дублирует «Оплачено», а не ' || v_count;
+  assert exists (select 1 from public.admin_outbox
+                  where topic = 'sessions' and kind = 'session_booked'
+                    and params ->> 'email' = 'support@example.com'
+                    and params ->> 'amount' <> ''),
+    'сообщение о брони несёт сумму оплаты';
   select count(*) into v_count from public.admin_outbox
    where topic = 'sessions' and kind not in ('session_booked', 'session_paid')
      and params ->> 'email' = 'support@example.com';
