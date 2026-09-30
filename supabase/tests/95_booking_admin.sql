@@ -13,7 +13,8 @@
 --   * `p_ignore_booking` lets anybody see through somebody else's session;
 --   * a move lands under 24 hours away;
 --   * the hour-before reminder still dies after 55 minutes;
---   * the owner's channel hears about a paid hold twice, or not at all about an unmatched one.
+--   * the owner's channel hears about a paid hold twice, or not at all about an unmatched one;
+--   * the admin's length quietly replaces the one the payment was for.
 --
 -- Every date is «so many days from today in Moscow», as in 94. Everything created is removed.
 -- =============================================================================
@@ -284,8 +285,14 @@ begin
   exception when others then
     assert sqlerrm = 'coach_unavailable', 'coach_unavailable, got ' || sqlerrm;
   end;
-  -- The payment's own length wins over a wrong one passed in.
-  v_id := public.admin_book_from_payment(v_pay, 'sergey', pg_temp.msk(4, '10:00'), 'hour');
+  -- A length that contradicts the payment's own is refused, not quietly swapped.
+  begin
+    perform public.admin_book_from_payment(v_pay, 'sergey', pg_temp.msk(4, '10:00'), 'hour');
+    assert false, 'booked an hour on a half-hour payment';
+  exception when others then
+    assert sqlerrm = 'option_mismatch', 'option_mismatch, got ' || sqlerrm;
+  end;
+  v_id := public.admin_book_from_payment(v_pay, 'sergey', pg_temp.msk(4, '10:00'), 'half');
   select * into v_row from public.coach_bookings where id = v_id;
   assert v_row.status = 'active', 'the booking is active';
   assert v_row.email = 'bka-payer@example.com', 'the booking is the payer''s';
@@ -370,6 +377,10 @@ select pg_temp.as_user('00000000-0000-0000-0000-0000000056c3', 'bka-clara@exampl
 do $$ begin
   assert public.claim_payment('BKA-6') = 'linked', 'Clara claims the payment, with no hold';
 end $$;
+-- By now the payment's own «Занятие оплачено» has gone out (the sender ran in the meantime).
+select pg_temp.as_super();
+update public.admin_outbox set status = 'sent'
+where dedupe_key = 'session_paid:' || pg_temp.pay('BKA-6')::text;
 select pg_temp.as_user('00000000-0000-0000-0000-0000000056e5', 'bka-admin@example.com');
 do $$
 declare v_id uuid;
@@ -378,6 +389,20 @@ begin
     'sergey', pg_temp.msk(4, '12:00'));
   assert (select email from public.coach_bookings where id = v_id) = 'bka-clara@example.com',
     'a claimed payment is booked to the account that claimed it';
+end $$;
+select pg_temp.as_super();
+do $$
+declare v_row record;
+begin
+  -- The line already sent stays; the booking does not say «Занятие оплачено» a second time.
+  assert exists (select 1 from public.admin_outbox
+                 where dedupe_key = 'session_paid:' || pg_temp.pay('BKA-6')::text and status = 'sent'),
+    'a sent session_paid was touched';
+  select * into v_row from public.admin_outbox
+  where kind = 'session_booked' and params ->> 'email' = 'bka-clara@example.com';
+  assert found, 'no session_booked for the admin''s booking';
+  assert not (v_row.params ? 'paymentId'),
+    'the booking repeats a «Занятие оплачено» that already went out';
 end $$;
 select pg_temp.as_user('00000000-0000-0000-0000-0000000056c3', 'bka-clara@example.com');
 do $$ begin

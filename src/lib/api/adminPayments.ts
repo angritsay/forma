@@ -276,7 +276,8 @@ export async function bindPayment(
 /**
  * Book a paid session that matched no hold (RPC `admin_book_from_payment`, 0056): the coach and
  * the start the admin agreed with the client. The length is the payment's own when the webhook
- * knew it; `option` is used only when it did not. Answers the new booking's id.
+ * knew it (an `option` that contradicts it is refused, `option_mismatch`), else `option`.
+ * Answers the new booking's id.
  */
 export async function bookFromPayment(
   paymentId: string,

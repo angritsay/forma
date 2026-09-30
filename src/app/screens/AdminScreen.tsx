@@ -493,7 +493,12 @@ export default function AdminScreen() {
     } catch (e) {
       const key = bookErrorKey(e);
       // What can be fixed in the sheet stays in it; the rest closes it and says why.
-      if (key === 'app.adminPayBookErrTaken' || key === 'app.adminPayBookErrTime') {
+      if (
+        key === 'app.adminPayBookErrTaken' ||
+        key === 'app.adminPayBookErrTime' ||
+        key === 'app.adminPayBookErrLength' ||
+        key === 'app.adminPayBookErrOption'
+      ) {
         setBookError(t(key));
       } else {
         setBookRow(null);

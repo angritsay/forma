@@ -223,7 +223,8 @@ grant execute on function public.admin_coach_bookings(text) to authenticated;
 --
 --   * the payment is a session payment, not applied, not dismissed, and not already a booking;
 --   * the length is the payment's own (`session_option`, written by the webhook), or `p_option`
---     when the webhook could not tell it (a lava.top key naming no option);
+--     when the webhook could not tell it (a lava.top key naming no option); a `p_option` that
+--     contradicts the recorded one is refused (`option_mismatch`), never silently swapped;
 --   * the client is the account behind the payment: the one that claimed it, else the account
 --     the paid address is linked to (0020), else the paid address itself — the address the app
 --     shows sessions to (`my_coach_bookings`);
@@ -236,7 +237,8 @@ grant execute on function public.admin_coach_bookings(text) to authenticated;
 --     channel; the payment is marked applied.
 --
 -- Answers the booking's id. Errors: not_admin (42501) · not_found · not_session ·
--- already_applied · invalid_option · coach_unavailable · invalid_times · slot_taken.
+-- already_applied · option_mismatch · invalid_option · coach_unavailable · invalid_times ·
+-- slot_taken.
 -- -----------------------------------------------------------------------------
 create or replace function public.admin_book_from_payment(
   p_payment_id uuid,
@@ -275,7 +277,14 @@ begin
     raise exception 'already_applied' using errcode = 'P0001';
   end if;
 
-  v_option := coalesce(v_payment.session_option, nullif(btrim(coalesce(p_option, '')), ''));
+  -- The admin's length is a guess from the amount; the webhook's, when it knew one, is what was
+  -- paid for. A different one is refused rather than quietly replaced.
+  v_option := nullif(btrim(coalesce(p_option, '')), '');
+  if v_payment.session_option is not null and v_option is not null
+     and v_option is distinct from v_payment.session_option then
+    raise exception 'option_mismatch' using errcode = 'P0001';
+  end if;
+  v_option := coalesce(v_payment.session_option, v_option);
   if v_option is null or v_option not in ('half', 'hour') then
     raise exception 'invalid_option' using errcode = 'P0001';
   end if;
@@ -342,8 +351,9 @@ comment on function public.admin_book_from_payment(uuid, text, timestamptz, text
 -- 5. The 1-hour reminder lives 90 minutes, not 55.
 --
 -- The sender runs on a schedule, and 55 minutes left no room for one late run: the reminder
--- expired before anybody sent it. 90 keeps it alive past the start by half an hour — «через час»
--- read at the start is still the link to the room, which is what the reminder is for.
+-- expired before anybody sent it. 90 keeps it alive past the start by half an hour: the link to
+-- the room is what the reminder is for. A late one does not say «через час» — `telegram-notify`
+-- picks «скоро» or «уже началась» by its own clock.
 -- -----------------------------------------------------------------------------
 create or replace function public.booking_queue_reminders(p_row public.coach_bookings)
 returns void
@@ -388,11 +398,12 @@ update public.telegram_outbox
 -- -----------------------------------------------------------------------------
 -- 6. The owner's channel: one «Занятие оплачено» per paid session.
 --
--- The text of 0055 §12 with one change. A booking that becomes active with a payment (the webhook
--- confirmed a hold, a claim did, or the admin booked a payment) carries the money in its own
--- message, and the payment's `session_paid` line — queued by the payment's insert a moment
--- earlier — is taken out of the queue while it is still pending, as 0051 does for a referral.
--- A payment that confirms nothing keeps its line, next to `session_unmatched`.
+-- The text of 0055 §12 with one change. A booking that becomes active with a payment whose
+-- `session_paid` line — queued by the payment's insert a moment earlier — is still pending (the
+-- webhook confirmed a hold) takes that line out of the queue, as 0051 does for a referral, and
+-- carries the money in its own message. A line already sent (a claim or the admin's booking,
+-- later) stays said, and the booking is then the plain «Выбрали время», not a second «Занятие
+-- оплачено». A payment that confirms nothing keeps its line, next to `session_unmatched`.
 -- -----------------------------------------------------------------------------
 create or replace function public.coach_bookings_notify_admin()
 returns trigger
@@ -405,6 +416,7 @@ declare
   v_was_active boolean := tg_op = 'UPDATE' and old.status = 'active';
   v_params     jsonb;
   v_payment    public.payments%rowtype;
+  v_taken      int := 0;
 begin
   begin
     if new.status = 'active' and not v_was_active then
@@ -425,18 +437,24 @@ begin
         'coach', coalesce((select c.name from public.coaches c where c.id = new.coach_id), '')
       );
 
+      -- Only when the payment's own line was still waiting: one sent already (a claim days
+      -- later, the admin booking an unmatched payment) has said «Занятие оплачено», and the
+      -- booking is then plain «Выбрали время».
       if v_kind = 'session_booked' and new.payment_id is not null then
         select * into v_payment from public.payments where id = new.payment_id;
         if found then
-          v_params := v_params || jsonb_build_object(
-            'paymentId', v_payment.id::text,
-            'amount', coalesce(v_payment.amount::text, ''),
-            'currency', coalesce(v_payment.currency, ''),
-            'provider', coalesce(v_payment.provider, ''),
-            'ref', coalesce(v_payment.provider_ref, '')
-          );
           delete from public.admin_outbox
            where dedupe_key = 'session_paid:' || v_payment.id::text and status = 'pending';
+          get diagnostics v_taken = row_count;
+          if v_taken > 0 then
+            v_params := v_params || jsonb_build_object(
+              'paymentId', v_payment.id::text,
+              'amount', coalesce(v_payment.amount::text, ''),
+              'currency', coalesce(v_payment.currency, ''),
+              'provider', coalesce(v_payment.provider, ''),
+              'ref', coalesce(v_payment.provider_ref, '')
+            );
+          end if;
         end if;
       end if;
 

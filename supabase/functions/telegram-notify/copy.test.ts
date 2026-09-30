@@ -576,6 +576,20 @@ describe('coach sessions (0054)', () => {
     expect(other?.text).toContain('<b>Your session with the coach is coming up</b>');
   });
 
+  /* 0056: the hour-before reminder lives 90 minutes, so a late run may send it close to or after
+     the start; the headline must not say «через час» then. */
+  it('does not say «in an hour» when the sender is late', () => {
+    const start = Date.parse(base.starts_at);
+    const params = { ...base, hours_before: 1 };
+    const on = messageFor({ kind: 'session_reminder', params }, 'ru', start - 60 * 60_000);
+    expect(on?.text).toContain('<b>Через час встреча с тренером</b>');
+    const late = messageFor({ kind: 'session_reminder', params }, 'ru', start - 20 * 60_000);
+    expect(late?.text).toContain('<b>Скоро встреча с тренером</b>');
+    const after = messageFor({ kind: 'session_reminder', params }, 'en', start + 10 * 60_000);
+    expect(after?.text).toContain('<b>Your session with the coach has started</b>');
+    expect(after?.text).toContain('href=');
+  });
+
   it('names the new time and the old one when a session moves', () => {
     const m = messageFor({
       kind: 'session_moved',

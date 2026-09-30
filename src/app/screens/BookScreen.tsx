@@ -1039,12 +1039,13 @@ function OutcomeList({
  *
  * 1. The times are stored in UTC and shown in the **device's** zone. `booking.timezone` is the zone
  *    the booking was made in — the coach's for one made here (0055) — and it is only the fallback
- *    for a browser that will not name its own. Somebody who booked from a laptop abroad and opens the Mini App at home
- *    wants their kitchen clock, not the one in the hotel.
+ *    for a browser that will not name its own. Somebody who booked from a laptop abroad and opens
+ *    the Mini App at home wants their kitchen clock, not the one in the hotel.
  * 2. **The join link is often absent.** A historical Google Calendar booking (read in by a sync
  *    that is gone since the cutover) may carry none, a session booked here before the coach's room
- *    was set carries none, and a session with a physical location carries an address instead. Every control here is drawn from the
- *    field that would make it work, so a missing field removes the control rather than disabling it.
+ *    was set carries none, and a session with a physical location carries an address instead.
+ *    Every control here is drawn from the field that would make it work, so a missing field
+ *    removes the control rather than disabling it.
  * 3. **Nothing is booked, for almost everybody**, and that is not an empty state to design — the
  *    card simply is not rendered. `BookScreen` holds that: `booking === null` draws nothing.
  */

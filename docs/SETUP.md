@@ -1893,10 +1893,12 @@ database half:
   any future time that overlaps no session or live hold, for the account behind the payment, with
   the room link, the client's confirmation and reminders; the payment is marked applied.
 - **Messages.** The client's bot gets `session_confirmed`, reminders a day and an hour before (the
-  hour-before one lives 90 minutes, so one late run of the sender does not drop it — 0056),
-  `session_moved` and `session_cancelled`; reminders for an old time are dropped on a move. The
-  owner's channel says «Занятие оплачено» once for a paid hold: the booking's message carries the
-  payment, and the payment's own line is taken out of the queue.
+  hour-before one lives 90 minutes, so one late run of the sender does not drop it — 0056; sent
+  late, it says «скоро» or «уже началась» rather than «через час»), `session_moved` and
+  `session_cancelled`; reminders for an old time are dropped on a move. The owner's channel says
+  «Занятие оплачено» once for a paid hold: while the payment's own line is still queued, it is
+  taken out and the booking's message carries the payment. A booking made after that line went
+  out (a claim, the admin's «Записать на время») is the plain «Выбрали время».
 
 **The client's side** is the Тренер tab (§7.3, §7.7): coach, length, a day in the next two weeks,
 a free time, «Забронировать и оплатить». While the hold lives the card shows «Слот держится до
@@ -1922,7 +1924,8 @@ to it. The admin's side is **Admin → Записи** (§7.7).
 Google rows from before the cutover stay valid as history and still block Sergey's time (§7.7).
 
 **0056** (`0056_booking_admin.sql`) needs no order of its own beyond 0055: apply it, then deploy
-`deploy-notify` (the owner's channel prints the payment on «Занятие оплачено») and the site.
+`deploy-notify` (the owner's channel prints the payment on «Занятие оплачено», and a late
+hour-before reminder picks its headline by the clock) and the site.
 
 ## 7.10 What is still only in Russian
 

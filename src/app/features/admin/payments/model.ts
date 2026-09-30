@@ -119,6 +119,8 @@ export function bookErrorKey(e: unknown): TKey | null {
       return 'app.adminPayBookErrApplied';
     case 'invalid_option':
       return 'app.adminPayBookErrOption';
+    case 'option_mismatch':
+      return 'app.adminPayBookErrLength';
     case 'coach_unavailable':
       return 'app.bookCoachUnavailable';
     default:

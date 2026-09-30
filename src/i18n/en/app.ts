@@ -2004,6 +2004,7 @@ export const app = {
   adminPayBookErrTime: 'The time has to be in the future.',
   adminPayBookErrApplied: 'This payment is already booked or handled.',
   adminPayBookErrOption: 'Pick a length.',
+  adminPayBookErrLength: 'This payment is for the other length — switch it.',
   bookingsTabHolds: 'Held',
   bookingsStatusHold: 'Held',
   bookingsHoldUntil: 'Held until {time} MSK — waiting for the payment',

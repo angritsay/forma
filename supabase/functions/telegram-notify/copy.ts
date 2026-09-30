@@ -154,6 +154,7 @@ interface Copy {
   sessionReminderDay: string;
   sessionReminderHour: string;
   sessionReminderSoon: string;
+  sessionReminderStarted: string;
   sessionMoved: string;
   sessionMovedFrom: string;
   sessionCancelled: string;
@@ -234,6 +235,7 @@ const COPY: Record<Locale, Copy> = {
     sessionReminderDay: 'Завтра встреча с тренером',
     sessionReminderHour: 'Через час встреча с тренером',
     sessionReminderSoon: 'Скоро встреча с тренером',
+    sessionReminderStarted: 'Встреча с тренером уже началась',
     sessionMoved: 'Встреча перенесена',
     sessionMovedFrom: 'Было: {when}',
     sessionCancelled: 'Встреча отменена',
@@ -288,6 +290,7 @@ const COPY: Record<Locale, Copy> = {
     sessionReminderDay: 'Your session with the coach is tomorrow',
     sessionReminderHour: 'Your session with the coach is in an hour',
     sessionReminderSoon: 'Your session with the coach is coming up',
+    sessionReminderStarted: 'Your session with the coach has started',
     sessionMoved: 'Your session has been moved',
     sessionMovedFrom: 'Was: {when}',
     sessionCancelled: 'Your session has been cancelled',
@@ -329,7 +332,11 @@ export function accessWarningEnd(row: OutboxRow): number | null {
  * `null`, а не исключение: неизвестный вид — это строка из будущей миграции, доехавшая до старой
  * функции, и ронять на ней всю рассылку нельзя.
  */
-export function messageFor(row: OutboxRow, locale: Locale = DEFAULT_LOCALE): Message | null {
+export function messageFor(
+  row: OutboxRow,
+  locale: Locale = DEFAULT_LOCALE,
+  now?: number,
+): Message | null {
   const params = row.params ?? {};
   const c = COPY[locale] ?? COPY[DEFAULT_LOCALE];
 
@@ -462,7 +469,7 @@ export function messageFor(row: OutboxRow, locale: Locale = DEFAULT_LOCALE): Mes
     case 'session_reminder':
     case 'session_moved':
     case 'session_cancelled':
-      return sessionMessage(row.kind, params, c, locale);
+      return sessionMessage(row.kind, params, c, locale, now);
 
     default:
       return null;
@@ -594,6 +601,9 @@ function zoneOf(x: unknown): string {
   }
 }
 
+/** Under this much to go, the hour-before reminder says «скоро», not «через час». */
+const LATE_HOUR_REMINDER_MS = 45 * 60_000;
+
 /** A timestamp from the queue, or `null` when it is missing or unreadable. */
 function instant(x: unknown): Date | null {
   if (typeof x !== 'string' || !x.trim()) return null;
@@ -665,6 +675,11 @@ function joinLink(x: unknown, c: Copy): string {
  *   * `from_starts_at` — `session_moved` only: the old time.
  *   * `hours_before` — `session_reminder` only: 24 or 1, which picks the headline.
  *
+ * `now` is the sender's clock. The hour-before reminder lives 90 minutes (0056), so a late run can
+ * send it with far less than an hour to go, or after the start: then «через час» would be false,
+ * and the headline says «скоро» or «уже началась» instead. Without `now` the headline goes by
+ * `hours_before` alone.
+ *
  * Layout: a bold headline, then «Сергей · 30 минут · 2 октября, 14:30 МСК», then the link and,
  * for a confirmation or a move, the 24-hour rule. The coach's name is a person's own words and is
  * escaped like any other.
@@ -674,6 +689,7 @@ function sessionMessage(
   params: Record<string, unknown>,
   c: Copy,
   locale: Locale,
+  now?: number,
 ): Message | null {
   const tz = zoneOf(params.tz);
   const when = whenOf(params.starts_at, tz, c, locale);
@@ -699,12 +715,16 @@ function sessionMessage(
       break;
     case 'session_reminder': {
       const hours = count(params.hours_before);
+      const starts = instant(params.starts_at)?.getTime() ?? null;
+      const left = now !== undefined && starts !== null ? starts - now : null;
       title =
         hours === 24
           ? c.sessionReminderDay
-          : hours === 1
-            ? c.sessionReminderHour
-            : c.sessionReminderSoon;
+          : left !== null && left <= 0
+            ? c.sessionReminderStarted
+            : hours === 1 && (left === null || left > LATE_HOUR_REMINDER_MS)
+              ? c.sessionReminderHour
+              : c.sessionReminderSoon;
       lines.push(details);
       if (link) lines.push(link);
       break;

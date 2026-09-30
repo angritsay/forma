@@ -131,6 +131,9 @@ describe('a paid session with no time', () => {
     expect(bookErrorKey(new AppError('validation', 'invalid_option'))).toBe(
       'app.adminPayBookErrOption',
     );
+    expect(bookErrorKey(new AppError('validation', 'option_mismatch'))).toBe(
+      'app.adminPayBookErrLength',
+    );
     expect(bookErrorKey(new AppError('network', 'fetch failed'))).toBeNull();
   });
 });

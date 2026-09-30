@@ -5,9 +5,10 @@
  *
  * The client is the account behind the payment (the one that claimed it, else the one the paid
  * address belongs to), decided by the server; the sheet only names who that will likely be. The
- * length starts where the amount points (`sessionOptionOf`), and the server keeps the length the
- * webhook recorded when it recorded one. `admin_book_from_payment` refuses a time on top of a
- * session or a live hold, and the refusal comes back under the fields.
+ * length starts where the amount points (`sessionOptionOf`); when the webhook recorded a length
+ * and the switch says the other one, the server refuses (`option_mismatch`) rather than book the
+ * wrong one. `admin_book_from_payment` also refuses a time on top of a session or a live hold, and
+ * each refusal comes back under the fields.
  */
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/Button';
