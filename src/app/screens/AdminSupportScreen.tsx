@@ -25,7 +25,6 @@ import {
   type SupportState,
   type SupportTab,
 } from '@/lib/api/adminInbox';
-import { BootScreen } from '@/app/components/BootScreen';
 import { LoadingBlock } from '@/app/components/LoadingBlock';
 import { TopBar } from '@/app/components/TopBar';
 import { useT } from '@/app/hooks/useT';
@@ -39,6 +38,8 @@ import {
   replyErrorKey,
   replyRoute,
 } from '@/app/features/admin/inbox';
+import { AdminBoot } from '@/app/features/admin/AdminBoot';
+import { AdminLoadError } from '@/app/features/admin/AdminLoadError';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
 import { checkSupportText, SUPPORT_MAX, supportLength } from '@/app/features/support/model';
 
@@ -54,40 +55,46 @@ export default function AdminSupportScreen() {
   const [items, setItems] = useState<SupportItem[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  /** A failed read is shown as one, with a retry — not as «Новых обращений нет». */
+  const [loadError, setLoadError] = useState<unknown>(null);
   const [more, setMore] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [replyTo, setReplyTo] = useState<SupportItem | null>(null);
   const [closing, setClosing] = useState<SupportItem | null>(null);
   // Ignores an answer to a tab she has already left.
   const request = useRef(0);
+  /** The tab the rows on screen belong to. */
+  const shown = useRef<SupportTab | null>(null);
 
-  const load = useCallback(
-    (which: SupportTab) => {
-      const id = ++request.current;
-      setLoading(true);
-      listSupport(which, PAGE, 0)
-        .then((page) => {
-          if (id !== request.current) return;
-          setItems(page.items);
-          setTotal(page.total);
-        })
-        .catch((e: unknown) => {
-          if (id === request.current) {
-            toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.inboxLoadError') });
-          }
-        })
-        .finally(() => {
-          if (id === request.current) setLoading(false);
-        });
-    },
-    [toast, tr],
-  );
+  const load = useCallback((which: SupportTab) => {
+    const id = ++request.current;
+    setLoading(true);
+    setLoadError(null);
+    // Another tab's rows are never shown under this one, not even while it loads.
+    if (shown.current !== which) {
+      shown.current = which;
+      setItems([]);
+      setTotal(0);
+    }
+    listSupport(which, PAGE, 0)
+      .then((page) => {
+        if (id !== request.current) return;
+        setItems(page.items);
+        setTotal(page.total);
+      })
+      .catch((e: unknown) => {
+        if (id === request.current) setLoadError(e);
+      })
+      .finally(() => {
+        if (id === request.current) setLoading(false);
+      });
+  }, []);
 
   useEffect(() => {
     if (admin) load(tab);
   }, [admin, tab, load]);
 
-  if (admin === null) return <BootScreen />;
+  if (admin === null) return <AdminBoot />;
   if (admin === false) return <Navigate to="/" replace />;
 
   const loadMore = async () => {
@@ -148,6 +155,8 @@ export default function AdminSupportScreen() {
         />
         {loading ? (
           <LoadingBlock />
+        ) : loadError !== null ? (
+          <AdminLoadError error={loadError} onRetry={() => load(tab)} title="app.inboxLoadError" />
         ) : items.length === 0 ? (
           tab === 'new' ? (
             <EmptyState title={t('app.inboxEmptyNew')} description={t('app.inboxEmptyNewBody')} />
@@ -169,7 +178,7 @@ export default function AdminSupportScreen() {
             ))}
           </ul>
         )}
-        {!loading && items.length < total ? (
+        {!loading && loadError === null && items.length < total ? (
           <Button variant="secondary" fullWidth loading={more} onClick={() => void loadMore()}>
             {t('app.inboxMore')}
           </Button>

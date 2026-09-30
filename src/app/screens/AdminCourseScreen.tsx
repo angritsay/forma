@@ -44,11 +44,11 @@ import type {
 import { isCompiledCourse } from '@/content/catalogue';
 import { draftToCourse } from '@/lib/courses/draft';
 import type { CustomWorkoutStructure } from '@/lib/training/customWorkout';
-import { BootScreen } from '@/app/components/BootScreen';
 import { LoadingBlock } from '@/app/components/LoadingBlock';
 import { TopBar } from '@/app/components/TopBar';
 import { adminErrorTitle } from '@/app/features/admin/adminError';
 import { useT } from '@/app/hooks/useT';
+import { AdminBoot } from '@/app/features/admin/AdminBoot';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
 import { LangTabs } from '@/app/features/admin/LangTabs';
 import { CompiledCourseNotice } from '@/app/features/admin/courses/CompiledCourseNotice';
@@ -57,7 +57,9 @@ import { DayEditor } from '@/app/features/admin/courses/DayEditor';
 import { DayList } from '@/app/features/admin/courses/DayList';
 import { nextDaySlot, nodeIdFor } from '@/app/features/admin/courses/ids';
 import { canPublish } from '@/app/features/admin/courses/publishRule';
+import { combineSaveStates, SaveStatus } from '@/app/features/admin/courses/SaveStatus';
 import { useAutosave } from '@/app/features/admin/courses/useAutosave';
+import { AdminLoadError } from '@/app/features/admin/AdminLoadError';
 import { WorkoutEditor } from '@/app/features/admin/workoutBuilder/WorkoutEditor';
 
 type Tab = 'meta' | 'days' | 'publish';
@@ -78,6 +80,8 @@ export default function AdminCourseScreen() {
   const [confirm, setConfirm] = useState<Confirm | null>(null);
   const [bundle, setBundle] = useState<AdminCourseBundle | null>(null);
   const [loading, setLoading] = useState(true);
+  /** The last load's failure; the screen shows it with a retry instead of loading forever. */
+  const [loadError, setLoadError] = useState<unknown>(null);
   const [tab, setTab] = useState<Tab>('meta');
   const [openDayId, setOpenDayId] = useState<string | null>(null);
   const [workoutFor, setWorkoutFor] = useState<WorkoutTarget>(null);
@@ -86,11 +90,12 @@ export default function AdminCourseScreen() {
 
   const load = useCallback(() => {
     setLoading(true);
+    setLoadError(null);
     getAdminCourse(id)
       .then(setBundle)
-      .catch(() => toast.show({ kind: 'error', title: t('app.courseLoadError') }))
+      .catch((e: unknown) => setLoadError(e))
       .finally(() => setLoading(false));
-  }, [id, toast, t]);
+  }, [id]);
 
   useEffect(() => {
     if (admin) load();
@@ -133,13 +138,26 @@ export default function AdminCourseScreen() {
     );
   }, [bundle]);
 
-  if (admin === null) return <BootScreen />;
+  if (admin === null) return <AdminBoot />;
   if (admin === false) return <Navigate to="/" replace />;
 
   if (loading || !bundle) {
     return (
       <Screen header={<TopBar back="/admin/courses" />}>
-        <LoadingBlock />
+        {!loading && loadError !== null ? (
+          <AdminLoadError
+            error={loadError}
+            onRetry={load}
+            title="app.courseLoadError"
+            notFound={{
+              title: 'app.courseNotFoundTitle',
+              body: 'app.courseNotFoundBody',
+              back: '/admin/courses',
+            }}
+          />
+        ) : (
+          <LoadingBlock />
+        )}
       </Screen>
     );
   }
@@ -241,9 +259,18 @@ export default function AdminCourseScreen() {
   };
 
   const publish = async () => {
-    courseSave.flush();
-    daySave.flush();
     setPublishing(true);
+    /*
+     * Publish what is saved, and only once it is: the last edits are sent and waited for, and a
+     * failed one stops the publish — otherwise the course would go out without them while the
+     * screen showed them as done.
+     */
+    const [courseSaved, daySaved] = await Promise.all([courseSave.flush(), daySave.flush()]);
+    if (!courseSaved || !daySaved) {
+      toast.show({ kind: 'error', title: t('app.courseSaveBeforePublish') });
+      setPublishing(false);
+      return;
+    }
     try {
       await publishAdminCourse(course.id);
       setBundle((b) => (b ? { ...b, course: { ...b.course, status: 'published' } } : b));
@@ -363,6 +390,15 @@ export default function AdminCourseScreen() {
         />
       </div>
 
+      {/* Whether the screen is what the database has — the editor has no Save button. */}
+      <SaveStatus
+        state={combineSaveStates(courseSave.state, daySave.state)}
+        onRetry={() => {
+          courseSave.retry();
+          daySave.retry();
+        }}
+      />
+
       {/* On every tab, not only «Публикация»: the edits the notice is about happen on the other two. */}
       <CompiledCourseNotice slugId={course.slugId} />
 
@@ -411,7 +447,7 @@ export default function AdminCourseScreen() {
                 workouts={workouts}
                 openId={openDay?.id}
                 onOpen={(d: AdminCourseDayRow) => {
-                  daySave.flush();
+                  void daySave.flush();
                   setOpenDayId(d.id);
                 }}
               />
@@ -426,7 +462,7 @@ export default function AdminCourseScreen() {
                     className="-ml-3"
                     icon={<Glyph size={14}>←</Glyph>}
                     onClick={() => {
-                      daySave.flush();
+                      void daySave.flush();
                       setOpenDayId(null);
                     }}
                   >

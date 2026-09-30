@@ -2082,6 +2082,43 @@ export const app = {
   bookingsOutsideTitle: 'These bookings end up outside working hours',
   bookingsOutsideBody:
     'The schedule does not cancel them — move or cancel them under «Bookings» if the coach is not working then.',
+  // Admin failures (0059): what did not load or save, and what to do about it.
+  adminLoadErrorTitle: 'Could not load',
+  adminLoadErrorBody: 'Nothing is lost — the screen just did not get the data. Try again.',
+  adminCheckFailedTitle: 'Could not check your admin access',
+  adminCheckFailedBody: 'This is a connection problem, not a refusal. Try again.',
+  adminNotFoundBack: 'Back to the list',
+  courseNotFoundTitle: 'Course not found',
+  courseNotFoundBody: 'It may have been deleted, or the link is off. Go back to the course list.',
+  mAdminNotFoundTitle: 'Not found',
+  mAdminNotFoundBody: 'It may have been deleted, or the link is off. Go back to the list.',
+  courseSaving: 'Saving…',
+  courseSaved: 'Saved',
+  courseSaveFailed: 'Not saved. Your edits are still here — try saving again.',
+  courseSaveBeforePublish:
+    'The latest edits did not save, so the course was not published. Save again, then publish.',
+  bookingsCoachesError: 'Could not load the coaches.',
+  bookingsScheduleLoadError: 'Could not load the schedule',
+  bookingsScheduleLoadErrorBody:
+    'The editor stays closed so an empty week is not saved over the real one. Try again.',
+  bookingsWeekEmptyTitle: 'Save a week with no hours?',
+  bookingsWeekEmptyBody:
+    'The coach will have no working hours, and nobody can book until you add hours or an exception. Sessions already booked stay.',
+  bookingsWeekEmptyConfirm: 'Save with no hours',
+  bookingsWeekStale:
+    'The week was changed in another window. Load it again — the edits on this screen will be lost.',
+  bookingsWeekReload: 'Load again',
+  bookingsLeaveBody: 'Your changes to the weekly hours will be lost.',
+  bookingsExceptionRemoveTitle: 'Delete this exception?',
+  bookingsExceptionRemoveBody: '{date}: {what}. That day goes back to the weekly hours.',
+  bookingsRoomClearTitle: 'Remove the room link?',
+  bookingsRoomClearBody:
+    'Until you add a new one, people who pay get their booking without a room link.',
+  bookingsRoomClearConfirm: 'Remove the link',
+  bookingsTelegramBlocked: 'Blocked the bot — booking messages will not arrive',
+  personTelegramBlocked: 'Bot blocked',
+  mediaRemovedKept:
+    'Removed from the field. The file itself stays in storage — a new upload here replaces it.',
   bookPaymentChecking: 'Checking the payment…',
   bookPaymentCheckingNote:
     'The time to pay ran out while the payment page was open. If you have paid, the session will show up here by itself — no need to pick a time again.',

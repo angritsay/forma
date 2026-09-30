@@ -38,13 +38,13 @@ import { formatDate, formatNumber, type TKey } from '@/i18n/index';
 import { getAdminOverview, listFunnel, listProgress } from '@/lib/api/admin';
 import type { AdminOverview, FunnelWeek, ProgressRow } from '@/lib/api/types';
 import { toLocalDateIso } from '@/lib/util/dates';
-import { BootScreen } from '@/app/components/BootScreen';
 import { LoadingBlock } from '@/app/components/LoadingBlock';
 import { TopBar } from '@/app/components/TopBar';
 import { useT } from '@/app/hooks/useT';
 import { SEARCH_DEBOUNCE_MS } from '@/app/features/admin/model';
 import { adminHref } from '@/app/features/admin/payments/model';
 import { useDebounced } from '@/app/features/admin/useDebounced';
+import { AdminBoot } from '@/app/features/admin/AdminBoot';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
 import { personPath } from '@/app/features/admin/person/path';
 import {
@@ -159,7 +159,7 @@ export default function AdminStatsScreen() {
     };
   }, [admin, search]);
 
-  if (admin === null) return <BootScreen />;
+  if (admin === null) return <AdminBoot />;
   if (admin === false) return <Navigate to="/" replace />;
 
   const closed = closedWeeks(weeks, today);

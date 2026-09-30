@@ -19,11 +19,12 @@ import { useToast } from '@/components/ui/Toast';
 import { createAdminCourse, listAdminCourses } from '@/lib/api/courseBuilder';
 import type { AdminCourseRow } from '@/lib/api/types';
 import { courseTileVars } from '@/lib/ui/tile';
-import { BootScreen } from '@/app/components/BootScreen';
 import { LoadingBlock } from '@/app/components/LoadingBlock';
 import { TopBar } from '@/app/components/TopBar';
 import { adminErrorTitle } from '@/app/features/admin/adminError';
 import { useT } from '@/app/hooks/useT';
+import { AdminBoot } from '@/app/features/admin/AdminBoot';
+import { AdminLoadError } from '@/app/features/admin/AdminLoadError';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
 import { COURSE_ID_RE } from '@/app/features/admin/courses/ids';
 
@@ -36,23 +37,26 @@ export default function AdminCoursesScreen() {
 
   const [rows, setRows] = useState<AdminCourseRow[]>([]);
   const [loading, setLoading] = useState(true);
+  /** A failed read is said as one, not as «no courses yet». */
+  const [loadError, setLoadError] = useState<unknown>(null);
   const [creating, setCreating] = useState(false);
   const [newId, setNewId] = useState('');
   const [busy, setBusy] = useState(false);
 
   const refresh = useCallback(() => {
     setLoading(true);
+    setLoadError(null);
     listAdminCourses()
       .then(setRows)
-      .catch(() => toast.show({ kind: 'error', title: t('app.courseLoadError') }))
+      .catch((e: unknown) => setLoadError(e))
       .finally(() => setLoading(false));
-  }, [toast, t]);
+  }, []);
 
   useEffect(() => {
     if (admin) refresh();
   }, [admin, refresh]);
 
-  if (admin === null) return <BootScreen />;
+  if (admin === null) return <AdminBoot />;
   if (admin === false) return <Navigate to="/" replace />;
 
   const idError = newId !== '' && !COURSE_ID_RE.test(newId) ? t('app.courseIdInvalid') : undefined;
@@ -88,6 +92,8 @@ export default function AdminCoursesScreen() {
     >
       {loading ? (
         <LoadingBlock />
+      ) : loadError !== null ? (
+        <AdminLoadError error={loadError} onRetry={refresh} title="app.courseLoadError" />
       ) : rows.length === 0 ? (
         <EmptyState title={t('app.courseEmptyTitle')} description={t('app.courseEmptyBody')} />
       ) : (

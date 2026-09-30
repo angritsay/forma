@@ -50,6 +50,12 @@ export interface CoachAvailability {
   rules: WeeklyRule[];
   /** Today's and later, soonest first. */
   exceptions: CoachException[];
+  /**
+   * The week's version (`coaches.availability_updated_at`, 0059), sent back with the save so a
+   * week changed elsewhere since it was read is refused (`stale_week`) rather than overwritten.
+   * `null` when it could not be read (no 0059 yet, or the demo): the save then goes unchecked.
+   */
+  version?: string | null;
 }
 
 export interface CoachPatch {
@@ -204,7 +210,7 @@ export async function getAvailability(coach: string, today: string): Promise<Coa
   assertLocalDate(today, 'date');
   if (isDemo()) return (await demo()).getAvailability(coach, today);
   return guard(async () => {
-    const [rules, exceptions] = await Promise.all([
+    const [rules, exceptions, version] = await Promise.all([
       supabase()
         .from('coach_availability')
         .select('weekday, start_time, end_time')
@@ -218,8 +224,15 @@ export async function getAvailability(coach: string, today: string): Promise<Coa
         .gte('date', today)
         .order('date')
         .order('start_time', { nullsFirst: true }),
+      supabase()
+        .from('coaches')
+        .select('availability_updated_at')
+        .eq('id', coach)
+        .maybeSingle<{ availability_updated_at: string | null }>(),
     ]);
     return {
+      // Best effort: a database without 0059 has no version, and the week saves as before.
+      version: version.error ? null : (version.data?.availability_updated_at ?? null),
       rules: (unwrapMaybe<DbRule[]>(rules) ?? [])
         .map(ruleFromDb)
         .filter((r): r is WeeklyRule => r !== null),
@@ -228,12 +241,24 @@ export async function getAvailability(coach: string, today: string): Promise<Coa
   });
 }
 
-/** Replace the coach's whole week (`admin_set_availability`). */
-export async function setWeeklyRules(coach: string, rules: readonly WeeklyRule[]): Promise<void> {
+/**
+ * Replace the coach's whole week (`admin_set_availability`). With `expected` — the version the
+ * editor read — a week changed since is refused with `stale_week` (0059).
+ */
+export async function setWeeklyRules(
+  coach: string,
+  rules: readonly WeeklyRule[],
+  expected?: string | null,
+): Promise<void> {
   if (isDemo()) return (await demo()).setWeeklyRules(coach, rules);
   return guard(async () => {
     unwrapMaybe<number>(
-      await supabase().rpc('admin_set_availability', { p_coach: coach, p_rules: rules }),
+      await supabase().rpc(
+        'admin_set_availability',
+        expected
+          ? { p_coach: coach, p_rules: rules, p_expected: expected }
+          : { p_coach: coach, p_rules: rules },
+      ),
     );
   });
 }

@@ -36,6 +36,7 @@ import { formatDate, formatNumber, type TKey } from '@/i18n/index';
 import { addPurchase, setSubscription } from '@/lib/api/admin';
 import { endSubscription, getAdminPerson, type AdminPerson } from '@/lib/api/adminPerson';
 import { assignCustomWorkout } from '@/lib/api/customWorkouts';
+import { listTelegramBlocked } from '@/lib/api/telegramBlocked';
 import { isAppError } from '@/lib/api/errors';
 import { updateMarathonMember } from '@/lib/api/marathonAdmin';
 import type { CustomWorkoutSummary, SubscriptionPlan } from '@/lib/api/types';
@@ -49,6 +50,7 @@ import { adminErrorTitle } from '@/app/features/admin/adminError';
 import { WorkoutPickerSheet } from '@/app/features/admin/courses/WorkoutPickerSheet';
 import { courseName } from '@/app/features/admin/model';
 import { STATUS_LABEL } from '@/app/features/admin/PurchaseList';
+import { AdminBoot } from '@/app/features/admin/AdminBoot';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
 import {
   activeClubMemberships,
@@ -129,6 +131,8 @@ export default function AdminPersonScreen() {
   const [open, setOpen] = useState<Open>(null);
   const [busy, setBusy] = useState(false);
   const [sheetError, setSheetError] = useState<string | null>(null);
+  /** The person blocked the bot (0059): «ответим в бота» is not true for them. */
+  const [botBlocked, setBotBlocked] = useState(false);
 
   useEffect(() => {
     if (admin !== true || !email) return;
@@ -154,7 +158,25 @@ export default function AdminPersonScreen() {
   useEffect(() => {
     setPerson(null);
     setStatus('loading');
+    setBotBlocked(false);
   }, [email]);
+
+  // Best effort, after the record: without it the page is the same, minus one warning.
+  const linked = person?.profile?.telegramLinked === true;
+  useEffect(() => {
+    if (admin !== true || !email || !linked) return;
+    let alive = true;
+    listTelegramBlocked([email])
+      .then((set) => {
+        if (alive) setBotBlocked(set.has(email.toLowerCase()));
+      })
+      .catch(() => {
+        /* No warning is the old page, not a broken one. */
+      });
+    return () => {
+      alive = false;
+    };
+  }, [admin, email, linked, tick]);
 
   const reload = useCallback(() => setTick((n) => n + 1), []);
 
@@ -210,7 +232,7 @@ export default function AdminPersonScreen() {
   if (admin === null) {
     return (
       <Screen header={header}>
-        <LoadingBlock />
+        <AdminBoot inline />
       </Screen>
     );
   }
@@ -277,6 +299,9 @@ export default function AdminPersonScreen() {
                 <Pill tone="ghost">
                   {p.profile.telegramLinked ? t('app.personTelegram') : t('app.personNoTelegram')}
                 </Pill>
+                {p.profile.telegramLinked && botBlocked ? (
+                  <Pill tone="ghost">{t('app.personTelegramBlocked')}</Pill>
+                ) : null}
                 <Pill tone="ghost">{p.profile.locale.toUpperCase()}</Pill>
               </>
             ) : (

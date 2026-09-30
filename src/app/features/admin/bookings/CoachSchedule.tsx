@@ -16,10 +16,24 @@
  * sessions and, as the week is edited and exceptions added, lists the ones the hours would no
  * longer cover (`bookingsOutsideHours`) — a paid session is not stranded without anybody seeing
  * it. They are moved or cancelled in «Записи», with the client told.
+ *
+ * ## When something goes wrong (0059)
+ *
+ *   - **A failed load shows no editor.** It used to show the empty week it started with, and one
+ *     «Сохранить неделю» on top of a network error wiped the coach's real hours. Now the load is
+ *     its own state (`CoachScheduleGate`): an error and «Повторить», and no week to save.
+ *   - **A week with no hours asks first.** It is a valid week (the coach is away), and the one
+ *     that stops all booking, so it is never saved by a slip.
+ *   - **The week carries its version.** The save sends the version it read; a week changed in
+ *     another window since is refused (`stale_week`) and offered to load again, not overwritten.
+ *   - **Unsaved hours are guarded.** `onDirtyChange` tells the screen, which asks before leaving.
+ *   - **Deleting an exception and clearing the room link ask first**: both undo something that
+ *     clients depend on, with one tap.
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Modal } from '@/components/ui/Modal';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { useToast } from '@/components/ui/Toast';
 import {
@@ -46,6 +60,7 @@ import type { TKey } from '@/i18n/index';
 import { LoadingBlock } from '@/app/components/LoadingBlock';
 import { useT } from '@/app/hooks/useT';
 import { adminErrorTitle } from '@/app/features/admin/adminError';
+import { AdminLoadError } from '@/app/features/admin/AdminLoadError';
 import { dayLong, weekdayLong } from '@/app/features/coach/slotCopy';
 import { formatMoscow } from '@/app/features/admin/inbox';
 
@@ -57,7 +72,57 @@ const PROBLEM: Record<RangeProblem, TKey> = {
 
 const WEEKDAYS = [1, 2, 3, 4, 5, 6, 7] as const;
 
-export function CoachSchedule({ coach, onSaved }: { coach: AdminCoach; onSaved: () => void }) {
+/** No hours on any day: nobody can book this coach until an exception or a range is added. */
+export function weekIsEmpty(week: ReadonlyMap<number, readonly RangeDraft[]>): boolean {
+  return WEEKDAYS.every((d) => (week.get(d) ?? []).length === 0);
+}
+
+/** The week as it would be saved, as one comparable string: edited or not. */
+function weekKey(week: ReadonlyMap<number, readonly RangeDraft[]>): string {
+  return JSON.stringify(weekToRules(week));
+}
+
+export type ScheduleLoad =
+  { status: 'loading' } | { status: 'error'; error: unknown } | { status: 'ready' };
+
+/**
+ * The editor only once the week has been read. Loading is the loader; a failure is the reason and
+ * «Повторить» — never the editor over an empty week, which one tap would have saved over the
+ * coach's real hours.
+ */
+export function CoachScheduleGate({
+  load,
+  onRetry,
+  children,
+}: {
+  load: ScheduleLoad;
+  onRetry: () => void;
+  children: ReactNode;
+}) {
+  if (load.status === 'loading') return <LoadingBlock />;
+  if (load.status === 'error') {
+    return (
+      <AdminLoadError
+        error={load.error}
+        onRetry={onRetry}
+        title="app.bookingsScheduleLoadError"
+        fallback="app.bookingsScheduleLoadErrorBody"
+      />
+    );
+  }
+  return <>{children}</>;
+}
+
+export function CoachSchedule({
+  coach,
+  onSaved,
+  onDirtyChange,
+}: {
+  coach: AdminCoach;
+  onSaved: () => void;
+  /** Whether the week has edits that are not saved — the screen guards leaving on it. */
+  onDirtyChange?: (dirty: boolean) => void;
+}) {
   const tr = useT();
   const { t, locale } = tr;
   const toast = useToast();
@@ -67,8 +132,15 @@ export function CoachSchedule({ coach, onSaved }: { coach: AdminCoach; onSaved: 
    */
   const today = useMemo(() => dateIn(Date.now(), coach.timezone), [coach.timezone]);
 
-  const [loading, setLoading] = useState(true);
+  const [loadState, setLoadState] = useState<ScheduleLoad>({ status: 'loading' });
   const [week, setWeek] = useState<Map<number, RangeDraft[]>>(() => rulesToWeek([]));
+  /** The week as last read or saved, to tell an edit from what the server has. */
+  const [savedKey, setSavedKey] = useState(() => weekKey(rulesToWeek([])));
+  /** The version the week was read at (0059); sent back with the save. */
+  const [version, setVersion] = useState<string | null>(null);
+  const [stale, setStale] = useState(false);
+  const [confirmEmpty, setConfirmEmpty] = useState(false);
+  const [confirmClearRoom, setConfirmClearRoom] = useState(false);
   const [exceptions, setExceptions] = useState<CoachException[]>([]);
   const [room, setRoom] = useState(coach.roomUrl ?? '');
   const [roomError, setRoomError] = useState(false);
@@ -77,16 +149,30 @@ export function CoachSchedule({ coach, onSaved }: { coach: AdminCoach; onSaved: 
   const [sessions, setSessions] = useState<AdminBooking[]>([]);
 
   const load = useCallback(() => {
-    setLoading(true);
+    setLoadState({ status: 'loading' });
+    setStale(false);
     getAvailability(coach.id, today)
       .then((a) => {
-        setWeek(rulesToWeek(a.rules));
+        const read = rulesToWeek(a.rules);
+        setWeek(read);
+        setSavedKey(weekKey(read));
+        setVersion(a.version ?? null);
         setExceptions(a.exceptions);
+        setLoadState({ status: 'ready' });
       })
+      .catch((e: unknown) => setLoadState({ status: 'error', error: e }));
+  }, [coach.id, today]);
+
+  /*
+   * Exceptions change on their own and must not reset the week being edited: they are read again
+   * alone. A failure keeps the list as it was and says so.
+   */
+  const reloadExceptions = useCallback(() => {
+    getAvailability(coach.id, today)
+      .then((a) => setExceptions(a.exceptions))
       .catch((e: unknown) =>
         toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.bookingsLoadError') }),
-      )
-      .finally(() => setLoading(false));
+      );
   }, [coach.id, today, toast, tr]);
 
   /*
@@ -118,6 +204,7 @@ export function CoachSchedule({ coach, onSaved }: { coach: AdminCoach; onSaved: 
   }, [coach.id]);
 
   const saveRoom = async () => {
+    setConfirmClearRoom(false);
     setBusy('room');
     setRoomError(false);
     try {
@@ -142,19 +229,52 @@ export function CoachSchedule({ coach, onSaved }: { coach: AdminCoach; onSaved: 
     ? bookingsOutsideHours(sessions, weekToRules(week), exceptions, coach.timezone)
     : [];
 
+  const dirty = loadState.status === 'ready' && weekKey(week) !== savedKey;
+  useEffect(() => {
+    onDirtyChange?.(dirty);
+  }, [dirty, onDirtyChange]);
+  // Leaving the editor (another coach, the list) is not leaving with edits.
+  useEffect(() => () => onDirtyChange?.(false), [onDirtyChange]);
+
   const saveWeek = async () => {
+    setConfirmEmpty(false);
     setBusy('week');
     try {
-      await setWeeklyRules(coach.id, weekToRules(week));
+      await setWeeklyRules(coach.id, weekToRules(week), version);
+      // Read back: the new version, and the week exactly as the server now has it.
+      const a = await getAvailability(coach.id, today).catch(() => null);
+      if (a) {
+        setVersion(a.version ?? null);
+        setSavedKey(weekKey(rulesToWeek(a.rules)));
+      } else {
+        setSavedKey(weekKey(week));
+      }
       toast.show({ kind: 'success', title: t('app.bookingsWeekSaved') });
     } catch (e) {
-      toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.bookingsSaveError') });
+      if (isAppError(e) && e.message === 'stale_week') setStale(true);
+      else toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.bookingsSaveError') });
     } finally {
       setBusy(null);
     }
   };
 
-  if (loading) return <LoadingBlock />;
+  const askSaveWeek = () => {
+    if (weekIsEmpty(week)) setConfirmEmpty(true);
+    else void saveWeek();
+  };
+
+  const askSaveRoom = () => {
+    if (room.trim() === '' && coach.roomUrl) setConfirmClearRoom(true);
+    else void saveRoom();
+  };
+
+  if (loadState.status !== 'ready') {
+    return (
+      <CoachScheduleGate load={loadState} onRetry={load}>
+        {null}
+      </CoachScheduleGate>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-8">
@@ -179,7 +299,7 @@ export function CoachSchedule({ coach, onSaved }: { coach: AdminCoach; onSaved: 
           className="self-start"
           loading={busy === 'room'}
           disabled={room.trim() === (coach.roomUrl ?? '')}
-          onClick={() => void saveRoom()}
+          onClick={askSaveRoom}
         >
           {t('app.bookingsRoomSave')}
         </Button>
@@ -269,12 +389,20 @@ export function CoachSchedule({ coach, onSaved }: { coach: AdminCoach; onSaved: 
             );
           })}
         </ul>
+        {stale ? (
+          <div role="alert" className="flex flex-col items-start gap-2">
+            <p className="text-sm text-danger">{t('app.bookingsWeekStale')}</p>
+            <Button variant="secondary" size="sm" onClick={load}>
+              {t('app.bookingsWeekReload')}
+            </Button>
+          </div>
+        ) : null}
         <Button
           variant="primary"
           fullWidth
-          disabled={!weekValid}
+          disabled={!weekValid || stale}
           loading={busy === 'week'}
-          onClick={() => void saveWeek()}
+          onClick={askSaveWeek}
         >
           {t('app.bookingsWeekSave')}
         </Button>
@@ -303,7 +431,28 @@ export function CoachSchedule({ coach, onSaved }: { coach: AdminCoach; onSaved: 
         list={exceptions}
         busy={busy === 'exception'}
         setBusy={(b) => setBusy(b ? 'exception' : null)}
-        onChanged={load}
+        onChanged={reloadExceptions}
+      />
+
+      <Modal
+        open={confirmEmpty}
+        onClose={() => setConfirmEmpty(false)}
+        title={t('app.bookingsWeekEmptyTitle')}
+        description={t('app.bookingsWeekEmptyBody')}
+        confirmLabel={t('app.bookingsWeekEmptyConfirm')}
+        cancelLabel={t('common.cancel')}
+        danger
+        onConfirm={() => void saveWeek()}
+      />
+      <Modal
+        open={confirmClearRoom}
+        onClose={() => setConfirmClearRoom(false)}
+        title={t('app.bookingsRoomClearTitle')}
+        description={t('app.bookingsRoomClearBody')}
+        confirmLabel={t('app.bookingsRoomClearConfirm')}
+        cancelLabel={t('common.cancel')}
+        danger
+        onConfirm={() => void saveRoom()}
       />
     </div>
   );
@@ -333,6 +482,7 @@ function Exceptions({
   const [end, setEnd] = useState('');
   const [note, setNote] = useState('');
   const [invalid, setInvalid] = useState(false);
+  const [removing, setRemoving] = useState<CoachException | null>(null);
 
   const add = async () => {
     setBusy(true);
@@ -353,6 +503,7 @@ function Exceptions({
   };
 
   const remove = async (id: string) => {
+    setRemoving(null);
     setBusy(true);
     try {
       await deleteException(id);
@@ -389,7 +540,7 @@ function Exceptions({
                   {e.note ? ` · ${e.note}` : ''}
                 </span>
               </div>
-              <Button variant="ghost" size="sm" disabled={busy} onClick={() => void remove(e.id)}>
+              <Button variant="ghost" size="sm" disabled={busy} onClick={() => setRemoving(e)}>
                 {t('app.bookingsExceptionRemove')}
               </Button>
             </li>
@@ -457,6 +608,32 @@ function Exceptions({
           {t('app.bookingsExceptionAdd')}
         </Button>
       </div>
+
+      <Modal
+        open={removing !== null}
+        onClose={() => setRemoving(null)}
+        title={t('app.bookingsExceptionRemoveTitle')}
+        description={
+          removing
+            ? t('app.bookingsExceptionRemoveBody', {
+                date: dayLong(removing.date, locale),
+                what:
+                  (removing.kind === 'extra'
+                    ? t('app.bookingsExceptionExtra')
+                    : t('app.bookingsExceptionOff')) +
+                  ' · ' +
+                  (removing.start && removing.end
+                    ? `${removing.start}–${removing.end}`
+                    : t('app.bookingsExceptionAllDay')),
+              })
+            : undefined
+        }
+        confirmLabel={t('app.bookingsExceptionRemove')}
+        cancelLabel={t('common.cancel')}
+        danger
+        loading={busy}
+        onConfirm={() => removing && void remove(removing.id)}
+      />
     </section>
   );
 }
