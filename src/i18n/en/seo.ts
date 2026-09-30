@@ -11,7 +11,7 @@ export const seo = {
   // Static page names (sitemap registry, llms.txt)
   coursesHubTitle: 'Home CrossFit course with no equipment',
   coursesHubDescription:
-    'Home CrossFit from zero: a twenty-workout no-equipment course, a club with a task a day and the coach in Telegram. Sign in by email; the load adapts to you.',
+    'Home CrossFit from zero: a twenty-workout no-equipment course, a club with a task a day and the coach online. Sign in by email; the load adapts to you.',
   togetherTitle: 'Train together from Monday',
   togetherDescription:
     'Bring a friend along: workout 1 of Forma is free for each of you, and in the Small Steps Club you can play as a pair — one board for the two of you.',
@@ -44,7 +44,6 @@ export const seo = {
     'Video, step-by-step technique, cues and scaling options in the Forma library.',
   exerciseFacts: 'Quick facts',
   factMuscles: 'Muscles',
-  factPattern: 'Movement pattern',
   factEquipment: 'Equipment',
   factLevel: 'Level',
   factUnit: 'Measured in',
@@ -83,10 +82,10 @@ export const seo = {
   // Guides hub and clusters
   guidesHubTitle: 'Home CrossFit guides: training, technique, recovery',
   guidesHubDescription:
-    'Coach-written guides on home CrossFit: where to start, AMRAP and EMOM formats, dumbbell and kettlebell workouts, recovery and motivation. Pick a topic and read.',
+    'Coach-written guides on home CrossFit: where to start, AMRAP and EMOM formats, recovery and motivation. Pick a topic and read.',
   guidesHubH1: 'Home CrossFit guides',
   guidesHubIntro:
-    'These are the Forma coach’s guides to CrossFit-style training at home: where to start, how AMRAP and EMOM formats work, how to train with dumbbells and a kettlebell, how to recover and how to keep going. The articles follow widely accepted guidance (ACSM, WHO) and link to exercises from our library.',
+    'These are the Forma coach’s guides to CrossFit-style training at home: where to start, how AMRAP and EMOM formats work, how to recover and how to keep going. The articles follow widely accepted guidance (ACSM, WHO) and link to exercises from our library.',
   guidesHubEmpty: 'The first articles are being written — check back soon.',
   guidesAll: 'All guides',
   guideWordOne: 'guide',
@@ -182,7 +181,7 @@ export const seo = {
 
   // llms.txt / RSS / OG
   llmsIntro:
-    'Forma is home CrossFit in small steps: the no-equipment Start course, a club with one small task a day and a weekly board, and the coach on hand in Telegram. The app runs in Telegram and in the browser and adapts reps, rest and load after every session; a bought course is yours for life.',
+    'Forma is home CrossFit in small steps: the no-equipment Start course, a club with one small task a day and a weekly board, and the coach on hand online. The app runs in Telegram and in the browser and adapts reps, rest and load after every session; a bought course stays yours with no time limit.',
   llmsCourses: 'Courses',
   llmsGuides: 'Guides',
   llmsExercises: 'Exercise library',

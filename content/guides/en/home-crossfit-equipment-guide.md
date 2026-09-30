@@ -1,6 +1,6 @@
 ---
 title: 'Home CrossFit Equipment: What to Buy'
-description: 'Home CrossFit equipment: what to buy first, what to skip, which dumbbells and kettlebell to pick and what each course needs. A coach''s guide — read and decide.'
+description: 'Home CrossFit equipment: what to buy first, what to skip, which dumbbells and kettlebell to pick and what the Forma course needs. A coach''s guide.'
 h1: 'Home CrossFit equipment: what to buy first, what to buy later and what to skip'
 targetKeyword: 'home crossfit equipment what to buy'
 secondaryKeywords:
@@ -12,7 +12,7 @@ secondaryKeywords:
 cluster: equipment
 translationKey: home-gym-equipment
 publishedAt: '2026-09-02'
-updatedAt: '2026-09-29'
+updatedAt: '2026-09-30'
 faq:
   - q: 'What should I buy first for CrossFit at home?'
     a: 'A mat and a sturdy chair: they cover the first month of technique work. The first loaded implement, a kettlebell or a pair of dumbbells, is worth buying once bodyweight exercises have become easy.'
@@ -46,13 +46,13 @@ priority: 0.8
 draft: false
 ---
 
-Home CrossFit equipment: what to buy first is the question that stalls more beginners than any workout does. While you compare racks, barbells and rowing machines, a month goes by without a single session. Coaching people who train in apartments taught me the opposite lesson: the fastest progress comes from those who start with a mat and a chair and add iron once their technique is solid. This guide is an honest look at what you actually need for CrossFit at home, in what order to buy it, which weights to pick and what each Forma course requires. No brands and no "mandatory" ten-item list.
+Home CrossFit equipment: what to buy first is the question that stalls more beginners than any workout does. While you compare racks, barbells and rowing machines, a month goes by without a single session. Coaching people who train in apartments taught me the opposite lesson: the fastest progress comes from those who start with a mat and a chair and add iron once their technique is solid. This guide is an honest look at what you actually need for CrossFit at home, in what order to buy it, which weights to pick and what the Forma course requires. No brands and no "mandatory" ten-item list.
 
 ## What you will get from this guide
 
 - Four tiers of a home setup, from nothing to complete, and the order to move through them.
 - How to choose dumbbells and a kettlebell by type and weight when space and budget are limited.
-- What each course needs and how the app adapts the program to the gear you own.
+- What the Forma course needs.
 - A workout on the minimal setup, buying mistakes and the rule that tells you when to add the next item.
 
 ## Home CrossFit equipment: what to buy and in what order
@@ -86,7 +86,7 @@ The rule for the light pair: you can press it overhead cleanly 15 times in a row
 
 ### Which kettlebell to buy
 
-One bell is enough for a full course: [swings](exercise:kb_swing), [goblet squats](exercise:kb_goblet_squat), the [standing press](exercise:kb_press), the [Turkish get-up](exercise:kb_turkish_get_up) and [carries](exercise:kb_suitcase_carry). The weight guideline is the same one the Forma course uses: men with some training experience 16 kg, without it 12 kg; women 8 to 12 kg. A bell you cannot swing cleanly ten times is too heavy to start with; one that leaves your heart rate flat after twenty swings is too light.
+One bell is enough for a full course: [swings](exercise:kb_swing), [goblet squats](exercise:kb_goblet_squat), the [standing press](exercise:kb_press), the [Turkish get-up](exercise:kb_turkish_get_up) and [carries](exercise:kb_suitcase_carry). A bell you cannot swing cleanly ten times is too heavy to start with; one that leaves your heart rate flat after twenty swings is too light.
 
 Two body types: cast iron (the size grows with the weight) and competition steel (the same size at every weight). Both work at home; the handle matters more: smooth, no seam or burrs, wide enough for a two-hand grip in the swing. Rough paint or a rubber coating gets in the way when the bell has to rotate in your hand during cleans and snatches.
 
@@ -106,8 +106,6 @@ Right now Forma has one course open — [Start: home CrossFit basics](course:sta
 
 Between sessions you need no gear at all: the Small Steps Club in the app gives you one small task a day — a walk, twenty squats, a glass of water before coffee — and it gets done wherever you are standing.
 
-How the app works with your gear. In your profile you tick what you own and enter the weights of your dumbbells and bells. Loads in the programs are labelled light, medium and heavy, and Forma maps them to your implements: with a single bell all three labels point to it and the volume and rest adjust instead. No rope means rope jumps become [jumping jacks](exercise:jumping_jack) and the program stays the same. And the chair can always be swapped for squats or reverse lunges when nothing sturdy is at hand.
-
 ## A workout on the minimal setup
 
 A minimal home gym is a chair, a mat and one implement: a kettlebell or a pair of dumbbells. About 30 minutes.
@@ -119,8 +117,6 @@ A minimal home gym is a chair, a mat and one implement: a kettlebell or a pair o
 **Finisher.** Three sets of [farmer carry](exercise:farmer_carry), 40 seconds each with the heaviest thing you own, 30 seconds of rest.
 
 **Cool-down.** [Hamstring stretch](exercise:hamstring_stretch) and [hip flexor stretch](exercise:hip_flexor_stretch), 30 seconds per side, child's pose 45 seconds.
-
-How the app scales this session. Before you start, Forma offers "easier", "as planned" or "harder": the first drops a set from one or two of the biggest blocks and trims the reps by about 10 percent, the third does the reverse; rest between sets stays the same. If the questionnaire and test placed you at level 1, push-ups become [knee push-ups](exercise:knee_push_up) and swings become [kettlebell deadlifts](exercise:kb_deadlift). After the session you rate the effort from 1 to 10, and the next one adjusts.
 
 ## Common buying mistakes
 

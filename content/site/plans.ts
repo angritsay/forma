@@ -49,8 +49,8 @@ export const PLANS: readonly Plan[] = [
     price: { rub: 1990, usd: 19 },
     period: 'month',
     note: {
-      ru: 'Автосписания пока нет — продлевается вручную',
-      en: 'No auto-renewal yet — renewed by hand',
+      ru: 'Автосписаний нет — продлевается вручную',
+      en: 'No auto-renewal — renewed by hand',
     },
     paymentUrl: { ru: 'https://payform.ru/lvcyfuk/' },
   },

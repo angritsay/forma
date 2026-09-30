@@ -1,32 +1,26 @@
 /**
- * Landing FAQ (home page + FAQPage JSON-LD): ten questions in the order the page tells the story —
- * what is free, how to get in, course or club, starting together, the +30 days, the weekly prize,
- * the coach, auto-renewal, equipment, refunds (site synthesis §2, S9).
+ * Homepage FAQ (and its FAQPage JSON-LD): five questions in the order the page tells the story —
+ * what is free, how to get in, course or club, starting together, auto-renewal (site synthesis
+ * §2, S9). The pair, the prize and the coach's sessions are answered on their own pages and in
+ * the terms, not here.
  *
  * Answers describe how the product actually works, and **every figure is read from its file**:
  * the course's price from `content/courses/start.ts`, the club's year and month from `plans.ts`
  * (`planMonthlyPrice`, so «666 ₽» is always the year divided by twelve and is never printed
- * without the year's price beside it), the coach's two lengths from `booking.ts`, the refund window
- * from `pricing.ts`. English quotes the club's year only, as every EN surface does (`clubPrice.ts`).
+ * without the year's price beside it). English quotes the club's year only, as every EN surface
+ * does (`clubPrice.ts`).
  *
- * Two owner rules are written into the wording, not left to taste:
- * - **The pair is not a promotion.** +30 days each happens when a friend pays for the club through
- *   a personal link, and the weekly prize is an hour with the coach for each of a winning pair.
- *   Nothing here promises an hour for joining together.
- * - **Coach sessions are not refunded.** The time is picked in the app and paid for there (the
- *   slot is held `HOLD_MINUTES`), and the client moves it in the app at least 24 hours ahead — the
- *   same rule the line under the landing's `SessionTickets` states.
+ * The owner's rule that **the pair is not a promotion** is written into the wording, not left to
+ * taste: nothing here promises an hour for joining together.
  *
- * A question whose product is switched off (`BOOKING.enabled`, `PLANS_ENABLED`) drops out rather
- * than describing something that cannot be bought.
+ * A question whose product is switched off (`PLANS_ENABLED`) drops out rather than describing
+ * something that cannot be bought.
  */
 import type { FaqItem, L10n } from '@/content/schema';
 import { l, t } from '@/i18n/index';
 import { COURSE_START } from '../courses/start';
-import { HOLD_MINUTES } from '@/lib/coach/slots';
-import { BOOKING } from './booking';
 import { CLUB_PLAN_ID, PLAN_BY_ID, PLANS, PLANS_ENABLED, planMonthlyPrice } from './plans';
-import { formatPrice, PRICING, type CoursePrice } from './pricing';
+import { formatPrice, type CoursePrice } from './pricing';
 
 /** Both locales' spelling of one price. */
 function both(price: CoursePrice): L10n {
@@ -41,16 +35,13 @@ const courseName: L10n = {
 const clubPlan = PLANS_ENABLED ? PLAN_BY_ID.get(CLUB_PLAN_ID) : undefined;
 const thirtyDays = PLANS.find((p) => p.period === 'month' && p.id !== CLUB_PLAN_ID);
 
-const half = BOOKING.options.find((o) => o.id === 'half');
-const hour = BOOKING.options.find((o) => o.id === 'hour');
-
 const courseOrClub: FaqItem[] = clubPlan
   ? [
       {
         q: { ru: 'Курс или клуб?', en: 'Course or club?' },
         a: {
           ru: `Курс — 20 тренировок навсегда за ${course.ru}, и неделя клуба в подарок. Клуб — задание в день, серия, таблица недели и приз; курс уже внутри. ${formatPrice('ru', planMonthlyPrice(clubPlan))} в месяц — это одна оплата ${formatPrice('ru', clubPlan.price)} за год.`,
-          en: `The course is 20 workouts for life for ${course.en}, with a week of the club as a gift. The club is a task a day, a streak, the weekly board and a prize, with the course inside. It is one payment of ${formatPrice('en', clubPlan.price)} for a year.`,
+          en: `The course is 20 workouts with no time limit for ${course.en}, with a week of the club as a gift. The club is a task a day, a streak, the weekly board and a prize, with the course inside. It is one payment of ${formatPrice('en', clubPlan.price)} for a year.`,
         },
       },
     ]
@@ -63,41 +54,6 @@ const together: FaqItem = {
     en: `Take the link from the “Together from Monday” block on this page — no sign-up needed. On Monday each of you does workout 1 at home. In the club you can become a pair: in the app, Club → Duo → “${t('en', 'app.duoInvite')}”.`,
   },
 };
-
-const pairAndPrize: FaqItem[] = clubPlan
-  ? [
-      {
-        q: { ru: 'Что за +30 дней?', en: 'What are the +30 days?' },
-        a: {
-          ru: 'Когда человек по твоей личной ссылке оплатит клуб — на 30 дней или на год, — вы оба получаете по 30 дней клуба. Если друг уже был в клубе, бонус не начисляется. До 12 наград в год. Это не скидка: цена та же, дней больше.',
-          en: 'When someone pays for the club through your personal link — for 30 days or for a year — you both get 30 days of the club. No bonus if your friend has been in the club before. Up to 12 rewards a year. It is not a discount: the price is the same, the days are more.',
-        },
-      },
-      {
-        q: { ru: 'Что за приз недели?', en: 'What is the weekly prize?' },
-        a: {
-          ru: 'Час один на один с Сергеем. Кто наверху таблицы в воскресенье, получает его; в дуо — каждый из пары. Победителя объявляет тренер.',
-          en: 'An hour one-to-one with Sergey. Whoever tops the board on Sunday gets it; in a duo, each of the pair. The coach announces the winner.',
-        },
-      },
-    ]
-  : [];
-
-const coach: FaqItem[] =
-  BOOKING.enabled && half && hour
-    ? [
-        {
-          q: {
-            ru: 'Можно заниматься с тренером лично?',
-            en: 'Can I train with the coach one-to-one?',
-          },
-          a: {
-            ru: `Да, онлайн: полчаса — ${formatPrice('ru', half.price)}, час — ${formatPrice('ru', hour.price)}. Выбираешь время в приложении и оплачиваешь; слот держится ${HOLD_MINUTES} минут. Возврата нет — занятие можно перенести самому в приложении не позднее чем за 24 часа.`,
-            en: `Yes, online: half an hour is ${formatPrice('en', half.price)}, an hour ${formatPrice('en', hour.price)}. You pick a time in the app and pay; the slot is held for ${HOLD_MINUTES} minutes. No refunds — you can move a session yourself in the app at least 24 hours ahead.`,
-          },
-        },
-      ]
-    : [];
 
 const autoRenewal: FaqItem[] = clubPlan
   ? [
@@ -127,33 +83,8 @@ const signIn: FaqItem = {
   },
 };
 
-export const FAQ: FaqItem[] = [
-  free,
-  signIn,
-  ...courseOrClub,
-  together,
-  ...pairAndPrize,
-  ...coach,
-  ...autoRenewal,
-  {
-    q: { ru: 'Нужно ли оборудование?', en: 'Do I need equipment?' },
-    a: {
-      ru: 'Нет: устойчивый стул и коврик. Прыжков и бёрпи в курсе нет.',
-      en: 'No: a sturdy chair and a mat. There are no jumps and no burpees in the course.',
-    },
-  },
-  {
-    q: { ru: 'Можно вернуть деньги?', en: 'Can I get a refund?' },
-    a: {
-      ru: `За курс — в течение ${PRICING.refundDays} дней после открытия доступа, за клуб — после оплаты, если сделано меньше ${PRICING.refundMaxCompletedWorkouts} тренировок. Занятие с тренером не возвращается — его можно перенести.`,
-      en: `For the course — within ${PRICING.refundDays} days of access opening, for the club — of payment, if fewer than ${PRICING.refundMaxCompletedWorkouts} workouts are done. A coach session is not refunded — it can be moved.`,
-    },
-  },
-];
-
 /**
- * The homepage keeps five of them — what is free, how to get in, course or club, starting
- * together, auto-renewal — and its FAQPage JSON-LD is built from the same five, so the markup
- * never describes a question the page does not show. The rest stay in `FAQ` for the inner pages.
+ * The homepage's five, in its order, and its FAQPage JSON-LD is built from the same five, so the
+ * markup never describes a question the page does not show.
  */
 export const HOME_FAQ: FaqItem[] = [free, signIn, ...courseOrClub, together, ...autoRenewal];

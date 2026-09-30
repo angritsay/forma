@@ -293,8 +293,7 @@ translation for reading, not a second contract.
   sentence case, where capitals at 11px/.18em averaged 9.5px). A string too long to be a kicker is
   not a kicker: set it as body text at the same size and colour, one step lighter.
 - Photography is the main visual surface: full-bleed, monochrome, grained, white text over a
-  protection gradient (`.photo-mono` / `.photo-grain` / `.photo-scrim`, and the landing's
-  `PhotoBlock.astro`). **The current photographs are placeholders** — see `src/lib/media/photos.ts`: they
+  protection gradient (`.photo-mono` / `.photo-grain` / `.photo-scrim`). **The current photographs are placeholders** — see `src/lib/media/photos.ts`: they
   are remote Unsplash URLs rather than vendored files, and the pictures themselves are wrong for a
   product about training at home.
 - A still from the coach's clip (`components/media/ExerciseStill`) is the second illustration
