@@ -5,7 +5,7 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { SlotPickerView, type SlotPickerViewProps } from './SlotPicker';
+import { isStale, SlotPickerView, STALE_MS, type SlotPickerViewProps } from './SlotPicker';
 
 const MSK = 'Europe/Moscow';
 /** Monday 5 Oct 2026, 09:00 in Moscow. */
@@ -57,5 +57,13 @@ describe('SlotPickerView', () => {
     expect(render({ state: { kind: 'ready', slots: [] }, empty: 'WRITE' })).toContain('WRITE');
     expect(render({ state: { kind: 'error' } })).toContain('<button');
     expect(render({ state: { kind: 'loading' } })).toContain('aria-busy="true"');
+  });
+});
+
+describe('a stale list is asked again on return (0058)', () => {
+  it('only once it is older than a minute, and never before the first read', () => {
+    expect(isStale(null, NOW)).toBe(false);
+    expect(isStale(NOW, NOW + STALE_MS)).toBe(false);
+    expect(isStale(NOW, NOW + STALE_MS + 1)).toBe(true);
   });
 });

@@ -5,7 +5,9 @@
  *
  * Buttons only where there is something to decide: an unmatched payment for something that can be
  * opened gets «Привязать к человеку» and, until somebody has decided, «Отметить как разобранный».
- * A session paid for with no time on the calendar gets «Записать на время» (0056).
+ * A session paid for with no time on the calendar gets «Записать на время» (0056), and «Возврат
+ * сделан» when the money went back instead (0058). Money that opened nothing may be a session paid
+ * at the wrong amount, so an unmatched course payment also gets «Это занятие» (0058).
  */
 import { Badge, type BadgeTone } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -16,8 +18,10 @@ import { courseName, sourceLabel } from '../model';
 import { rowIndex } from '../PurchaseList';
 import {
   canBind,
+  canBookAsSession,
   canBookSession,
   canDismiss,
+  canRefundSession,
   formatMoney,
   INTENT_LABEL,
   paymentState,
@@ -34,6 +38,7 @@ const STATE_TONE: Record<PaymentState, BadgeTone> = {
   dismissed: 'neutral',
   session: 'neutral',
   sessionUnbooked: 'warning',
+  sessionClosed: 'neutral',
 };
 
 export interface PaymentListProps {
@@ -43,8 +48,13 @@ export interface PaymentListProps {
   highlightId?: string | null;
   onBind: (row: PaymentRow) => void;
   onDismiss: (row: PaymentRow) => void;
-  /** «Записать на время» for a paid session with no time (0056). */
+  /**
+   * «Записать на время» for a paid session with no time (0056), and «Это занятие» for an
+   * unmatched course payment (0058) — the same sheet, which tells the two apart by the intent.
+   */
   onBook: (row: PaymentRow) => void;
+  /** «Возврат сделан» for a paid session with no time (0058). */
+  onRefund: (row: PaymentRow) => void;
 }
 
 export function PaymentList({
@@ -54,6 +64,7 @@ export function PaymentList({
   onBind,
   onDismiss,
   onBook,
+  onRefund,
 }: PaymentListProps) {
   const { t, locale } = useT();
   const time = (iso: string) =>
@@ -140,6 +151,16 @@ export function PaymentList({
                         {t('app.adminPayDismiss')}
                       </Button>
                     ) : null}
+                    {canBookAsSession(row) ? (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        disabled={busyId !== null}
+                        onClick={() => onBook(row)}
+                      >
+                        {t('app.adminPayAsSession')}
+                      </Button>
+                    ) : null}
                   </div>
                 ) : canBookSession(row) ? (
                   <div className="flex flex-wrap gap-2 lg:shrink-0">
@@ -152,6 +173,16 @@ export function PaymentList({
                     >
                       {t('app.adminPayBook')}
                     </Button>
+                    {canRefundSession(row) ? (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        disabled={busyId !== null}
+                        onClick={() => onRefund(row)}
+                      >
+                        {t('app.adminPayRefund')}
+                      </Button>
+                    ) : null}
                   </div>
                 ) : null}
               </div>

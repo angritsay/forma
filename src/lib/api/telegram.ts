@@ -38,3 +38,22 @@ export async function linkTelegram(initData: string): Promise<boolean> {
     return false;
   }
 }
+
+/**
+ * Привязан ли телеграм к вошедшему профилю (`my_telegram_linked`, 0058) — чтобы карточка записи
+ * честно сказала, придёт ли напоминание.
+ *
+ * `null` — не удалось узнать (сеть, база без 0058). Экран тогда молчит: подсказка «привяжи
+ * телеграм» человеку, у которого он привязан, хуже, чем никакой. В демо бота нет, и просить
+ * привязать его там незачем — поэтому `true`.
+ */
+export async function myTelegramLinked(): Promise<boolean | null> {
+  if (isDemo()) return true;
+  try {
+    const { data, error } = await supabase().rpc('my_telegram_linked');
+    if (error || typeof data !== 'boolean') return null;
+    return data;
+  } catch {
+    return null;
+  }
+}

@@ -78,6 +78,19 @@
  * free. So the card says «Оплата проверяется…», hides the picker and keeps asking until the
  * session appears (`PaymentChecking`, `holdLapse`) — a second pick here was a second payment.
  *
+ * ## When something is not quite right (0058)
+ *
+ * - **The till was opened** is remembered past a reload (`src/lib/coach/paying.ts`), with the
+ *   sessions already booked: a lapsed hold is checked even after Telegram closed the Mini App, and
+ *   any new active session — a claim, the admin, another device — ends the check. The check
+ *   offers the claim by order number for money paid from another address.
+ * - **The same start again** too soon is «через N мин», not «заняли» (`hold_again_later`), and the
+ *   picker stops offering it. The pay button stays busy for three seconds after the till opens.
+ * - **A failed read** of the person's sessions says so above the offer, with «Ещё раз»; a session
+ *   the coach cancelled is shown in the booked card's place; the card asks for the next session
+ *   once this one ends; and it tells a client without Telegram that no reminder will come.
+ * - **«Написать тренеру»** carries the time the message is about (`contextTime`).
+ *
  * This replaced the Google appointment page and the «pay, then write, and he sets the time»
  * block. Without a till link for the length there is still nothing to hold a slot for, so that
  * case keeps «Написать тренеру».
@@ -124,8 +137,8 @@ import { Screen } from '@/components/ui/Screen';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { Sheet } from '@/components/ui/Sheet';
 import { useToast } from '@/components/ui/Toast';
-import { l, plural, type Locale } from '@/i18n/index';
-import { getMyCoachBookings, getMyUpcomingBooking } from '@/lib/api/coachBookings';
+import { l, type Locale } from '@/i18n/index';
+import { getMyCoachBookings } from '@/lib/api/coachBookings';
 import {
   confirmDemoHold,
   getMyHold,
@@ -134,33 +147,39 @@ import {
   releaseHold,
 } from '@/lib/api/coachSlots';
 import { isAppError } from '@/lib/api/errors';
+import { myTelegramLinked } from '@/lib/api/telegram';
 import type { BookingHold, CoachBooking, SessionOption } from '@/lib/api/types';
-import { describeCountdown, deviceTimeZone, type Countdown } from '@/lib/coach/booking';
+import { deviceTimeZone, pickCancelled, pickUpcoming } from '@/lib/coach/booking';
 import {
-  canSelfMove,
-  clockIn,
-  holdClock,
-  holdDeadline,
-  holdLapse,
-  JOIN_OPENS_MINUTES,
-  joinOpen,
-  MOVE_CUTOFF_HOURS,
-} from '@/lib/coach/slots';
+  activeIds,
+  clearPaying,
+  paymentLanded,
+  payingState,
+  readPaying,
+  writePaying,
+  type PayingRecord,
+} from '@/lib/coach/paying';
+import { clockIn, holdClock, holdDeadline, holdLapse, MOVE_CUTOFF_HOURS } from '@/lib/coach/slots';
 import { isDemo } from '@/lib/api/mode';
 import { COACH_TILE, courseTileVars } from '@/lib/ui/tile';
-import { openExternal } from '@/lib/telegram/webapp';
+import { openExternal, telegram } from '@/lib/telegram/webapp';
 import { payHref, type PayRoute, payRoute } from '@/lib/util/payment';
-import { LinkButton } from '@/app/features/courses/LinkButton';
 import { SupportSheet } from '@/app/features/support/SupportSheet';
 import { splitName } from '@/app/features/profile/model';
 import { Doodle } from '@/components/ui/Doodle';
 import { CoachHeroCard } from '@/app/features/coach/CoachHeroCard';
 import { PaymentChecking } from '@/app/features/coach/PaymentChecking';
 import { SlotPicker } from '@/app/features/coach/SlotPicker';
-import { dateOf, slotErrorKey } from '@/app/features/coach/slotCopy';
+import {
+  BookingsReadError,
+  CancelledSession,
+  UpcomingSession,
+  whenLine,
+} from '@/app/features/coach/SessionCard';
+import { contextTime, dateOf, holdAgainMinutes, slotErrorKey } from '@/app/features/coach/slotCopy';
 import { activeFromScroll, COACH_PEOPLE, type CoachPerson } from '@/lib/coach/person';
 import { externalLinkProps } from '@/app/hooks/useExternalLink';
-import { useT, type Translator } from '@/app/hooks/useT';
+import { useT } from '@/app/hooks/useT';
 import { useFlag } from '@/app/store/flags';
 import { useSession } from '@/app/store/session';
 import { BOOKING, type BookingOption, type BookingOutcome } from '@content/site/booking';
@@ -197,25 +216,58 @@ export default function BookScreen() {
     return () => window.removeEventListener('pageshow', onShow);
   }, []);
   /*
-   * Whether the payment page has been opened from here. It is not proof of a payment — nothing on
-   * a static front end can be — and it is not meant to be: it is what turns the step after the
-   * money from a line of small print into the thing the screen is now asking for.
+   * The payment in flight (0056, 0058): which hold the till was opened for, when, and which
+   * sessions the person already had. It is not proof of a payment — nothing on a static front end
+   * can be — and it is not meant to be: it is what turns a lapsed hold into «оплата проверяется»
+   * instead of «выбери снова». It is kept in localStorage too (`src/lib/coach/paying.ts`), so a
+   * reload, or Telegram closing the Mini App while the person pays in the browser, does not forget
+   * it and invite a second payment.
    */
-  const [sent, setSent] = useState(false);
+  const userId = user?.id ?? '';
+  const [paying, setPaying] = useState<PayingRecord | null>(null);
+  const payingRef = useRef<PayingRecord | null>(null);
+  useEffect(() => {
+    payingRef.current = paying;
+  }, [paying]);
+  const forgetPaying = useCallback(() => {
+    clearPaying();
+    payingRef.current = null;
+    setPaying(null);
+  }, []);
+  /*
+   * The till was just opened. For three seconds the pay button stays busy: Telegram takes a
+   * moment to hand the page to the browser, and a second tap in that moment opened it twice.
+   */
+  const [payBusy, setPayBusy] = useState(false);
+  const payBusyTimer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(payBusyTimer.current), []);
 
   /*
    * The session already booked, and the clock the card reads from.
    *
    * `null` is the answer for almost everybody and is not an error state: nothing is booked, the
-   * card is not drawn, and the screen is what it always was. A failed request lands in the same
-   * place on purpose — a network blip must not put an error where a person's session would be,
-   * and it must certainly not stop the offer below from rendering.
+   * card is not drawn, and the screen is what it always was. A failed request is not the same
+   * answer any more (0058): somebody who has paid would read the silence as «nothing booked», so
+   * `readFailed` puts one line with «Ещё раз» above the offer — and the offer still renders.
+   *
+   * `cancelled` is a session the coach cancelled that has not happened yet (0058): shown in the
+   * booked card's place when nothing else is booked, because the bot that would have said it
+   * reaches only people with Telegram.
    *
    * `now` ticks only while a booking exists. Half a minute is the coarsest interval that still
    * turns «через 1 минуту» over before it becomes a lie, and the card is the only thing on the
    * screen that goes stale by sitting still.
    */
   const [booking, setBooking] = useState<CoachBooking | null>(null);
+  const [cancelled, setCancelled] = useState<CoachBooking | null>(null);
+  const [readFailed, setReadFailed] = useState(false);
+  /* Whether the bot can reach them about the session (0058); asked once a session exists. */
+  const [tgLinked, setTgLinked] = useState<boolean | null>(null);
+  /*
+   * The active sessions last read: what a payment in flight is compared against. Null until a read
+   * has succeeded — an empty list would make every session the person already has look new.
+   */
+  const knownActive = useRef<string[] | null>(null);
   const [now, setNow] = useState(() => Date.now());
   /*
    * The slot held for this person while they pay (0055), or null. Read with the booking, so a
@@ -248,26 +300,57 @@ export default function BookScreen() {
   );
 
   /*
+   * A hold that ran out after the till was opened (0056): which hold, and when it lapsed here.
+   * While it is set the picker is hidden and the screen asks for the session every few seconds.
+   */
+  const [checking, setChecking] = useState<{ id: string; since: number } | null>(null);
+
+  /*
    * Asked on arrival and again whenever the person comes back to the tab: the payment is
    * confirmed by a webhook, not by anything here, so «back from the till» is the moment the
-   * session may have appeared and the hold gone. Failures leave the screen as it was.
+   * session may have appeared and the hold gone.
+   *
+   * All the person's sessions, not only the soonest (0058): the list says what is booked, what
+   * the coach cancelled, and whether a payment in flight has landed — under the held slot's id or
+   * any new one (a claim, the admin, another device). A hold read back after a reload is matched
+   * with the remembered payment: the same hold is «оплата открылась», a gone one is being checked
+   * from the moment it ran out, and another one means the record is about a slot left behind.
    */
   const refresh = useCallback(() => {
-    getMyUpcomingBooking()
-      .then((b) => {
-        if (alive.current) setBooking(b);
+    getMyCoachBookings()
+      .then((list) => {
+        if (!alive.current) return;
+        const at = Date.now();
+        setBooking(pickUpcoming(list, at));
+        setCancelled(pickCancelled(list, at));
+        setReadFailed(false);
+        knownActive.current = activeIds(list);
+        const p = payingRef.current;
+        if (p && paymentLanded(list, p)) {
+          forgetPaying();
+          setChecking(null);
+        }
       })
       .catch(() => {
-        /* Nothing booked and could-not-ask look the same here, deliberately. */
+        if (alive.current) setReadFailed(true);
       });
     getMyHold()
       .then((h) => {
-        if (alive.current) adoptHold(h);
+        if (!alive.current) return;
+        adoptHold(h);
+        const p = payingRef.current;
+        if (!p) return;
+        const at = Date.now();
+        const state = payingState(p, h && !lapsed.current.has(h.id) ? h : null, at);
+        if (state === 'stale') forgetPaying();
+        else if (state !== 'holding') {
+          setChecking((c) => c ?? { id: p.holdId, since: Math.min(p.deadline, at) });
+        }
       })
       .catch(() => {
         /* No countdown is better than an error where the offer is. */
       });
-  }, [adoptHold]);
+  }, [adoptHold, forgetPaying]);
 
   useEffect(() => {
     refresh();
@@ -282,12 +365,45 @@ export default function BookScreen() {
     };
   }, [refresh]);
 
+  /*
+   * A payment remembered from before a reload, read once the account is known (the session may
+   * arrive after the first refresh) and matched against the hold and the sessions right away.
+   */
+  useEffect(() => {
+    if (!userId) return;
+    const saved = readPaying(userId, Date.now());
+    payingRef.current = saved;
+    setPaying(saved);
+    if (saved) refresh();
+  }, [userId, refresh]);
+
   /* Every second while a hold counts down; every half minute while only a session does. */
   useEffect(() => {
     if (!booking && !hold) return;
     const id = window.setInterval(() => setNow(Date.now()), hold ? 1_000 : 30_000);
     return () => window.clearInterval(id);
   }, [booking, hold]);
+
+  /* The session ended while the tab sat open: the card goes, and the next one is asked for. */
+  useEffect(() => {
+    if (booking && Date.parse(booking.endsAt) <= now) {
+      setBooking(null);
+      refresh();
+    }
+  }, [booking, now, refresh]);
+
+  /* Asked once there is a session to be reminded of; a failure leaves the card as it was. */
+  const hasBooking = booking !== null;
+  useEffect(() => {
+    if (!hasBooking || tgLinked !== null) return;
+    let live = true;
+    void myTelegramLinked().then((linked) => {
+      if (live) setTgLinked(linked);
+    });
+    return () => {
+      live = false;
+    };
+  }, [hasBooking, tgLinked]);
 
   /*
    * Which length is showing. The first option leads because `content/site/booking.ts` orders them
@@ -418,12 +534,9 @@ export default function BookScreen() {
   const personName = who === 'nastia' ? herName : name;
   const herLinks = NASTIA.links[locale] ?? NASTIA.links.ru;
 
-  /*
-   * A hold that ran out after the till was opened (0056): which hold, and when it lapsed here.
-   * While it is set the picker is hidden and the screen asks for the session every few seconds.
-   */
-  const [checking, setChecking] = useState<{ id: string; since: number } | null>(null);
   const lapse = checking ? holdLapse(true, checking.since, now) : null;
+  /* The live hold's till was opened from here (or from before a reload, `paying`). */
+  const sent = paying !== null && hold !== null && paying.holdId === hold.id;
 
   const clock = hold ? holdClock(hold.deadline, now) : null;
   useEffect(() => {
@@ -431,20 +544,22 @@ export default function BookScreen() {
     lapsed.current.add(hold.id);
     setHold(null);
     if (sent) {
+      // The record stays: a reload while the payment is checked must come back to the check.
       setChecking({ id: hold.id, since: Date.now() });
     } else {
       setHoldLapsed(true);
       setSlotsKey((n) => n + 1);
     }
-    setSent(false);
     // A payment that landed in the last seconds may have made it a session: ask.
     refresh();
   }, [hold, clock?.expired, sent, refresh]);
 
   /*
-   * While a payment is being checked: ask every ten seconds whether the lapsed hold became a
-   * session. All the person's sessions, not only the soonest — an earlier one would hide it. The
-   * clock ticks too, so the wait ends by itself after `PAYMENT_CHECK_MINUTES`.
+   * While a payment is being checked: ask every ten seconds whether it landed. All the person's
+   * sessions, not only the soonest — an earlier one would hide it — and not only under the held
+   * slot's id (0058): a claim, the admin or another device can confirm it as a new session, and
+   * any active session that was not there when the till opened is the payment. The clock ticks
+   * too, so the wait ends by itself after `PAYMENT_CHECK_MINUTES`.
    */
   useEffect(() => {
     if (!checking || lapse !== 'checking') return;
@@ -452,8 +567,10 @@ export default function BookScreen() {
       getMyCoachBookings()
         .then((list) => {
           if (!alive.current) return;
-          if (list.some((b) => b.id === checking.id && b.status === 'active')) {
+          const known = payingRef.current?.known ?? null;
+          if (paymentLanded(list, { holdId: checking.id, known })) {
             setChecking(null);
+            forgetPaying();
             refresh();
           }
         })
@@ -467,20 +584,33 @@ export default function BookScreen() {
       ask();
     }, 10_000);
     return () => window.clearInterval(id);
-  }, [checking, lapse, refresh]);
+  }, [checking, lapse, refresh, forgetPaying]);
 
   /* «Я не платил(а)»: the picker comes back, and the lapsed slot is free to everybody again. */
   const stopChecking = () => {
     setChecking(null);
+    forgetPaying();
     setSlot(null);
     reloadSlots();
+  };
+
+  /* A claim by order number confirmed the held slot (0058): the wait is over, read the session. */
+  const claimed = () => {
+    setChecking(null);
+    forgetPaying();
+    toast.show({ kind: 'success', title: t('app.claimSession') });
+    refresh();
   };
 
   /*
    * Open the till for a held slot. In the demo there is no till: the demo's stand-in for the
    * webhook confirms the hold, so the walkthrough reaches the booked card.
+   *
+   * Before leaving, the payment is written down (`paying`), with the sessions already booked, so
+   * a reload or a closed Mini App still knows the money may be on its way.
    */
-  const payFor = async (held: BookingHold) => {
+  const payFor = async (held: BookingHold, deadline: number) => {
+    if (payBusy) return;
     const route = routeFor(BOOKING.options.find((o) => o.id === held.optionId));
     // No till for the hold's length in this language: the panel offers a message instead.
     if (!route) {
@@ -490,12 +620,27 @@ export default function BookScreen() {
     if (isDemo()) {
       await confirmDemoHold().catch(() => false);
       toast.show({ kind: 'success', title: t('app.bookDemoPaid') });
-      setSent(false);
+      forgetPaying();
       refresh();
       return;
     }
     const target = payHref(route, email);
-    setSent(true);
+    const record: PayingRecord = {
+      user: userId,
+      holdId: held.id,
+      sentAt: Date.now(),
+      deadline,
+      startsAt: held.startsAt,
+      known: knownActive.current,
+    };
+    writePaying(record);
+    payingRef.current = record;
+    setPaying(record);
+    setPayBusy(true);
+    window.clearTimeout(payBusyTimer.current);
+    payBusyTimer.current = window.setTimeout(() => {
+      if (alive.current) setPayBusy(false);
+    }, 3_000);
     // Inside Telegram the payment page opens in the person's own browser, not in the Mini App.
     if (openExternal(target)) return;
     setRedirecting(true);
@@ -517,12 +662,17 @@ export default function BookScreen() {
       }
       // A fresh pick is a fresh hold, even of a start that lapsed here before.
       lapsed.current.delete(held.id);
+      const at = Date.now();
       adoptHold(held);
-      setNow(Date.now());
-      await payFor(held);
+      setNow(at);
+      await payFor(held, holdDeadline(held.holdExpiresAt, at));
     } catch (e) {
-      toast.show({ kind: 'error', title: t(slotErrorKey(e)) });
-      if (isAppError(e) && e.message === 'slot_taken') reloadSlots();
+      toast.show({ kind: 'error', title: t(slotErrorKey(e), { n: holdAgainMinutes(e) }) });
+      // Taken, or held by them too recently (0058, the picker stops offering it): ask again.
+      if (isAppError(e) && (e.message === 'slot_taken' || e.message === 'hold_again_later')) {
+        setSlot(null);
+        reloadSlots();
+      }
     } finally {
       setHolding(false);
     }
@@ -530,19 +680,37 @@ export default function BookScreen() {
 
   /* «Выбрать другое время»: the slot goes back to everybody, the picker comes back. */
   const giveBack = async () => {
+    const id = hold?.id;
     setHolding(true);
     try {
       await releaseHold();
     } catch {
-      /* A hold that could not be released runs out on its own in minutes. */
+      /*
+       * A hold that could not be released runs out on its own in minutes. Until then the server
+       * still returns it, and it must not come back on the next refresh as if nothing was pressed.
+       */
+      if (id) lapsed.current.add(id);
     } finally {
       setHold(null);
-      setSent(false);
+      forgetPaying();
       setSlot(null);
       reloadSlots();
       setHolding(false);
     }
   };
+
+  /*
+   * «Написать тренеру» carries what the message is about (0058): the held slot, the one whose
+   * payment is being checked, or the booked session — in Moscow time, as the coach reads it.
+   */
+  const aboutTime = hold
+    ? contextTime('hold', hold.startsAt)
+    : checking && paying
+      ? contextTime('checking', paying.startsAt)
+      : booking
+        ? contextTime('booking', booking.startsAt)
+        : '';
+  const contactAbout = [contactContext, aboutTime].filter(Boolean).join(' · ');
 
   /* The session being moved, while the sheet is open. */
   const [moving, setMoving] = useState<CoachBooking | null>(null);
@@ -562,10 +730,15 @@ export default function BookScreen() {
             <UpcomingSession
               booking={booking}
               now={now}
+              telegram={tgLinked}
+              inTelegram={telegram() !== null}
               onMove={() => setMoving(booking)}
               onContact={openContact}
             />
+          ) : cancelled ? (
+            <CancelledSession booking={cancelled} onContact={openContact} />
           ) : null}
+          {readFailed ? <BookingsReadError onRetry={refresh} /> : null}
 
           {/*
           The coach, as a photograph and one display line — first name at 800, surname at 200.
@@ -830,7 +1003,16 @@ export default function BookScreen() {
                   }))}
                 />
               ) : null}
-              {option ? <Option option={option} payment={payment} onContact={openContact} /> : null}
+              {option ? (
+                <Option
+                  option={option}
+                  payment={payment}
+                  onContact={openContact}
+                  // A slot is held or its payment is being checked: this price is not the
+                  // thing to act on now (0058).
+                  dim={checking !== null || (hold !== null && clock !== null && !clock.expired)}
+                />
+              ) : null}
               {/*
                * The time, then the one action (0055). While a slot is held the hold stands here
                * instead — whichever card or length is in view, because it is the person's one hold
@@ -838,7 +1020,12 @@ export default function BookScreen() {
                * would be nothing to hold a slot for (`Option` offers the message instead).
                */}
               {checking && lapse && lapse !== 'expired' && !hold ? (
-                <PaymentChecking state={lapse} onContact={openContact} onDismiss={stopChecking} />
+                <PaymentChecking
+                  state={lapse}
+                  onContact={openContact}
+                  onDismiss={stopChecking}
+                  onClaimed={claimed}
+                />
               ) : hold && clock && !clock.expired ? (
                 <HoldPanel
                   hold={hold}
@@ -846,8 +1033,8 @@ export default function BookScreen() {
                   canPay={routeFor(BOOKING.options.find((o) => o.id === hold.optionId)) !== null}
                   onContact={openContact}
                   sent={sent}
-                  busy={holding || redirecting}
-                  onPay={() => void payFor(hold)}
+                  busy={holding || redirecting || payBusy}
+                  onPay={() => void payFor(hold, hold.deadline)}
                   onRelease={() => void giveBack()}
                 />
               ) : option && payment ? (
@@ -926,7 +1113,7 @@ export default function BookScreen() {
               }}
             />
           ) : null}
-          <SupportSheet open={writing} onClose={() => setWriting(false)} context={contactContext} />
+          <SupportSheet open={writing} onClose={() => setWriting(false)} context={contactAbout} />
         </div>
       </Screen>
     </div>
@@ -1039,186 +1226,6 @@ function OutcomeList({
   );
 }
 
-/*
- * --- the session already booked ---------------------------------------------------------------
- *
- * Three rules this card is written around, and all three are about what is *missing* rather than
- * about what is shown.
- *
- * 1. The times are stored in UTC and shown in the **device's** zone. `booking.timezone` is the zone
- *    the booking was made in — the coach's for one made here (0055) — and it is only the fallback
- *    for a browser that will not name its own. Somebody who booked from a laptop abroad and opens
- *    the Mini App at home wants their kitchen clock, not the one in the hotel.
- * 2. **The join link is often absent.** A historical Google Calendar booking (read in by a sync
- *    that is gone since the cutover) may carry none, a session booked here before the coach's room
- *    was set carries none, and a session with a physical location carries an address instead.
- *    Every control here is drawn from the field that would make it work, so a missing field
- *    removes the control rather than disabling it.
- * 3. **Nothing is booked, for almost everybody**, and that is not an empty state to design — the
- *    card simply is not rendered. `BookScreen` holds that: `booking === null` draws nothing.
- */
-
-/** `Intl` throws on a zone name it does not know; the device's own zone is the fallback. */
-function formatIn(
-  locale: Locale,
-  ms: number,
-  options: Intl.DateTimeFormatOptions,
-  timeZone: string | undefined,
-): string {
-  const tag = locale === 'ru' ? 'ru-RU' : 'en-GB';
-  try {
-    return new Intl.DateTimeFormat(tag, { ...options, timeZone }).format(ms);
-  } catch {
-    return new Intl.DateTimeFormat(tag, options).format(ms);
-  }
-}
-
-/* h23 so a Russian clock reads «9:00» and never «9:00 AM»; `numeric` so it is not «09:00». */
-const CLOCK: Intl.DateTimeFormatOptions = { hour: 'numeric', minute: '2-digit', hourCycle: 'h23' };
-
-/** «6 октября · 10:00 – 11:00 · 60 мин» — a session's date, hours and length, in `zone`. */
-function whenLine(
-  { t, locale }: Translator,
-  startsAt: string,
-  endsAt: string,
-  zone: string | undefined,
-): string {
-  const starts = Date.parse(startsAt);
-  const ends = Date.parse(endsAt);
-  return t('app.bookWhen', {
-    date: formatIn(locale, starts, { day: 'numeric', month: 'long' }, zone),
-    from: formatIn(locale, starts, CLOCK, zone),
-    to: formatIn(locale, ends, CLOCK, zone),
-    dur: t('app.bookDuration', { n: Math.round((ends - starts) / 60_000) }),
-  });
-}
-
-/**
- * The countdown, said out loud.
- *
- * `describeCountdown` returns `{ kind: 'tomorrow', hour: 9, minute: 0 }` and refuses to build the
- * sentence itself, which is what lets the Russian be Russian: three plural forms for минуты, часы
- * and дни, and a «завтра в 9:00» that is a calendar fact rather than an arithmetic one.
- */
-function countdownLine(countdown: Countdown, { t, locale }: Translator): string {
-  switch (countdown.kind) {
-    case 'live':
-      return t('app.bookLive');
-    case 'minutes':
-      return plural(locale, countdown.minutes, {
-        one: t('app.bookInMinutesOne', { n: countdown.minutes }),
-        few: t('app.bookInMinutesFew', { n: countdown.minutes }),
-        many: t('app.bookInMinutesMany', { n: countdown.minutes }),
-      });
-    case 'hours':
-      return plural(locale, countdown.hours, {
-        one: t('app.bookInHoursOne', { n: countdown.hours }),
-        few: t('app.bookInHoursFew', { n: countdown.hours }),
-        many: t('app.bookInHoursMany', { n: countdown.hours }),
-      });
-    case 'tomorrow':
-      // Built from the shape rather than from the instant: these two numbers are already the
-      // wall-clock reading in the zone the day boundary was decided in.
-      return t('app.bookTomorrowAt', {
-        time: `${countdown.hour}:${String(countdown.minute).padStart(2, '0')}`,
-      });
-    case 'later':
-      return plural(locale, countdown.days, {
-        one: t('app.bookInDaysOne', { n: countdown.days }),
-        few: t('app.bookInDaysFew', { n: countdown.days }),
-        many: t('app.bookInDaysMany', { n: countdown.days }),
-      });
-    default:
-      return '';
-  }
-}
-
-/**
- * The booked session, as the owner listed it: «вот ссылка на вход, через столько то начнется,
- * дата, время» — in that order of loudness, the countdown as the figure and the date under it.
- *
- * No glass and no photograph: a hairline card on the flat ground, so the buttons in it are
- * rectangles at `--r-control` and not pills (design/CHANGELOG.md §13).
- */
-function UpcomingSession({
-  booking,
-  now,
-  onMove,
-  onContact,
-}: {
-  booking: CoachBooking;
-  now: number;
-  onMove: () => void;
-  onContact: () => void;
-}) {
-  const tr = useT();
-  const { t } = tr;
-  const zone = deviceTimeZone() ?? booking.timezone ?? undefined;
-  const countdown = describeCountdown(booking.startsAt, booking.endsAt, now, zone);
-
-  // The session ended while the tab sat open. The fetch will not run again until the screen is
-  // remounted, so the tick is what takes the card away.
-  if (countdown.kind === 'past') return null;
-
-  const when = whenLine(tr, booking.startsAt, booking.endsAt, zone);
-
-  return (
-    <section className="glass-card flex flex-col gap-4 rounded-card p-5">
-      <div className="flex flex-col gap-2">
-        <span className="eyebrow">{t('app.bookUpcoming')}</span>
-        {/* 1.2, as the lockup above: «идёт сейчас» and «через 2 часа» both drop a descender. */}
-        <p className="display text-[clamp(26px,7.5vw,34px)] leading-[1.2] text-balance">
-          {countdownLine(countdown, tr)}
-        </p>
-        <p className="tabular text-[13px] leading-snug text-muted">{when}</p>
-      </div>
-
-      {/* The room opens fifteen minutes before (0055): until then the button would only take
-          somebody into an empty call, so its place says when it will be there. */}
-      {booking.joinUrl && joinOpen(booking.startsAt, booking.endsAt, now) ? (
-        <LinkButton href={booking.joinUrl} size="lg" fullWidth external>
-          {t('app.bookJoin')}
-        </LinkButton>
-      ) : booking.joinUrl ? (
-        <p className="text-[13px] leading-snug text-muted">
-          {t('app.bookJoinSoon', { n: JOIN_OPENS_MINUTES })}
-        </p>
-      ) : booking.locationText ? (
-        <p className="text-[15px] leading-snug">
-          {t('app.bookPlace', { place: booking.locationText })}
-        </p>
-      ) : (
-        <p className="text-[13px] leading-snug text-muted-2">{t('app.bookNoLink')}</p>
-      )}
-
-      {/*
-       * A session booked in the app (it has a coach, 0055) moves here, by the owner's rule: the
-       * client moves it themselves 24 hours or more ahead, into a free slot; later than that only
-       * the coach can, so the action becomes a message to him. There is no cancel — no
-       * self-cancel and no refund. `-ml-4.5` pulls the ghost label back onto the card's edge.
-       */}
-      {booking.coachId ? (
-        canSelfMove(booking.startsAt, now) ? (
-          <div className="-mb-2 -ml-4.5 flex">
-            <Button variant="ghost" size="sm" onClick={onMove}>
-              {t('app.bookMove')}
-            </Button>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-1">
-            <p className="text-xs leading-snug text-muted-2">{t('app.bookMoveLate')}</p>
-            <div className="-mb-2 -ml-4.5 flex">
-              <Button variant="ghost" size="sm" onClick={onContact}>
-                {t('app.bookContact')}
-              </Button>
-            </div>
-          </div>
-        )
-      ) : null}
-    </section>
-  );
-}
-
 /**
  * One length, as a block: its price as the figure, what the money buys, and the one action.
  *
@@ -1239,10 +1246,13 @@ function Option({
   option,
   payment,
   onContact,
+  dim = false,
 }: {
   option: BookingOption;
   payment: PayRoute | null;
   onContact: () => void;
+  /** The price steps back while a hold or a payment check is the thing in progress (0058). */
+  dim?: boolean;
 }) {
   const { t, locale } = useT();
   const price = formatPrice(locale, option.price);
@@ -1255,7 +1265,12 @@ function Option({
           tab's bleu ciel; the figure is what this block is for, and neon is the colour of the one
           thing to act on (the pay button under it is the same neon). 17.3 on the graphite ground.
           The length above keeps the coach's ciel tag, so the tab still says whose it is. */}
-      <p className="display tabular text-[clamp(34px,11vw,48px)] leading-none text-action">
+      <p
+        className={clsx(
+          'display tabular text-[clamp(34px,11vw,48px)] leading-none transition-colors duration-150',
+          dim ? 'text-muted-2' : 'text-action',
+        )}
+      >
         {price}
       </p>
 
@@ -1423,8 +1438,16 @@ function MoveSheet({
       onMoved();
     } catch (e) {
       toast.show({ kind: 'error', title: t(slotErrorKey(e)) });
-      if (isAppError(e) && e.message === 'too_late') onClose();
-      else {
+      /*
+       * Each refusal has its own next step (0058). Too late: the sheet has nothing left to offer.
+       * The session changed under it (moved or cancelled by the coach): close and read it again.
+       * No connection or signed out: the pick stays, to try again as it was. A taken slot: the
+       * times are asked for again.
+       */
+      const code = isAppError(e) ? e.message : '';
+      if (code === 'too_late') onClose();
+      else if (code === 'not_found') onMoved();
+      else if (!isAppError(e) || (e.code !== 'network' && e.code !== 'auth')) {
         setSlot(null);
         setReload((n) => n + 1);
       }

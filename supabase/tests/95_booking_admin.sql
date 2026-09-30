@@ -256,16 +256,17 @@ declare
   v_id   uuid;
   v_row  public.coach_bookings%rowtype;
 begin
+  -- The payer has no account, so the admin names the person (0058, `p_email`): here, the payer.
   -- On top of Anna's session (10:30–11:30): refused.
   begin
-    perform public.admin_book_from_payment(v_pay, 'sergey', pg_temp.msk(3, '11:00'));
+    perform public.admin_book_from_payment(v_pay, 'sergey', pg_temp.msk(3, '11:00'), p_email => 'bka-payer@example.com');
     assert false, 'booked on top of a session';
   exception when others then
     assert sqlerrm = 'slot_taken', 'slot_taken, got ' || sqlerrm;
   end;
   -- In the past: refused.
   begin
-    perform public.admin_book_from_payment(v_pay, 'sergey', now() - interval '1 hour');
+    perform public.admin_book_from_payment(v_pay, 'sergey', now() - interval '1 hour', p_email => 'bka-payer@example.com');
     assert false, 'booked in the past';
   exception when others then
     assert sqlerrm = 'invalid_times', 'invalid_times, got ' || sqlerrm;
@@ -280,19 +281,19 @@ begin
   end;
   -- No such coach: refused.
   begin
-    perform public.admin_book_from_payment(v_pay, 'nobody', pg_temp.msk(4, '10:00'));
+    perform public.admin_book_from_payment(v_pay, 'nobody', pg_temp.msk(4, '10:00'), p_email => 'bka-payer@example.com');
     assert false, 'booked with a coach that does not exist';
   exception when others then
     assert sqlerrm = 'coach_unavailable', 'coach_unavailable, got ' || sqlerrm;
   end;
   -- A length that contradicts the payment's own is refused, not quietly swapped.
   begin
-    perform public.admin_book_from_payment(v_pay, 'sergey', pg_temp.msk(4, '10:00'), 'hour');
+    perform public.admin_book_from_payment(v_pay, 'sergey', pg_temp.msk(4, '10:00'), 'hour', p_email => 'bka-payer@example.com');
     assert false, 'booked an hour on a half-hour payment';
   exception when others then
     assert sqlerrm = 'option_mismatch', 'option_mismatch, got ' || sqlerrm;
   end;
-  v_id := public.admin_book_from_payment(v_pay, 'sergey', pg_temp.msk(4, '10:00'), 'half');
+  v_id := public.admin_book_from_payment(v_pay, 'sergey', pg_temp.msk(4, '10:00'), 'half', p_email => 'bka-payer@example.com');
   select * into v_row from public.coach_bookings where id = v_id;
   assert v_row.status = 'active', 'the booking is active';
   assert v_row.email = 'bka-payer@example.com', 'the booking is the payer''s';
@@ -304,7 +305,7 @@ begin
   assert v_row.source = 'forma' and v_row.coach_id = 'sergey', 'our own row, with its coach';
   -- Twice: refused.
   begin
-    perform public.admin_book_from_payment(v_pay, 'sergey', pg_temp.msk(4, '12:00'));
+    perform public.admin_book_from_payment(v_pay, 'sergey', pg_temp.msk(4, '12:00'), p_email => 'bka-payer@example.com');
     assert false, 'a payment was booked twice';
   exception when others then
     assert sqlerrm = 'already_applied', 'already_applied, got ' || sqlerrm;
@@ -312,13 +313,13 @@ begin
   -- No length known and none given: refused; with one given, booked.
   begin
     perform public.admin_book_from_payment(pg_temp.pay('BKA-4'),
-      'sergey', pg_temp.msk(4, '14:00'));
+      'sergey', pg_temp.msk(4, '14:00'), p_email => 'bka-payer@example.com');
     assert false, 'booked with no length';
   exception when others then
     assert sqlerrm = 'invalid_option', 'invalid_option, got ' || sqlerrm;
   end;
   perform public.admin_book_from_payment(pg_temp.pay('BKA-4'),
-    'sergey', pg_temp.msk(4, '14:00'), 'hour');
+    'sergey', pg_temp.msk(4, '14:00'), 'hour', p_email => 'bka-payer@example.com');
 end $$;
 select pg_temp.as_super();
 do $$

@@ -1873,7 +1873,8 @@ export const app = {
   bookPlace: 'Where: {place}',
   // A conference link is created asynchronously, and a Google Calendar booking may never have
   // one. An honest line beats a dead button.
-  bookNoLink: 'No join link yet.',
+  bookNoLink:
+    'The coach will send the call link before the start. If it is not there, message the coach.',
   bookMove: 'Reschedule',
   // --- «Message the coach»: a message into the owner's «Обращения» topic (0042) ---
   supportWrite: 'Message the coach',
@@ -2046,7 +2047,8 @@ export const app = {
   bookingsMoveTitle: 'Move the booking',
   bookingsMoveDate: 'Date',
   bookingsMoveTime: 'Time, Moscow',
-  bookingsMoveHint: 'Any future time agreed with the coach. The client gets a bot message.',
+  bookingsMoveHint:
+    'Any future time agreed with the coach. The client gets a bot message if they have Telegram linked.',
   bookingsMoved: 'Booking moved',
   bookingsMoveTaken: 'The coach already has a booking at that time.',
   bookingsMoveInvalid: 'The time has to be in the future.',
@@ -2066,7 +2068,6 @@ export const app = {
   adminPayBookTitle: 'Book a time',
   adminPayBookLead:
     'The time agreed with the client. The session appears in their app and the bot sends a confirmation with the link.',
-  adminPayBookFor: 'Client: {email}',
   adminPayBookLength: 'Length',
   adminPayBookConfirm: 'Book',
   adminPayBooked: 'Session booked',
@@ -2123,7 +2124,43 @@ export const app = {
   bookPaymentCheckingNote:
     'The time to pay ran out while the payment page was open. If you have paid, the session will show up here by itself — no need to pick a time again.',
   bookPaymentCheckingLong:
-    'The payment has not arrived. If you were charged, message the coach and we will book it by hand.',
+    'We do not see the payment yet. If you paid from another email, enter the order number from the receipt. If you were charged and there is no session, message the coach and we will book it by hand.',
   bookPaymentNotPaid: 'I did not pay — pick a time',
   bookMoveTooSoon: 'A session can only be moved to a time at least 24 hours away.',
+  // --- Booking edge cases (0058) ---------------------------------------------------------------
+  bookPaymentOtherEmail: 'Paid from another email',
+  bookHoldAgainLater:
+    'You already held this time. You can pick it again in {n} min — or take another one.',
+  bookReadError: 'Could not check your sessions.',
+  bookReadRetry: 'Try again',
+  bookTelegramPrompt:
+    'Telegram is not linked, so no reminder will come. Open the app through our bot and sign in with this email — the reminder and the link will arrive there.',
+  bookTelegramOpen: 'Open the bot',
+  bookCancelled: 'Session cancelled',
+  bookCancelledNote: '{when}. To pick another time, message the coach.',
+  bookMoveGone: 'The session has changed: it was moved or cancelled. Here is how it stands now.',
+  bookErrorAuth: 'You were signed out. Sign in again and retry.',
+  bookingsNoTelegram: 'no Telegram',
+  bookingsMoveNoTelegram:
+    'The client has no Telegram linked: the bot message will not reach them. Let them know yourself.',
+  bookingsMoveOutside: "This time is outside the coach's hours. Move it only if you agreed on it.",
+  bookingsGone: 'The booking has already changed — the list is refreshed.',
+  bookingsRelease: 'Release',
+  bookingsReleaseTitle: 'Release the time?',
+  bookingsReleaseBody:
+    'The hold goes and the time is free for everybody. If the payment still arrives, it does not confirm a booking by itself: it shows up under «Payments» with no time, and you can book it from there.',
+  bookingsReleased: 'Time released',
+  adminPayBookWhoHint:
+    'No account stands behind this payment. Pick the person — the session will show up in their app.',
+  adminPayBookErrPerson: 'Pick who the session is for.',
+  adminPayAsSession: 'This is a session',
+  adminPayAsSessionLead:
+    'The amount matched no price. If it paid for a session, pick the length and the time — the payment becomes a session.',
+  adminPayRefund: 'Refund done',
+  adminPayRefundTitle: 'Close the payment as a refund?',
+  adminPayRefundBody:
+    'The payment leaves «Paid, no time picked». The money does not go back by itself — the refund is made in the till.',
+  adminPayRefundNote: 'Refund',
+  adminPayRefunded: 'Payment closed as a refund',
+  adminPayStateSessionClosed: 'Closed, no booking',
 } as const;

@@ -574,6 +574,25 @@ describe('coach sessions (0054)', () => {
     expect(m?.text).toContain('up to 24 hours ahead');
   });
 
+  /* 0058: a payment confirmed after the start still confirms, and says to go in rather than how
+     to move a session that is already running. */
+  it('confirms a running session with a way in instead of the move rule', () => {
+    const start = Date.parse(base.starts_at);
+    const late = messageFor({ kind: 'session_confirmed', params: base }, 'ru', start + 5 * 60_000);
+    expect(late?.text).toContain('<b>Встреча с тренером подтверждена</b>');
+    expect(late?.text).toContain('Встреча уже идёт');
+    expect(late?.text).toContain('href=');
+    expect(late?.text).not.toContain('24 часа');
+    const early = messageFor({ kind: 'session_confirmed', params: base }, 'en', start - 60_000);
+    expect(early?.text).toContain('24 hours');
+    expect(early?.text).not.toContain('already started');
+    // Booked by the admin for a coach with no room yet: no «join through the link» without one.
+    const bare = { ...base, join_url: null };
+    const noLink = messageFor({ kind: 'session_confirmed', params: bare }, 'ru', start + 60_000);
+    expect(noLink?.text).not.toContain('Встреча уже идёт');
+    expect(noLink?.text).not.toContain('24 часа');
+  });
+
   it('picks the reminder headline by how far ahead it is', () => {
     const day = messageFor({ kind: 'session_reminder', params: { ...base, hours_before: 24 } });
     expect(day?.text).toContain('<b>Завтра встреча с тренером</b>');

@@ -299,7 +299,9 @@ the step feature — §2.6.) Later features brought their own files, numbered af
 `93_outbox_kinds.sql` for the message kinds of 0054, `94_booking_core.sql` for the in-app
 booking of 0055 (slots, holds, the overlap constraint, moves, payment confirming a hold) and
 `95_booking_admin.sql` for 0056 (booking a paid session from the admin, holds in «Записи», a move
-over its own old time, the reminder's lifetime).
+over its own old time, the reminder's lifetime) and `96_booking_edge_cases.sql` for 0058 (the
+anti-squat answer, a coach without a room link, booking a payment for the person the admin picked,
+a late confirmation, who has Telegram).
 Each ends with a "PASSED" line. The test files are **not** idempotent — they insert fixtures — so
 rebuild the database for each run.
 
@@ -1927,6 +1929,13 @@ Google rows from before the cutover stay valid as history and still block Sergey
 **0056** (`0056_booking_admin.sql`) needs no order of its own beyond 0055: apply it, then deploy
 `deploy-notify` (the owner's channel prints the payment on «Занятие оплачено», and a late
 hour-before reminder picks its headline by the clock) and the site.
+
+**0058** (`0058_booking_edge_cases.sql`) needs 0056: apply it, then deploy `deploy-notify` (a
+confirmation that arrives after the start says the session is running) and the site. From then on a
+coach **without a room link offers no new time** in the app: set the link in Admin → Записи →
+Расписание before opening a coach's calendar. «Записать на время» in Платежи now asks who the
+session is for when no account stands behind the payment, and an unmatched payment of the wrong
+amount can be booked as a session with «Это занятие».
 
 ## 7.10 What is still only in Russian
 

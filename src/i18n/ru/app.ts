@@ -2007,7 +2007,7 @@ export const app = {
   bookPlace: 'Место: {place}',
   // Ссылка на конференцию создаётся не мгновенно, а у брони из Google Календаря её может не быть
   // вовсе. Пустая кнопка была бы хуже честной строки.
-  bookNoLink: 'Ссылки на вход пока нет.',
+  bookNoLink: 'Ссылку на созвон пришлёт тренер до начала. Если её нет — напиши тренеру.',
   bookMove: 'Перенести',
   // --- «Написать тренеру»: сообщение в тему «Обращения» группы владельца (0042) ---
   supportWrite: 'Написать тренеру',
@@ -2185,7 +2185,7 @@ export const app = {
   bookingsMoveDate: 'Дата',
   bookingsMoveTime: 'Время, МСК',
   bookingsMoveHint:
-    'Любое будущее время, о котором договорились с тренером. Клиенту придёт сообщение в бота.',
+    'Любое будущее время, о котором договорились с тренером. Если у клиента привязан Телеграм, ему придёт сообщение в бота.',
   bookingsMoved: 'Запись перенесена',
   bookingsMoveTaken: 'На это время у тренера уже есть запись.',
   bookingsMoveInvalid: 'Время должно быть в будущем.',
@@ -2206,7 +2206,6 @@ export const app = {
   adminPayBookTitle: 'Записать на время',
   adminPayBookLead:
     'Время, о котором договорились с клиентом. Запись появится у него в приложении, в бота придёт подтверждение со ссылкой.',
-  adminPayBookFor: 'Клиент: {email}',
   adminPayBookLength: 'Длительность',
   adminPayBookConfirm: 'Записать',
   adminPayBooked: 'Занятие записано',
@@ -2267,7 +2266,49 @@ export const app = {
   bookPaymentCheckingNote:
     'Время на оплату вышло, пока была открыта страница оплаты. Если ты уже заплатил(а), тренировка появится здесь сама — выбирать время заново не нужно.',
   bookPaymentCheckingLong:
-    'Оплата так и не дошла. Если деньги списались — напиши тренеру, запишем вручную.',
+    'Оплату пока не видим. Если платил(а) с другой почты — введи номер заказа из чека. Если деньги списались, а записи нет, напиши тренеру — запишем вручную.',
   bookPaymentNotPaid: 'Я не платил(а) — выбрать время',
   bookMoveTooSoon: 'Перенести можно только на время не раньше чем через 24 часа.',
+  // --- Booking edge cases (0058) ---------------------------------------------------------------
+  // «Оплата так и не дошла» was a guess stated as a fact: the money may have come from another
+  // address. The screen says what it sees and what to do about each case.
+  bookPaymentOtherEmail: 'Оплатил(а) с другой почты',
+  // The same start picked again inside the anti-squat window (0058 `hold_again_later`).
+  bookHoldAgainLater:
+    'Это время ты уже держал(а). Снова выбрать его можно через {n} мин — или возьми другое.',
+  bookReadError: 'Не удалось проверить твои записи.',
+  bookReadRetry: 'Ещё раз',
+  bookTelegramPrompt:
+    'Телеграм не привязан, и напоминание не придёт. Открой приложение через нашего бота и войди с этой почтой — напоминание и ссылка придут туда.',
+  bookTelegramOpen: 'Открыть бота',
+  bookCancelled: 'Тренировка отменена',
+  bookCancelledNote: '{when}. Чтобы выбрать другое время, напиши тренеру.',
+  bookMoveGone: 'Запись изменилась: её перенесли или отменили. Показываем, какая она сейчас.',
+  bookErrorAuth: 'Вход истёк. Войди снова и повтори.',
+  // Admin: who gets bot messages, and the edges of a move, a cancel and a hold (0058).
+  bookingsNoTelegram: 'нет Телеграма',
+  bookingsMoveNoTelegram:
+    'У клиента не привязан Телеграм: сообщение в бота не дойдёт. Предупреди его сам(а).',
+  bookingsMoveOutside:
+    'Это время вне рабочих часов тренера. Переноси, только если вы договорились.',
+  bookingsGone: 'Запись уже изменилась — список обновлён.',
+  bookingsRelease: 'Освободить',
+  bookingsReleaseTitle: 'Освободить время?',
+  bookingsReleaseBody:
+    'Бронь снимется, и время станет свободным для всех. Если оплата всё же придёт, запись сама не подтвердится: платёж появится в «Платежах» без времени, и записать его можно будет там.',
+  bookingsReleased: 'Время освобождено',
+  // Admin payments: who the session is for, a payment of the wrong amount, a refund (0058).
+  adminPayBookWhoHint:
+    'За этим платежом нет аккаунта. Выбери человека — запись появится у него в приложении.',
+  adminPayBookErrPerson: 'Выбери, кому записать занятие.',
+  adminPayAsSession: 'Это занятие',
+  adminPayAsSessionLead:
+    'Сумма не совпала ни с одной ценой. Если это оплата занятия, выбери длительность и время — платёж станет занятием.',
+  adminPayRefund: 'Возврат сделан',
+  adminPayRefundTitle: 'Закрыть платёж как возврат?',
+  adminPayRefundBody:
+    'Платёж уйдёт из «Оплачено, время не выбрано». Деньги сами не вернутся — возврат делается в кассе.',
+  adminPayRefundNote: 'Возврат',
+  adminPayRefunded: 'Платёж закрыт как возврат',
+  adminPayStateSessionClosed: 'Закрыт без записи',
 } as const;

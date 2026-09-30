@@ -59,6 +59,28 @@ export function pickUpcoming<T extends BookingTimes>(
   return best;
 }
 
+/**
+ * A session cancelled from the coach's side that has not happened yet, soonest first, or null
+ * (0058). A client cannot cancel (0055), so a cancelled row is always news to them — and the bot
+ * that would have told them reaches only people with Telegram linked. The tab says it instead.
+ */
+export function pickCancelled<T extends BookingTimes>(
+  bookings: readonly T[],
+  now: number = Date.now(),
+): T | null {
+  let best: T | null = null;
+  let bestStart = Number.POSITIVE_INFINITY;
+  for (const booking of bookings) {
+    if (booking.status !== 'cancelled') continue;
+    const starts = Date.parse(booking.startsAt);
+    const ends = Date.parse(booking.endsAt);
+    if (!Number.isFinite(starts) || !(ends > now) || starts >= bestStart) continue;
+    best = booking;
+    bestStart = starts;
+  }
+  return best;
+}
+
 /** Whole minutes the session runs for; 0 when the times are unusable. */
 export function durationMinutes(startsAt: string, endsAt: string): number {
   const a = Date.parse(startsAt);
