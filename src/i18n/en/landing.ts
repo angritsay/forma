@@ -187,6 +187,7 @@ export const landing = {
   orderSuccessText:
     'We have recorded {course} for {email}. Access opens automatically once the payment lands — sign in to the app with this email.',
   orderSuccessApp: 'Open the app',
+  orderEmailTypo: 'A typo in the domain? Tap to change it to {suggestion}',
   orderErrorEmail: 'Check the email — the address does not look right.',
   orderErrorConsent: 'Please agree to the privacy policy.',
   orderErrorNetwork: 'No connection. Check your internet and try again.',

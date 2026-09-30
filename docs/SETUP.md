@@ -1604,6 +1604,7 @@ one topic is deleted, make it by hand and correct one number in the secret.
 | Регистрации       | a new account, with its language                                                  |
 | Курсы             | course paid, refund, **a payment that opened nothing**, a claim with no order     |
 | Клуб              | paid, renewed, cancelled, a duo pair formed, a proof sent again after a rejection |
+| (payment's topic) | **a refund or chargeback at the till** (0057) — access is not closed by itself    |
 | Онлайн-тренировки | session paid, time chosen, moved, cancelled                                       |
 | Обращения         | what people write to the bot, and the app's «Написать тренеру» (§7.12)            |
 

@@ -227,10 +227,22 @@ export const app = {
     'The first workout of “{course}” was free. The rest is the whole course: the workouts in order, adapted to your level. One payment, yours for good.',
   unlockCta: 'Go to payment',
   unlockNote:
-    'The course opens for {email} right after payment — usually within a couple of minutes.',
+    'On the payment page, enter {email} — the course opens for that address on its own, usually within a couple of minutes. With another address it will not open by itself: then find the payment by the order number on your receipt.',
   unlockNoteManual:
     'The order was not recorded — you can still pay, but the coach opens access by hand. Usually the same day.',
   unlockNoPayment: 'Payment for this course is not connected yet. Write to us and we will open it.',
+  unlockPayAnyway: 'Pay anyway',
+  payPendingTitle: 'Checking your payment…',
+  payPendingNote:
+    'If you have already paid, access opens here on its own — usually within a couple of minutes. No need to pay again.',
+  payPendingLongTitle: 'The payment has not arrived yet',
+  payPendingLong:
+    'If the money was taken and the payment page had another address, find the payment by the order number on your receipt. If that does not work, write to us and we will open it by hand.',
+  payPendingCheckAgain: 'Check again',
+  payPendingNotPaid: 'I did not pay',
+  payPendingCourseDone: 'Payment received — the course is open',
+  payPendingClubDone: 'Payment received — you are in the club',
+  contactUs: 'Write to us',
   claimLink: 'Paid from another address?',
   claimTitle: 'Payment from another address',
   claimBody:
@@ -245,6 +257,10 @@ export const app = {
   claimEmailTaken:
     'That address is already linked to another account. Write to us and we will sort it out.',
   claimRateLimited: 'Too many tries. Please try again in an hour.',
+  claimAmbiguous:
+    'The payment was found, but you have several unpaid orders and the amount does not tell which one it is for. Write to us which course you paid for and we will open it.',
+  claimRefreshFailed:
+    'Found it, access is open — but the screen did not refresh. Close and reopen the app if the lock is still there.',
   // Telling somebody the trial "was free" before they have used it describes an event that
   // never happened.
   pathTrialLeftBody: 'The first workout of this course is free — start there, then decide.',
@@ -531,7 +547,8 @@ export const app = {
   profileSubscriptionCancelled: 'Cancelled · access until {date}',
   profileSubscriptionEnded: 'Ended {date} · renew',
   profileSubscriptionEndedUndated: 'Ended · renew',
-  profileSubscriptionPending: 'Waiting for payment',
+  profileSubscriptionPending: 'Waiting for payment · pay',
+  profileSubscriptionRenewSoon: 'until {date} · renew',
   profileSubscriptionCharge: 'One payment: {price} for a year',
   planMonthly: 'Monthly',
   planAnnual: 'Annual',
@@ -1219,6 +1236,11 @@ export const app = {
   duoRedeemOwn: 'This is your own link — send it to a friend so she can open it on her phone.',
   duoRedeemInviterGone: 'Your friend is not in the club right now, so there is no pair to join.',
   duoRedeemFailed: 'We could not accept the invite. Please try again later.',
+  duoSwitchTitle: 'Switch partners?',
+  duoSwitchBody:
+    'You are paired with {name} right now. Accepting this invite breaks that pair, and {name} stays without a partner — until Monday or until they invite someone.',
+  duoSwitchAccept: 'Accept the invite',
+  duoSwitchKeep: 'Stay in my pair',
   // «Позови друга» (0051): +30 days for both when the friend pays for the club.
   inviteTitle: 'Invite a friend',
   inviteRow: 'Invite a friend — +30 days',
@@ -1737,6 +1759,10 @@ export const app = {
   clubLeadAccent: 'here it is one small task a day',
   clubLeadPost: ': ten minutes on foot, twenty squats, a glass of water before coffee.',
   clubChargeNote: 'One payment: {price} for a year of access — the club and the Start course.',
+  clubEmailNote: 'On the payment page, enter {email} — the club opens for that address on its own.',
+  clubRenewTitle: 'Club open until {date}',
+  clubRenewNote: 'There is no auto-renewal — renew ahead and your days will not break.',
+  clubRenewCta: 'Renew',
   // --- Club, the selling screen's demo chat and features (stream: club-pitch-chat) ---
   clubDemoEyebrow: 'A day in the club',
   clubDemoCoachRole: 'coach',
@@ -1960,7 +1986,8 @@ export const app = {
   bookHoldUntil: 'Slot held until {time}',
   bookHoldLeft: '{left} left',
   bookHoldRelease: 'Pick another time',
-  bookHoldNote: 'The payment confirms the booking on its own — the session appears up here.',
+  bookHoldNote:
+    'On the payment page, enter the address you sign in with — the payment confirms the booking on its own, and the session appears up here.',
   bookHoldExpired: 'The time to pay ran out and the slot is free again. Pick a time again.',
   bookHoldTaken: 'Someone has just taken that time. Pick another one.',
   bookHoldRateLimited: 'Too many tries this hour — try again later.',

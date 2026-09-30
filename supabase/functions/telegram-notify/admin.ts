@@ -297,6 +297,7 @@ const PAYMENT_KINDS = new Set([
   'session_paid',
   'claim_no_order',
   'session_unmatched',
+  'payment_reversed',
 ]);
 
 /** Куда ведёт сообщение этого вида, и как ссылка подписана. */
@@ -545,7 +546,8 @@ function adminBody(row: AdminRow): string | null {
       return block(
         'Платёж не привязан',
         lines(
-          ['Почта', email],
+          // Prodamus sometimes sends no address at all (0057): say so rather than drop the line.
+          ['Почта', email || 'касса не прислала — только номер заказа'],
           ['Сумма', money(p)],
           ['За что', INTENT_NAMES[str(p, 'intent')] ?? str(p, 'intent')],
           ['Касса', tillName(str(p, 'provider'))],
@@ -559,9 +561,16 @@ function adminBody(row: AdminRow): string | null {
      * (0043). Платёж не сожжён — его можно забрать снова, — но человек сейчас стоит перед экраном
      * без курса и ждёт, так что это надо увидеть сразу.
      */
-    case 'claim_no_order':
+    /*
+     * `reason` (0057) says which of the two it was: `ambiguous` — several open orders and none at
+     * the paid price, so the owner has to ask which course; `no_order` (or empty, before 0057) —
+     * nothing was ordered at all.
+     */
+    case 'claim_no_order': {
+      const reason = str(p, 'reason');
+      const ambiguous = reason === 'ambiguous';
       return block(
-        'Пришли за платежом, а заказа нет',
+        ambiguous ? 'Пришли за платежом, а заказов несколько' : 'Пришли за платежом, а заказа нет',
         lines(
           ['Аккаунт', email],
           ['Почта в кассе', str(p, 'payEmail')],
@@ -569,7 +578,30 @@ function adminBody(row: AdminRow): string | null {
           ['Касса', tillName(str(p, 'provider'))],
           ['Заказ', str(p, 'ref')],
         ) +
-          '\n\nКурс не открылся: у аккаунта нет ожидающего заказа или их несколько. Платёж ждёт — открой курс вручную или попроси оформить заказ и забрать снова.',
+          (ambiguous
+            ? '\n\nКурс не открылся: у аккаунта несколько ожидающих заказов, и сумма не указывает на один. Платёж ждёт — спроси, какой курс оплачен, и открой его вручную.'
+            : reason === 'no_order'
+              ? '\n\nКурс не открылся: у аккаунта нет ожидающего заказа. Платёж ждёт — открой курс вручную или попроси оформить заказ и забрать снова.'
+              : '\n\nКурс не открылся: у аккаунта нет ожидающего заказа или их несколько. Платёж ждёт — открой курс вручную или попроси оформить заказ и забрать снова.'),
+      );
+    }
+
+    /*
+     * Касса сообщила не об оплате: возврат, отмена, чарджбэк (0057). Доступ сам не закрывается —
+     * это решение владельца, — поэтому сообщение говорит, что проверить и где.
+     */
+    case 'payment_reversed':
+      return block(
+        'Возврат или отмена в кассе',
+        lines(
+          ['Событие', str(p, 'event')],
+          ['Почта', email],
+          ['За что', INTENT_NAMES[str(p, 'intent')] ?? str(p, 'intent')],
+          ['Сумма', money(p)],
+          ['Касса', tillName(str(p, 'provider'))],
+          ['Заказ', str(p, 'ref')],
+        ) +
+          '\n\nДоступ не закрыт автоматически. Проверь в кассе и, если деньги вернулись, закрой доступ в админке.',
       );
 
     case 'support_message':

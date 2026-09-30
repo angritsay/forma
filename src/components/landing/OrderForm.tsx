@@ -7,6 +7,7 @@
 import { useEffect, useRef, useState, type SubmitEvent } from 'react';
 import type { Locale } from '@/content/schema';
 import { isConfigured } from '@/lib/api/client';
+import { checkEmail, withDomain } from '@/lib/api/auth';
 import { isAppError } from '@/lib/api/errors';
 import { isDemo, isDemoEnv } from '@/lib/api/mode';
 import { createOrder } from '@/lib/api/orders';
@@ -58,6 +59,12 @@ export interface OrderFormLabels {
   paymentNote?: string;
   /** Accessible name of the plan choice; required when `plans` is given. */
   plansLabel?: string;
+  /**
+   * A slipped domain («gmial.com»), template with {suggestion}. Shown once per address and
+   * tappable — it puts the suggestion in. The address is what ties the payment to the order, so
+   * a typo here is a paid course nobody can find.
+   */
+  emailTypo?: string;
 }
 
 export interface PlanOption {
@@ -150,6 +157,8 @@ export default function OrderForm({
   const plan = plans?.find((p) => p.id === planId) ?? plans?.[0];
   const [consent, setConsent] = useState(false);
   const [status, setStatus] = useState<Status>({ kind: 'idle' });
+  // The address the typo hint was shown for: a second submit of the same address goes through.
+  const [typo, setTypo] = useState<{ email: string; suggestion: string } | null>(null);
   const emailRef = useRef<HTMLInputElement>(null);
   const consentRef = useRef<HTMLInputElement>(null);
   const successRef = useRef<HTMLDivElement>(null);
@@ -190,6 +199,18 @@ export default function OrderForm({
       document.removeEventListener('click', onClick);
     };
   }, [plans]);
+
+  /*
+   * Back from the payment page, the browser may restore this page from its back-forward cache as
+   * it was left: «Переходим к оплате…» and every field disabled, with nothing left to press.
+   */
+  useEffect(() => {
+    const onShow = (e: PageTransitionEvent) => {
+      if (e.persisted) setStatus((s) => (s.kind === 'redirecting' ? { kind: 'idle' } : s));
+    };
+    window.addEventListener('pageshow', onShow);
+    return () => window.removeEventListener('pageshow', onShow);
+  }, []);
 
   const configured = isConfigured() || demo;
   const [consentBefore, consentAfter] = labels.consent.split('{privacy}');
@@ -235,6 +256,13 @@ export default function OrderForm({
     }
     if (!consent) {
       setStatus({ kind: 'error', reason: 'consent' });
+      return;
+    }
+    // A slipped domain is asked about once; the same address submitted again is taken as meant.
+    const check = checkEmail(trimmed);
+    if (labels.emailTypo && !check.ok && check.reason === 'email_typo' && typo?.email !== trimmed) {
+      setTypo({ email: trimmed, suggestion: check.suggestion });
+      emailRef.current?.focus();
       return;
     }
     setStatus({ kind: 'submitting' });
@@ -342,6 +370,8 @@ export default function OrderForm({
             : fill(labels.errorGeneric, { email: supportEmail })
       : '';
   const emailInvalid = status.kind === 'error' && status.reason === 'email';
+  // Only while the field still holds the address it was about.
+  const showTypo = typo !== null && typo.email === email.trim().toLowerCase();
   const consentInvalid = status.kind === 'error' && status.reason === 'consent';
 
   return (
@@ -405,16 +435,32 @@ export default function OrderForm({
           value={email}
           disabled={busy}
           aria-invalid={emailInvalid || undefined}
-          aria-describedby={errorText && !consentInvalid ? 'order-error' : undefined}
           onChange={(e) => {
             setEmail(e.target.value);
             if (status.kind === 'error') setStatus({ kind: 'idle' });
           }}
+          aria-describedby={
+            errorText && !consentInvalid ? 'order-error' : showTypo ? 'order-typo' : undefined
+          }
           placeholder={labels.emailPlaceholder}
           className={`mt-2 h-12 w-full border bg-surface-2 px-4 text-base text-text placeholder:text-muted-2 focus:border-accent focus:outline-none ${
             emailInvalid ? 'border-danger' : 'border-border'
           }`}
         />
+        {showTypo && typo && labels.emailTypo ? (
+          <button
+            id="order-typo"
+            type="button"
+            onClick={() => {
+              setEmail(withDomain(typo.email, typo.suggestion));
+              setTypo(null);
+              emailRef.current?.focus();
+            }}
+            className="mt-2 text-left text-sm text-muted underline underline-offset-4"
+          >
+            {fill(labels.emailTypo, { suggestion: typo.suggestion })}
+          </button>
+        ) : null}
       </div>
 
       <label className="flex cursor-pointer items-start gap-3 text-sm text-muted">

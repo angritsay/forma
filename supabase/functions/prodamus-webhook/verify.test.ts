@@ -10,6 +10,7 @@ import {
   parseForm,
   parsePriceList,
   planForAmount,
+  paymentDisposition,
   readPayment,
   routeAmount,
   sessionForAmount,
@@ -152,6 +153,26 @@ describe('readPayment', () => {
       ),
     ).toEqual({ email: 'sub@example.com', sum: '1990', status: 'success', ref: 'o-1' });
     expect(readPayment(parseForm(new URLSearchParams('sum=1990')))).toBeNull();
+  });
+
+  it('keeps a paid order without an address, so it is recorded rather than lost (0057)', () => {
+    const payment = readPayment(
+      parseForm(new URLSearchParams('sum=2990&payment_status=success&order_id=o-2')),
+    );
+    expect(payment).toEqual({ email: '', sum: '2990', status: 'success', ref: 'o-2' });
+    expect(paymentDisposition(payment!)).toBe('unaddressed');
+  });
+});
+
+describe('paymentDisposition', () => {
+  const base = { email: 'a@example.com', sum: '2990', ref: 'o-1' };
+  it('applies a success, and a notification with no status at all', () => {
+    expect(paymentDisposition({ ...base, status: 'success' })).toBe('apply');
+    expect(paymentDisposition({ ...base, status: undefined })).toBe('apply');
+  });
+  it('sends every other status to the owner, with or without an address', () => {
+    expect(paymentDisposition({ ...base, status: 'order_canceled' })).toBe('reversal');
+    expect(paymentDisposition({ ...base, email: '', status: 'order_denied' })).toBe('reversal');
   });
 });
 

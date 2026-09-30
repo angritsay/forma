@@ -56,6 +56,8 @@ export interface LinkButtonProps {
   /** Open in a new tab (a calendar, a payment page the user comes back from). */
   external?: boolean;
   className?: string;
+  /** Runs on the tap, before the link is followed — e.g. to remember that the till was opened. */
+  onOpen?: () => void;
 }
 
 export function LinkButton({
@@ -68,10 +70,16 @@ export function LinkButton({
   icon,
   external,
   className,
+  onOpen,
 }: LinkButtonProps) {
+  const link = externalLinkProps(href);
   return (
     <a
-      {...externalLinkProps(href)}
+      {...link}
+      onClick={(e) => {
+        onOpen?.();
+        link.onClick(e);
+      }}
       target={external ? '_blank' : undefined}
       rel={external ? 'noopener' : undefined}
       className={clsx(

@@ -7,6 +7,7 @@ import {
   subscriptionChargeNote,
   subscriptionDate,
   subscriptionLeadsToJoin,
+  subscriptionRenewDue,
   subscriptionSubtitle,
 } from './subscription';
 
@@ -68,10 +69,16 @@ describe('subscriptionSubtitle', () => {
     expect(subscriptionSubtitle(tr('ru'), null, NOW)).toBe(`от ${price} в месяц`);
   });
 
-  it('says a pending payment is pending', () => {
+  it('says a pending order waits for its payment, and how to finish it', () => {
     expect(subscriptionSubtitle(tr('ru'), sub({ status: 'pending', isLive: false }), NOW)).toBe(
-      'Ждёт оплаты',
+      'Ждёт оплаты · оплатить',
     );
+  });
+
+  it('offers to renew in the last week', () => {
+    const soon = sub({ expiresAt: '2027-01-15T12:00:00Z' });
+    expect(subscriptionSubtitle(tr('ru'), soon, NOW)).toBe('до 15 января · продлить');
+    expect(subscriptionSubtitle(tr('en'), soon, NOW)).toBe('until January 15 · renew');
   });
 });
 
@@ -82,8 +89,20 @@ describe('subscriptionLeadsToJoin', () => {
     expect(subscriptionLeadsToJoin(sub({ status: 'refunded', isLive: false }))).toBe(true);
     expect(subscriptionLeadsToJoin(sub({}))).toBe(false);
     expect(subscriptionLeadsToJoin(sub({ status: 'cancelled' }))).toBe(false);
-    // Money on its way: a second payment link beside it invites a double charge.
-    expect(subscriptionLeadsToJoin(sub({ status: 'pending', isLive: false }))).toBe(false);
+    // An order without its payment: the till finishes it (the claim link sits beside it).
+    expect(subscriptionLeadsToJoin(sub({ status: 'pending', isLive: false }))).toBe(true);
+  });
+
+  it('leads to the payment again in the last week, so «продли в приложении» is true', () => {
+    expect(subscriptionLeadsToJoin(sub({ expiresAt: '2027-01-16T12:00:00Z' }), NOW)).toBe(true);
+    expect(subscriptionLeadsToJoin(sub({ expiresAt: '2027-01-18T12:00:00Z' }), NOW)).toBe(false);
+    expect(
+      subscriptionRenewDue(sub({ status: 'cancelled', expiresAt: '2027-01-12T12:00:00Z' }), NOW),
+    ).toBe(true);
+    expect(subscriptionRenewDue(sub({ expiresAt: null }), NOW)).toBe(false);
+    expect(
+      subscriptionRenewDue(sub({ isLive: false, expiresAt: '2027-01-12T12:00:00Z' }), NOW),
+    ).toBe(false);
   });
 });
 
@@ -96,8 +115,10 @@ describe('subscriptionChargeNote', () => {
     expect(subscriptionChargeNote(tr('en'), null)).toContain(clubChargeLabel('en') ?? '');
   });
 
-  it('says nothing while it runs or while a payment is on its way', () => {
-    expect(subscriptionChargeNote(tr('ru'), sub({}))).toBe('');
-    expect(subscriptionChargeNote(tr('ru'), sub({ status: 'pending', isLive: false }))).toBe('');
+  it('says nothing while it runs with more than a week left', () => {
+    expect(subscriptionChargeNote(tr('ru'), sub({}), NOW)).toBe('');
+    expect(
+      subscriptionChargeNote(tr('ru'), sub({ status: 'pending', isLive: false }), NOW),
+    ).toContain(clubChargeLabel('ru') ?? '');
   });
 });

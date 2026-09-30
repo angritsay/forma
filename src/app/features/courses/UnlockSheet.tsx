@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { ClaimSheet } from '@/app/features/payments/ClaimSheet';
+import { PaymentPending, usePaymentPending } from '@/app/features/payments/PaymentPending';
+import { SupportSheet } from '@/app/features/support/SupportSheet';
 import { Button } from '@/components/ui/Button';
 import { KeyWord } from '@/components/ui/HeroField';
 import { Sheet } from '@/components/ui/Sheet';
@@ -39,10 +41,15 @@ export interface UnlockSheetProps {
  * по которой курс откроется. Согласие тоже не спрашивается второй раз — оно дано при входе, рядом
  * со ссылками на политику и оферту, и записано в журнал (0018).
  *
- * **Если заказ записать не удалось, кнопка оплаты всё равно появляется.** Так же устроена форма на
- * сайте: отказ бэкенда не повод терять покупку, потому что уведомление платёжного сервиса несёт ту
- * же почту и тренер включит курс руками. Молча делать вид, что ничего не произошло, нельзя —
- * поэтому подпись под кнопкой в этом случае говорит, что доступ откроется не сразу.
+ * **Если заказ записать не удалось, оплатить всё равно можно.** Так же устроена форма на сайте:
+ * отказ бэкенда не повод терять покупку, потому что уведомление платёжного сервиса несёт ту же
+ * почту и тренер включит курс руками. Но не сразу в кассу: сначала подпись говорит, что доступ
+ * откроется не сам, и только кнопка «Всё равно оплатить» ведёт дальше (0057 — раньше касса
+ * открывалась мгновенно, и подпись никто не успевал прочесть).
+ *
+ * **После кассы — «Проверяем оплату»** (`PaymentPending`): кнопка оплаты уступает место проверке,
+ * чтобы вернувшийся из кассы не заплатил второй раз, а шторка закрывается сама, как только курс
+ * открылся.
  */
 export function UnlockSheet({ open, course, onClose }: UnlockSheetProps) {
   const { t, l, locale } = useT();
@@ -52,6 +59,16 @@ export function UnlockSheet({ open, course, onClose }: UnlockSheetProps) {
   const [busy, setBusy] = useState(false);
   const [ordered, setOrdered] = useState<'idle' | 'ok' | 'failed'>('idle');
   const [claiming, setClaiming] = useState(false);
+  const [writing, setWriting] = useState(false);
+  const courseId = course?.id ?? null;
+  const pending = usePaymentPending(
+    courseId ? `course:${courseId}` : null,
+    (s) => courseId !== null && s.entitlements.includes(courseId),
+    () => {
+      toast.show({ kind: 'success', title: t('app.payPendingCourseDone') });
+      onClose();
+    },
+  );
 
   const email = (profile?.email || user?.email || '').trim().toLowerCase();
   // TEST_PAYMENT_URL — временная подмена; см. content/site/testPayment.ts. Она стоит перед
@@ -68,28 +85,32 @@ export function UnlockSheet({ open, course, onClose }: UnlockSheetProps) {
 
   if (!course) return null;
 
+  /* В кассу без почты не уходим: платёж потом не с кем связать. */
+  const toTill = () => {
+    if (!route || !email) return;
+    pending.start();
+    // Inside Telegram the payment page opens in the person's own browser, not in the Mini App.
+    goExternal(payHref(route, email));
+  };
+
   const go = async () => {
     setBusy(true);
-    let recorded = false;
     try {
       await createOrder({ email, courseId: course.id, locale, source: 'app' });
-      recorded = true;
     } catch (e) {
       // Записать не вышло — но платить человек всё ещё хочет; см. комментарий к компоненту.
       console.error('[unlock] create order failed', e);
       if (isAppError(e) && e.code === 'network') {
         toast.show({ kind: 'error', title: t('common.errorOffline') });
-        setBusy(false);
-        return;
+      } else {
+        setOrdered('failed');
       }
+      setBusy(false);
+      return;
     }
-    setOrdered(recorded ? 'ok' : 'failed');
+    setOrdered('ok');
     setBusy(false);
-    // В кассу без почты не уходим: платёж потом не с кем связать.
-    if (route && email) {
-      // Inside Telegram the payment page opens in the person's own browser, not in the Mini App.
-      goExternal(payHref(route, email));
-    }
+    toTill();
   };
 
   return (
@@ -104,19 +125,45 @@ export function UnlockSheet({ open, course, onClose }: UnlockSheetProps) {
           <KeyWord>{price}</KeyWord>
         </p>
 
-        {route ? (
+        {pending.phase !== 'idle' ? (
+          <PaymentPending
+            phase={pending.phase}
+            onNotPaid={pending.dismiss}
+            onCheckAgain={pending.checkAgain}
+            context={`unlock ${course.id}`}
+          />
+        ) : !route ? (
+          /* Ссылки на оплату нет — так бывает, пока продукт не заведён у платёжного сервиса.
+             Тогда честнее назвать адрес поддержки и дать написать туда, чем показать кнопку в
+             никуда. */
+          <div className="flex flex-col gap-3">
+            <p className="text-[13px] leading-snug text-muted">{t('app.unlockNoPayment')}</p>
+            <Button
+              variant="secondary"
+              size="md"
+              className="self-start"
+              onClick={() => setWriting(true)}
+            >
+              {t('app.contactUs')}
+            </Button>
+          </div>
+        ) : ordered === 'failed' ? (
+          /* Заказ не записался: сначала подпись, потом касса — по нажатию, а не сама. */
+          <div className="flex flex-col gap-3">
+            <p className="text-[13px] leading-snug text-muted">{t('app.unlockNoteManual')}</p>
+            <Button variant="secondary" size="lg" fullWidth onClick={toTill}>
+              {t('app.unlockPayAnyway')}
+            </Button>
+          </div>
+        ) : (
           <Button variant="action" size="lg" fullWidth loading={busy} onClick={() => void go()}>
             {t('app.unlockCta')}
           </Button>
-        ) : (
-          /* Ссылки на оплату нет — так бывает, пока продукт не заведён у платёжного сервиса.
-             Тогда честнее назвать адрес поддержки, чем показать кнопку в никуда. */
-          <p className="text-[13px] leading-snug text-muted">{t('app.unlockNoPayment')}</p>
         )}
 
-        <p className="text-[13px] leading-snug text-muted-2">
-          {ordered === 'failed' ? t('app.unlockNoteManual') : t('app.unlockNote', { email })}
-        </p>
+        {route && pending.phase === 'idle' && ordered !== 'failed' ? (
+          <p className="text-[13px] leading-snug text-muted-2">{t('app.unlockNote', { email })}</p>
+        ) : null}
 
         {/*
          * Для того, кто уже заплатил и вернулся к тому же замку. Оплата ищется по почте, а почту
@@ -124,15 +171,23 @@ export function UnlockSheet({ open, course, onClose }: UnlockSheetProps) {
          * так что разойтись адреса могут у кого угодно — и без этой строчки человек с оплаченным
          * курсом видит только предложение купить его ещё раз.
          */}
-        <button
-          type="button"
-          onClick={() => setClaiming(true)}
-          className="self-start text-[13px] text-muted underline underline-offset-4"
-        >
-          {t('app.claimLink')}
-        </button>
+        {/* While checking, the check offers the claim itself once it stops waiting. */}
+        {pending.phase === 'idle' ? (
+          <button
+            type="button"
+            onClick={() => setClaiming(true)}
+            className="self-start text-[13px] text-muted underline underline-offset-4"
+          >
+            {t('app.claimLink')}
+          </button>
+        ) : null}
       </div>
       <ClaimSheet open={claiming} onClose={() => setClaiming(false)} />
+      <SupportSheet
+        open={writing}
+        onClose={() => setWriting(false)}
+        context={`unlock ${course.id}`}
+      />
     </Sheet>
   );
 }

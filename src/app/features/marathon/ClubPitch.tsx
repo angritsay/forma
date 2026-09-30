@@ -57,6 +57,7 @@
  * register, the screen says what is actually charged — one payment for a year — because a button
  * quoting a month for an annual charge is a chargeback waiting to be filed.
  */
+import { useState } from 'react';
 import { useT } from '@/app/hooks/useT';
 import { useSession } from '@/app/store/session';
 import { Doodle } from '@/components/ui/Doodle';
@@ -64,6 +65,10 @@ import type { DoodleKind } from '@/content/schema';
 import { isDemo } from '@/lib/api/mode';
 import { withBase } from '@/lib/util/paths';
 import { LinkButton } from '@/app/features/courses/LinkButton';
+import { subscribeHref } from '@/app/features/courses/courseMeta';
+import { ClaimSheet } from '@/app/features/payments/ClaimSheet';
+import { PaymentPending, usePaymentPending } from '@/app/features/payments/PaymentPending';
+import { useToast } from '@/components/ui/Toast';
 import { clubChargeLabel, clubJoinHref, clubMonthlyLabel } from '@/app/features/marathon/clubPlan';
 import { ClubDemoChat } from '@/app/features/marathon/ClubDemoChat';
 import { clubPitchPhotos } from '@content/site/club';
@@ -280,25 +285,62 @@ export function ClubMember() {
  */
 export function ClubJoin() {
   const { t, locale } = useT();
+  const toast = useToast();
   const profile = useSession((s) => s.profile);
   const user = useSession((s) => s.user);
+  const [claiming, setClaiming] = useState(false);
+  const pending = usePaymentPending(
+    'club',
+    (s) => s.subscription?.isLive === true,
+    () => toast.show({ kind: 'success', title: t('app.payPendingClubDone') }),
+  );
   const price = clubMonthlyLabel(locale);
   const charge = clubChargeLabel(locale);
   if (!price || !charge) return null;
   const email = profile?.email || user?.email || '';
+  const href = clubJoinHref(locale, email, isDemo());
+  // Only the till is checked for; the plans page (no link, or a demo) takes nobody's money.
+  const toTill = href !== subscribeHref(locale);
   return (
     <div className="-mx-2 flex flex-col gap-2.5">
-      <LinkButton
-        href={clubJoinHref(locale, email, isDemo())}
-        variant="gradient"
-        size="lg"
-        fullWidth
-      >
-        {t('app.marathonJoinCta', { price })}
-      </LinkButton>
-      <p className="px-5 text-[13px] leading-snug text-muted-2">
-        {t('app.clubChargeNote', { price: charge })}
-      </p>
+      {pending.phase !== 'idle' ? (
+        <div className="px-5">
+          <PaymentPending
+            phase={pending.phase}
+            onNotPaid={pending.dismiss}
+            onCheckAgain={pending.checkAgain}
+            context="club join"
+          />
+        </div>
+      ) : (
+        <>
+          <LinkButton
+            href={href}
+            variant="gradient"
+            size="lg"
+            fullWidth
+            onOpen={toTill ? pending.start : undefined}
+          >
+            {t('app.marathonJoinCta', { price })}
+          </LinkButton>
+          <p className="px-5 text-[13px] leading-snug text-muted-2">
+            {t('app.clubChargeNote', { price: charge })}
+            {toTill && email ? ` ${t('app.clubEmailNote', { email })}` : ''}
+          </p>
+          {/*
+           * Paid already, from another address: the club opens by email too, and without this the
+           * person who paid sees only the offer to pay again (the same line as `UnlockSheet`).
+           */}
+          <button
+            type="button"
+            onClick={() => setClaiming(true)}
+            className="self-start px-5 text-[13px] text-muted underline underline-offset-4"
+          >
+            {t('app.claimLink')}
+          </button>
+        </>
+      )}
+      <ClaimSheet open={claiming} onClose={() => setClaiming(false)} />
     </div>
   );
 }

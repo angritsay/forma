@@ -79,6 +79,7 @@ import { ClubHud } from '@/app/features/marathon/ClubHud';
 import { ClubInviteCard } from '@/app/features/marathon/ClubInviteCard';
 import { ClubPitch } from '@/app/features/marathon/ClubPitch';
 import { PurchasesUnknown } from '@/app/components/PurchasesUnknown';
+import { ClubRenew } from '@/app/features/marathon/ClubRenew';
 import { ClubPodium } from '@/app/features/marathon/ClubPodium';
 import { ClubShare } from '@/app/features/marathon/ClubShare';
 import { ClubStreak, useClubDays } from '@/app/features/marathon/ClubStreak';
@@ -339,7 +340,10 @@ export default function MarathonScreen() {
   const page = (body: ReactNode) => (
     <div className="club-aurora-host" style={courseTileVars(GAME_TILE)}>
       <div className="club-aurora" aria-hidden="true" />
-      <Screen contentClassName="pt-2">{body}</Screen>
+      <Screen contentClassName="pt-2">
+        <ClubRenew />
+        {body}
+      </Screen>
     </div>
   );
 

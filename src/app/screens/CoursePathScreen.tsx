@@ -47,6 +47,7 @@ import { purchasesUnknown, useSession } from '@/app/store/session';
 import { courseVisible, nodeAccess } from '@/app/features/courses/courseAccess';
 import { UnlockSheet } from '@/app/features/courses/UnlockSheet';
 import { PurchasesUnknown } from '@/app/components/PurchasesUnknown';
+import { hasPendingPayment } from '@/app/features/payments/PaymentPending';
 
 export default function CoursePathScreen() {
   useProgressLoader();
@@ -92,7 +93,17 @@ export default function CoursePathScreen() {
    * достаточно `owned` — проба больше не тратится (0022), поэтому спрашивать сервер о том,
    * тренировался ли здесь человек, этому экрану не нужно вовсе.
    */
-  const [unlockOpen, setUnlockOpen] = useState(false);
+  /*
+   * Open from the start when the till was opened for this course a moment ago and the page was
+   * reloaded on the way back: the sheet is where «Проверяем оплату» lives (`PaymentPending`).
+   */
+  const [unlockOpen, setUnlockOpen] = useState(
+    () => !!course && !owned && hasPendingPayment(`course:${course.id}`),
+  );
+  // Owned — by the check, a claim or a refresh elsewhere: the price sheet has nothing left to sell.
+  useEffect(() => {
+    if (owned) setUnlockOpen(false);
+  }, [owned]);
 
   // The course the athlete opened becomes the one the Home screen follows.
   useEffect(() => {

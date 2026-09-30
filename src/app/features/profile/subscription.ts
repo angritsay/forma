@@ -1,7 +1,8 @@
 /**
  * The subscription's state in one line, for the value of the account sheet's «Подписка» row:
- * the club's price when there is none, «до 12 марта» while it runs, «Закончилась … · продлить»
- * once it has ended. Pure; unit-tested.
+ * the club's price when there is none, «до 12 марта» while it runs, «до 12 марта · продлить» in
+ * its last week, «Закончилась … · продлить» once it has ended, «Ждёт оплаты · оплатить» for an
+ * order not yet paid. Pure; unit-tested.
  *
  * The row exists because the end date was shown nowhere (audit item 2): there is no auto-renewal,
  * and on the last day the club tab quietly turned into the selling screen. A member who can read
@@ -33,14 +34,31 @@ export function subscriptionDate(locale: Locale, iso: string, now: number): stri
   }).format(date);
 }
 
+/** Renewal is offered this long before the end: there is no auto-renewal (`content/site/plans.ts`). */
+export const RENEW_AHEAD_MS = 7 * 24 * 60 * 60 * 1000;
+
 /**
- * Whether the row is a way to (re)join: nothing bought yet, or the period is over. A pending
- * payment is not — the money is on its way, and a second payment link beside it invites a
- * double charge.
+ * A live subscription that ends within {@link RENEW_AHEAD_MS}: time to offer «Продлить», so the
+ * bot's «продли в приложении» (`subscription_ending`, 0054) points at something that exists.
  */
-export function subscriptionLeadsToJoin(sub: Subscription | null): boolean {
+export function subscriptionRenewDue(sub: Subscription | null, now: number = Date.now()): boolean {
+  if (!sub || !sub.isLive || !sub.expiresAt) return false;
+  const end = Date.parse(sub.expiresAt);
+  return Number.isFinite(end) && end - now < RENEW_AHEAD_MS;
+}
+
+/**
+ * Whether the row is a way to (re)join: nothing bought yet, an order still waiting for its payment
+ * (the till is the way to finish it, and «Оплатил(а) с другой почты?» sits under it for the
+ * payment that did not find it), the period over, or less than a week of it left.
+ */
+export function subscriptionLeadsToJoin(
+  sub: Subscription | null,
+  now: number = Date.now(),
+): boolean {
   if (!sub) return true;
-  return sub.status !== 'pending' && !sub.isLive;
+  if (sub.status === 'pending') return true;
+  return !sub.isLive || subscriptionRenewDue(sub, now);
 }
 
 export function subscriptionSubtitle(
@@ -61,6 +79,7 @@ export function subscriptionSubtitle(
       : t('app.profileSubscriptionEndedUndated');
   }
   if (!date) return t('app.profileSubscriptionLiveUndated');
+  if (subscriptionRenewDue(sub, now)) return t('app.profileSubscriptionRenewSoon', { date });
   if (sub.status === 'cancelled') return t('app.profileSubscriptionCancelled', { date });
   return t('app.profileSubscriptionLive', { date });
 }
@@ -71,8 +90,12 @@ export function subscriptionSubtitle(
  * for a year's single payment without saying so is how chargebacks are made (`clubPlan.ts`).
  * Empty when the row leads nowhere or no plan is configured.
  */
-export function subscriptionChargeNote(tr: Translator, sub: Subscription | null): string {
-  if (!subscriptionLeadsToJoin(sub)) return '';
+export function subscriptionChargeNote(
+  tr: Translator,
+  sub: Subscription | null,
+  now: number = Date.now(),
+): string {
+  if (!subscriptionLeadsToJoin(sub, now)) return '';
   const charge = clubChargeLabel(tr.locale);
   return charge ? tr.t('app.profileSubscriptionCharge', { price: charge }) : '';
 }
