@@ -218,6 +218,11 @@ on conflict (short_id) do update set
   points = excluded.points,
   updated_at = now();
 
+-- days no longer in the course
+delete from public.admin_course_days
+ where course_id = (select id from public.admin_courses where slug_id = 'tempo')
+   and node_id <> all ('{"w1d1_gate","w1d2_rest","w1d3_strength","w1d4_ladder","w1d5_rest","w1d6_cap","w1d7_rest","w2d1_strength","w2d2_rest","w2d3_ladder","w2d4_cap","w2d5_rest","w2d6_rounds","w2d7_rest","w3d1_strength","w3d2_rest","w3d3_ladder","w3d4_cap","w3d5_rest","w3d6_gate","w3d7_rest","w4d1_strength","w4d2_rest","w4d3_ladder","w4d4_cap","w4d5_rest","w4d6_rounds","w4d7_rest","w5d1_strength","w5d2_rest","w5d3_flow","w5d4_ladder","w5d5_rest","w5d6_rounds","w5d7_rest","w6d1_strength","w6d2_rest","w6d3_ladder","w6d4_cap","w6d5_rest","w6d6_gate","w6d7_rest","w7d1_strength","w7d2_rest","w7d3_ladder","w7d4_cap","w7d5_rest","w7d6_rounds","w7d7_rest","w8d1_strength","w8d2_rest","w8d3_rounds","w8d4_flow","w8d5_rest","w8d6_rest","w8d7_gate"}'::text[]);
+
 -- days
 insert into public.admin_course_days (
   course_id, node_id, week, day, kind, custom_workout_id, content, deload,

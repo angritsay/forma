@@ -230,6 +230,11 @@ on conflict (short_id) do update set
   points = excluded.points,
   updated_at = now();
 
+-- days no longer in the course
+delete from public.admin_course_days
+ where course_id = (select id from public.admin_courses where slug_id = 'athlete')
+   and node_id <> all ('{"w1d1_test","w1d2_rest","w1d3_squat_push","w1d4_rest","w1d5_pull_hinge","w1d6_engine","w1d7_rest","w2d1_squat_push","w2d2_rest","w2d3_pull_hinge","w2d4_engine","w2d5_rest","w2d6_chipper","w2d7_rest","w3d1_squat_push","w3d2_rest","w3d3_pull_hinge","w3d4_engine","w3d5_rest","w3d6_murph_prep","w3d7_rest","w4d1_squat_push","w4d2_rest","w4d3_pull_hinge","w4d4_flow","w4d5_rest","w4d6_benchmark","w4d7_rest","w5d1_squat_push","w5d2_rest","w5d3_pull_hinge","w5d4_engine","w5d5_rest","w5d6_chipper","w5d7_rest","w6d1_squat_push","w6d2_rest","w6d3_pull_hinge","w6d4_engine","w6d5_rest","w6d6_murph_prep","w6d7_rest","w7d1_squat_push","w7d2_rest","w7d3_pull_hinge","w7d4_engine","w7d5_rest","w7d6_murph_prep","w7d7_rest","w8d1_flow","w8d2_rest","w8d3_benchmark","w8d4_rest","w8d5_rest","w8d6_retest"}'::text[]);
+
 -- days
 insert into public.admin_course_days (
   course_id, node_id, week, day, kind, custom_workout_id, content, deload,

@@ -162,6 +162,17 @@ for (const course of COURSES) {
     push();
   }
 
+  // Days a previous import wrote that the course no longer has. The upsert below matches on
+  // (course_id, node_id), so a course whose plan changed — «start» went from 28 days to 20 with new
+  // node ids — would otherwise collide with its own stale rows on (course_id, week, day). Nothing
+  // references a day row by id (progress keys off node_id text), and the compiled file wins over
+  // this copy anyway, so dropping the stale ones loses nothing a person sees.
+  push('-- days no longer in the course');
+  push('delete from public.admin_course_days');
+  push(` where course_id = (select id from public.admin_courses where slug_id = ${q(course.id)})`);
+  push(`   and node_id <> all (${arr(course.nodes.map((n) => n.id))});`);
+  push();
+
   // The days, in order, each pointing at the workout row by its short id.
   push('-- days');
   for (const [i, node] of course.nodes.entries()) {
