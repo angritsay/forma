@@ -42,8 +42,7 @@ import { TrainingSheet } from '@/app/features/stats/TrainingSheet';
 
 /**
  * The greeting without the name in it — the mockup sets the name on its own line, so there is
- * nothing to interpolate into. `app.homeGreeting*` keeps the one-line form for anywhere that still
- * wants it; this is the same four times of day, from the same `dayPart()`.
+ * nothing to interpolate into. The four times of day come from `dayPart()`.
  */
 const GREET_KEY: Record<ReturnType<typeof dayPart>, TKey> = {
   morning: 'app.homeGreetMorning',

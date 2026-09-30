@@ -144,10 +144,6 @@ export const app = {
   onbSaveError: 'Couldn’t save your profile. Check the connection and try again.',
 
   // Home
-  homeGreetingMorning: 'Good morning, {name}',
-  homeGreetingAfternoon: 'Good afternoon, {name}',
-  homeGreetingEvening: 'Good evening, {name}',
-  homeGreetingNight: 'Still up, {name}?',
   /*
    * Five streak keys stood here. The streak is gone: the course trains five days a week, so anyone
    * following it lost their streak every weekend for doing as they were told. Workouts are counted
@@ -502,7 +498,6 @@ export const app = {
   // Profile
   profileTitle: 'Profile',
   profileWeightsKg: '{list} kg',
-  profileLimitationsNone: 'Nothing',
   profileSubscription: 'Subscription',
   profileSubscriptionNoneHint: 'from {price} a month',
   profileSubscriptionLive: 'until {date}',
@@ -1680,9 +1675,9 @@ export const app = {
   profileSaveError: 'Couldn’t save. Check the connection and try again.',
 
   // --- Stream: «Курсы» and the tab bar, to the owner's mockup ------------------
-  // The mockup sets the greeting on two lines — «Доброе утро» over the name, large. Same four
-  // times of day as homeGreeting*, without the {name} slot: the name is its own line in its own
-  // face, so there is nothing left to interpolate it into.
+  // The mockup sets the greeting on two lines — «Доброе утро» over the name, large. The four
+  // times of day, without a {name} slot: the name is its own line in its own face, so there is
+  // nothing left to interpolate it into.
   homeGreetMorning: 'Good morning',
   homeGreetAfternoon: 'Good afternoon',
   homeGreetEvening: 'Good evening',

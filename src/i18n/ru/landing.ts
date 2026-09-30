@@ -29,9 +29,6 @@ export const landing = {
   footerTagline: 'Кроссфит дома маленькими шагами.',
 
   // Формы множественного числа
-  courseWordOne: 'курс',
-  courseWordFew: 'курса',
-  courseWordMany: 'курсов',
   weekWordOne: 'неделя',
   weekWordFew: 'недели',
   weekWordMany: 'недель',
@@ -60,7 +57,6 @@ export const landing = {
   heroThin: 'Первая тренировка —',
   heroChipVideo: 'Видео к каждому движению',
   heroChipNoJumps: 'Без прыжков',
-  chipCourses: '{n} {word}',
 
   // Главная, 01: тренировка 1.
   firstEyebrow: 'Тренировка 1',

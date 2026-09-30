@@ -29,9 +29,6 @@ export const landing = {
   footerTagline: 'Home CrossFit in small steps.',
 
   // Plural words
-  courseWordOne: 'course',
-  courseWordFew: 'courses',
-  courseWordMany: 'courses',
   weekWordOne: 'week',
   weekWordFew: 'weeks',
   weekWordMany: 'weeks',
@@ -60,7 +57,6 @@ export const landing = {
   heroThin: 'Your first workout —',
   heroChipVideo: 'A video for every move',
   heroChipNoJumps: 'No jumping',
-  chipCourses: '{n} {word}',
 
   // Home, 01: workout 1.
   firstEyebrow: 'Workout 1',

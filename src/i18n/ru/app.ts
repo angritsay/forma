@@ -147,10 +147,6 @@ export const app = {
   onbSaveError: 'Не удалось сохранить профиль. Проверь соединение и попробуй снова.',
 
   // Главная
-  homeGreetingMorning: 'Доброе утро, {name}',
-  homeGreetingAfternoon: 'Добрый день, {name}',
-  homeGreetingEvening: 'Добрый вечер, {name}',
-  homeGreetingNight: 'Не спится, {name}?',
   /*
    * Пять ключей серии стояли здесь — «Серия», «Чтобы не потерять серию…», «Рекорд». Серии больше
    * нет: курс Сергея — пять тренировочных дней в неделю, и человек, который делает ровно то, что
@@ -521,7 +517,6 @@ export const app = {
   // Профиль
   profileTitle: 'Профиль',
   profileWeightsKg: '{list} кг',
-  profileLimitationsNone: 'Ничего',
   // The account sheet's «Подписка» row (features/profile/subscription.ts): the value on the
   // right says until when; once it has ended the row is the way back to the club's payment.
   profileSubscription: 'Подписка',
@@ -1744,9 +1739,9 @@ export const app = {
   profileSaveError: 'Не удалось сохранить. Проверь соединение и попробуй снова.',
 
   // --- Stream: «Курсы» и таб-бар по макету владелицы --------------------------
-  // В макете приветствие стоит в две строки: «Доброе утро» сверху, имя под ним крупно. Это те же
-  // четыре времени суток, что и у homeGreeting*, но без подстановки {name}: имя печатается
-  // отдельной строкой и своим шрифтом, поэтому склеивать его с приветствием больше нечем.
+  // В макете приветствие стоит в две строки: «Доброе утро» сверху, имя под ним крупно. Четыре
+  // времени суток без подстановки {name}: имя печатается отдельной строкой и своим шрифтом,
+  // поэтому склеивать его с приветствием больше нечем.
   homeGreetMorning: 'Доброе утро',
   homeGreetAfternoon: 'Добрый день',
   homeGreetEvening: 'Добрый вечер',

@@ -169,9 +169,9 @@ export function BottomNav() {
          * segment per seat and one capsule one segment wide — only the row it divides is wider.
          */
         'fixed left-1/2 z-30 -translate-x-1/2 md:hidden',
-        items.length > 3
-          ? 'w-[calc(100%-32px)] max-w-[448px]'
-          : 'w-[calc(100%-88px)] max-w-[360px]',
+        // Keyed on the admin seat, not a count: with booking off an admin has three seats, and
+        // «Админка» still needs the wider row.
+        admin ? 'w-[calc(100%-32px)] max-w-[448px]' : 'w-[calc(100%-88px)] max-w-[360px]',
         'bottom-[calc(var(--safe-bottom)+var(--demo-inset,0px)+12px)]',
         /*
          * `.glass-capsule` is the material, `.nav-segmented` the ring and the shadow (global.css).
