@@ -58,7 +58,7 @@ export { Spinner, type SpinnerProps } from './Spinner';
 export { StatTile, type StatTileProps, type StatTrend } from './StatTile';
 export { Swoosh, type SwooshProps, type SwooshTone } from './Swoosh';
 export { Switch, type SwitchProps } from './Switch';
-export { Tabs, tabPanelId, type TabItem, type TabsProps } from './Tabs';
+export { Tabs, tabId, tabPanelId, type TabItem, type TabsProps } from './Tabs';
 export { Textarea, type TextareaProps } from './Textarea';
 export {
   Toast,

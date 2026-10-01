@@ -310,11 +310,8 @@ export const app = {
   nodeChipCap: '{n} min cap',
   nodeChipRestMin: 'rest {m} min',
   nodeChipRestMinSec: 'rest {m} min {s} s',
-  // The two-sided exercise card in the preview sheet (ExercisePreview.tsx).
-  previewFlipToBack: 'How to',
-  previewFlipToBackLabel: 'Turn the card over: how to do it',
-  previewFlipToFront: 'Video',
-  previewFlipToFrontLabel: 'Turn the card over: video',
+  // The first of the exercise drawer's tabs (ExercisePreview.tsx); the other three are the player's.
+  previewTabVideo: 'Video',
   nodeStart: 'Start workout',
   nodeReplaceTitle: 'Another workout is unfinished',
   nodeReplaceBody:
@@ -809,10 +806,6 @@ export const app = {
   customWorkoutMissingTitle: 'Workout not found',
   customWorkoutMissingBody: 'The link is invalid or the workout was removed.',
   customWorkoutFromCoach: 'From the coach',
-  customWorkoutRounds: '{n} rounds',
-  customWorkoutSeconds: '{n} sec',
-  customWorkoutReps: '{n} reps',
-  customWorkoutPerSide: 'per side',
   customWorkoutEmpty: 'This workout has no exercises yet.',
   homeCoachWorkouts: 'Workouts from the coach',
   builderPickExercise: 'Pick an exercise',
