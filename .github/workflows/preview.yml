@@ -38,8 +38,12 @@ on:
 permissions:
   contents: write
 
+# One group per preview branch, whatever started the run: a push (`github.ref_name` is
+# `preview/x`), its deletion (`github.event.ref` is `preview/x`; `github.ref` is the default
+# branch) or "Run workflow". So deleting a branch cancels its build still in flight instead of
+# racing it and leaving the folder behind.
 concurrency:
-  group: preview-${{ inputs.branch || github.event.ref || github.ref }}
+  group: preview-${{ inputs.branch || (github.event_name == 'delete' && github.event.ref) || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
@@ -66,10 +70,11 @@ jobs:
           echo "remove=$REMOVE" >> "$GITHUB_OUTPUT"
           echo "Branch: $BRANCH  Remove: $REMOVE"
 
-      # The branch to build, or the default branch for a removal (the slug script lives there).
+      # The pushed commit (not whatever the branch points at by now), the named branch for "Run
+      # workflow", or the default branch for a removal (the slug script lives there).
       - uses: actions/checkout@v5
         with:
-          ref: ${{ steps.what.outputs.remove == 'true' && github.event.repository.default_branch || steps.what.outputs.branch }}
+          ref: ${{ steps.what.outputs.remove == 'true' && github.event.repository.default_branch || (github.event_name == 'push' && github.sha || steps.what.outputs.branch) }}
 
       - uses: actions/setup-node@v5
         with:
