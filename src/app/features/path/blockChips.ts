@@ -57,10 +57,9 @@ export function blockChips(tr: Translator, block: ChipBlock): string[] {
       break;
     }
     case 'amrap':
-      out.push(
-        tr.t(isMaxRepsAmrap(block) ? 'app.nodeChipMaxReps' : 'app.nodeChipMaxRounds'),
-        minutes(tr, block.durationSec ?? 0),
-      );
+      out.push(tr.t(isMaxRepsAmrap(block) ? 'app.nodeChipMaxReps' : 'app.nodeChipMaxRounds'));
+      // A hand-made block can come without its clock; «0 мин» would be worse than no chip.
+      if (block.durationSec) out.push(minutes(tr, block.durationSec));
       break;
     case 'fortime':
       out.push(tr.t('app.nodeChipForTime'));

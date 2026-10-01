@@ -101,6 +101,15 @@ describe('blockChips — every format the courses use, in both languages', () =>
     ]);
   });
 
+  it('AMRAP without a clock (a hand-made block) drops the minutes rather than saying «0 мин»', () => {
+    const open: PrescribedBlock = {
+      ...block('start/w_s06_amrap8/s06_main'),
+      durationSec: undefined,
+    };
+    expect(blockChipLine(tr('ru'), open)).toBe('максимум кругов');
+    expect(blockChipLine(tr('en'), open)).toBe('max rounds');
+  });
+
   it('for time: the rounds when there are several, and the cap', () => {
     expect(both('dumbbells/w_complex_b/cxb_fortime')).toEqual([
       'на время · 3 круга · лимит 10 мин',

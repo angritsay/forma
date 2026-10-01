@@ -75,7 +75,7 @@ export interface ExercisePreviewProps {
  * The movement's clip, playing on its own; the still until it can, and instead of it if it can't.
  * It fills the card's front, in colour.
  */
-function ExerciseClip({ exerciseId }: { exerciseId: string }) {
+function ExerciseClip({ exerciseId, paused }: { exerciseId: string; paused: boolean }) {
   const { locale } = useT();
   const url = useMediaUrl(exerciseVideoRef(exerciseId, locale));
   const video = useRef<HTMLVideoElement>(null);
@@ -84,9 +84,14 @@ function ExerciseClip({ exerciseId }: { exerciseId: string }) {
   useEffect(() => setReady(false), [url]);
   useEffect(() => {
     /* `autoPlay` alone is ignored by some WebViews when the source arrives after the element was
-       created; asking once more when the URL lands is harmless everywhere else. */
-    void video.current?.play().catch(() => undefined);
-  }, [url]);
+       created; asking once more when the URL lands is harmless everywhere else. Turned to its
+       back, the clip is hidden but would go on decoding: it rests until the card turns back, and
+       picks up where it stopped. */
+    const v = video.current;
+    if (!v) return;
+    if (paused) v.pause();
+    else void v.play().catch(() => undefined);
+  }, [url, paused]);
 
   return (
     <div className="absolute inset-0 overflow-hidden bg-surface-2">
@@ -142,7 +147,7 @@ function PreviewCard({ item }: { item: PrescribedItem }) {
 
   const front = (
     <div className="relative size-full overflow-hidden rounded-card bg-surface-2">
-      <ExerciseClip exerciseId={item.exerciseId} />
+      <ExerciseClip exerciseId={item.exerciseId} paused={flipped} />
       {/*
        * The same fade-to-ground the workout's hero lays under its title, sized for a card. Over
        * the worst frame (pure white) the type's top edge sits on at least .7 of the ground: white
@@ -169,7 +174,8 @@ function PreviewCard({ item }: { item: PrescribedItem }) {
               </span>
             </p>
           ) : null}
-          <h3 className="line-clamp-2 font-display text-[19px] leading-tight text-paper">{name}</h3>
+          {/* `h2`: the sheet has no title of its own now, so this is the dialog's first heading. */}
+          <h2 className="line-clamp-2 font-display text-[19px] leading-tight text-paper">{name}</h2>
         </div>
         <Button
           ref={toBack}

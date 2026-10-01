@@ -6,7 +6,7 @@ import { formatDuration } from '@/i18n/index';
 import { useT } from '@/app/hooks/useT';
 import type { PrescribedBlock, PrescribedItem, PrescribedWorkout } from '@/lib/training/types';
 import { mainOnly } from './mainWork';
-import { blockChips } from './blockChips';
+import { blockChips, restChip } from './blockChips';
 import { itemLoadLabel } from './plan';
 
 /**
@@ -46,7 +46,8 @@ function PlanItem({
   const name = exercise ? l(exercise.name) : item.exerciseId;
   const extra = [
     itemLoadLabel(tr, item),
-    item.restAfterSec > 0 ? t('app.nodeRestAfter', { s: item.restAfterSec }) : undefined,
+    // Read the way the block's own rest reads: «отдых 1 мин 30 с», not «отдых 90 с».
+    item.restAfterSec > 0 ? restChip(tr, item.restAfterSec) : undefined,
   ].filter(Boolean);
   /*
    * Строка становится кнопкой, только когда упражнение есть в базе и открывать правда есть что.
@@ -58,7 +59,9 @@ function PlanItem({
     <>
       <span
         className={clsx(
-          'relative flex w-full items-center justify-center overflow-hidden rounded-tile bg-surface-2',
+          // `isolate`: WebKit drops the rounded clip for a child while it is being transformed, so
+          // without it the hover zoom below shows square corners for its 280ms.
+          'relative isolate flex w-full items-center justify-center overflow-hidden rounded-tile bg-surface-2',
           lead ? 'aspect-[16/9]' : 'aspect-[4/3]',
         )}
       >
