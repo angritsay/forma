@@ -1,5 +1,6 @@
 /**
- * /robots.txt — allow everything except the app shell; point crawlers at the sitemap.
+ * /robots.txt — allow everything except the app shell and branch previews (`/preview/<slug>/`,
+ * published next to production by preview.yml); point crawlers at the sitemap.
  * `Host:` is Yandex's (legacy but harmless) preferred-mirror directive.
  * Note: on a GitHub Pages *project* site (base path ≠ "/") this file lives under the base path
  * and is not read by crawlers — robots.txt only works at the origin root (custom domain).
@@ -15,6 +16,7 @@ export const GET: APIRoute = ({ site }) => {
     'User-agent: *',
     'Allow: /',
     `Disallow: ${withBase('/app/')}`,
+    `Disallow: ${withBase('/preview/')}`,
     '',
     `Sitemap: ${absoluteUrl(origin, '/sitemap.xml')}`,
     `Host: ${origin.startsWith('https://') ? `https://${host}` : host}`,

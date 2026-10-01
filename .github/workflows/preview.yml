@@ -1,0 +1,230 @@
+name: Preview
+
+# Publishes a branch as a private preview of the whole site, next to production on the same
+# GitHub Pages site: a push to `preview/<name>` builds that branch with
+# BASE_PATH=<production base>preview/<slug>/ and replaces only `preview/<slug>/` on the `gh-pages`
+# branch. Production stays as it was, and deploy.yml carries `preview/` over on every deploy.
+# See docs/DEPLOY.md, "Preview links".
+#
+# - Same origin as production, so the real Supabase backend, the stills and clips and the email
+#   code sign-in work as they do there.
+# - Every page is noindex and robots.txt disallows /preview/. No IndexNow, no analytics ids, no
+#   per-page OG images (the default card stands in for all of them).
+# - Deleting the branch deletes its preview. "Run workflow" does either by hand: a branch name,
+#   and "remove" to delete instead of publish.
+#
+# No `pages` concurrency group here: GitHub keeps one pending run per group and cancels the one
+# before it, so a preview push could cancel a queued production deploy. Instead neither side ever
+# overwrites the other: this job pushes without force and replays its folder onto the new tip
+# when the push is rejected, and deploy.yml force-pushes with a lease on the tip it copied
+# `preview/` from.
+
+on:
+  push:
+    branches: ['preview/**']
+  delete:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to preview, e.g. preview/workout-cards'
+        required: true
+        type: string
+      remove:
+        description: 'Delete this preview instead of publishing it'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+# One group per preview branch, whatever started the run: a push (`github.ref_name` is
+# `preview/x`), its deletion (`github.event.ref` is `preview/x`; `github.ref` is the default
+# branch) or "Run workflow". So deleting a branch cancels its build still in flight instead of
+# racing it and leaving the folder behind.
+concurrency:
+  group: preview-${{ inputs.branch || (github.event_name == 'delete' && github.event.ref) || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  preview:
+    if: ${{ github.event_name != 'delete' || (github.event.ref_type == 'branch' && startsWith(github.event.ref, 'preview/')) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Resolve the branch and what to do
+        id: what
+        env:
+          EVENT: ${{ github.event_name }}
+          INPUT_BRANCH: ${{ inputs.branch }}
+          INPUT_REMOVE: ${{ inputs.remove }}
+          DELETED_REF: ${{ github.event.ref }}
+        run: |
+          case "$EVENT" in
+            workflow_dispatch) BRANCH="$INPUT_BRANCH"; REMOVE="$INPUT_REMOVE" ;;
+            delete) BRANCH="$DELETED_REF"; REMOVE=true ;;
+            *) BRANCH="$GITHUB_REF_NAME"; REMOVE=false ;;
+          esac
+          [ "$REMOVE" = "true" ] || REMOVE=false
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+          echo "remove=$REMOVE" >> "$GITHUB_OUTPUT"
+          echo "Branch: $BRANCH  Remove: $REMOVE"
+
+      # The pushed commit (not whatever the branch points at by now), the named branch for "Run
+      # workflow", or the default branch for a removal (the slug script lives there).
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ steps.what.outputs.remove == 'true' && github.event.repository.default_branch || (github.event_name == 'push' && github.sha || steps.what.outputs.branch) }}
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: ${{ steps.what.outputs.remove != 'true' && 'npm' || '' }}
+
+      # Same resolution as deploy.yml, then the preview folder under the production base.
+      - name: Resolve site URL, base path and preview folder
+        env:
+          BRANCH: ${{ steps.what.outputs.branch }}
+          VAR_SITE_URL: ${{ vars.SITE_URL }}
+          VAR_BASE_PATH: ${{ vars.BASE_PATH }}
+        run: |
+          SLUG="$(node scripts/preview/preview.mjs slug "$BRANCH")"
+          REPO_NAME="${GITHUB_REPOSITORY#*/}"
+          OWNER_LC="$(echo "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')"
+          SITE_URL="$VAR_SITE_URL"
+          BASE_PATH="$VAR_BASE_PATH"
+          if [ -z "$SITE_URL" ]; then
+            case "$REPO_NAME" in
+              *.github.io) SITE_URL="https://${REPO_NAME}" ;;
+              *) SITE_URL="https://${OWNER_LC}.github.io/${REPO_NAME}" ;;
+            esac
+          fi
+          if [ -z "$BASE_PATH" ]; then
+            case "$SITE_URL" in
+              *github.io/*) BASE_PATH="/${REPO_NAME}/" ;;
+              *) BASE_PATH="/" ;;
+            esac
+          fi
+          BASE_PATH="/${BASE_PATH#/}"
+          BASE_PATH="${BASE_PATH%/}/"
+          PREVIEW_BASE="${BASE_PATH}preview/${SLUG}/"
+          ORIGIN="$(node -e 'console.log(new URL(process.argv[1]).origin)' "$SITE_URL")"
+          echo "SLUG=$SLUG" >> "$GITHUB_ENV"
+          echo "SITE_URL=$SITE_URL" >> "$GITHUB_ENV"
+          echo "PREVIEW_BASE=$PREVIEW_BASE" >> "$GITHUB_ENV"
+          echo "PREVIEW_URL=${ORIGIN}${PREVIEW_BASE}" >> "$GITHUB_ENV"
+          echo "Site: $SITE_URL  Preview base: $PREVIEW_BASE"
+
+      - name: Install
+        if: ${{ steps.what.outputs.remove != 'true' }}
+        run: npm ci --no-audit --no-fund
+
+      - name: Resolve demo mode
+        if: ${{ steps.what.outputs.remove != 'true' }}
+        env:
+          VAR_DEMO_MODE: ${{ vars.DEMO_MODE }}
+          SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
+        run: |
+          if [ -n "$VAR_DEMO_MODE" ]; then
+            DEMO="$VAR_DEMO_MODE"
+          elif [ -z "$SUPABASE_URL" ]; then
+            DEMO=true
+          else
+            DEMO=false
+          fi
+          echo "PUBLIC_DEMO_MODE=$DEMO" >> "$GITHUB_ENV"
+          echo "Demo mode: $DEMO"
+
+      # Only the default card: every page falls back to it, and the full set takes minutes.
+      - name: Generate the default OG image
+        if: ${{ steps.what.outputs.remove != 'true' }}
+        run: npm run seo:og -- --only default --quiet
+
+      # No analytics or verification ids (a preview is not traffic) and no IndexNow key. No SEO
+      # audit either: it assumes SITE_URL carries the base path, and the branch's CI runs it.
+      - name: Build
+        if: ${{ steps.what.outputs.remove != 'true' }}
+        env:
+          SITE_URL: ${{ env.SITE_URL }}
+          BASE_PATH: ${{ env.PREVIEW_BASE }}
+          PUBLIC_SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
+          PUBLIC_DEMO_MODE: ${{ env.PUBLIC_DEMO_MODE }}
+        run: npm run build
+
+      - name: Mark every page noindex
+        if: ${{ steps.what.outputs.remove != 'true' }}
+        run: |
+          rm -f dist/CNAME
+          node scripts/preview/preview.mjs noindex dist
+
+      # Clones the live gh-pages tip, changes only preview/<slug>/ and pushes without force. A
+      # rejected push means production or another preview published meanwhile: start over from
+      # the new tip, which may be a fresh one-commit branch from deploy.yml, so the change is
+      # replayed onto it rather than rebased.
+      - name: Publish to gh-pages
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REMOVE: ${{ steps.what.outputs.remove }}
+        run: |
+          REMOTE="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          DEST="preview/${SLUG}"
+          SITE="${RUNNER_TEMP}/gh-pages"
+          for attempt in 1 2 3 4 5; do
+            rm -rf "$SITE"
+            if ! git clone -q --depth=1 --single-branch --branch gh-pages "$REMOTE" "$SITE"; then
+              echo "::error::Could not clone gh-pages. If it does not exist yet, run the Deploy site workflow first."
+              exit 1
+            fi
+            cd "$SITE"
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            if [ "$REMOVE" = "true" ]; then
+              if [ ! -e "$DEST" ]; then
+                echo "::notice::There is no ${DEST}/ on gh-pages; nothing to remove."
+                exit 0
+              fi
+              git rm -rq -- "$DEST"
+              MESSAGE="Remove preview ${SLUG}"
+            else
+              rm -rf -- "$DEST"
+              mkdir -p "$DEST"
+              cp -a "${GITHUB_WORKSPACE}/dist/." "$DEST/"
+              git add -A -- "$DEST"
+              MESSAGE="Publish preview ${SLUG} (${GITHUB_SHA})"
+            fi
+            if git diff --cached --quiet; then
+              echo "Nothing changed in ${DEST}/."
+              break
+            fi
+            git commit -q -m "$MESSAGE"
+            if git push -q origin HEAD:gh-pages; then
+              break
+            fi
+            cd "$GITHUB_WORKSPACE"
+            if [ "$attempt" = 5 ]; then
+              echo "::error::gh-pages kept moving; the preview was not published. Re-run this job."
+              exit 1
+            fi
+            echo "gh-pages moved while publishing; retrying on the new tip ($attempt)."
+            sleep $((attempt * 5))
+          done
+
+      - name: Link
+        env:
+          REMOVE: ${{ steps.what.outputs.remove }}
+        run: |
+          if [ "$REMOVE" = "true" ]; then
+            echo "::notice::Preview removed: ${PREVIEW_URL}"
+            echo "Preview **${SLUG}** removed." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::notice::Preview: ${PREVIEW_URL}app/#/"
+            {
+              echo "### Preview \`${SLUG}\`"
+              echo ""
+              echo "- App: ${PREVIEW_URL}app/#/"
+              echo "- Site: ${PREVIEW_URL}"
+              echo ""
+              echo "GitHub Pages takes a minute or two to serve a new push."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi

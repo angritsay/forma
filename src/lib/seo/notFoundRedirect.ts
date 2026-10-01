@@ -13,6 +13,9 @@
  * - **A real page wins over an alias.** `/together/` goes to the homepage block today; once a
  *   `/together/` page ships, the same link reaches it with no change here.
  * - **Never a loop.** A target whose path is the one being shown is refused.
+ * - **Previews are not ours.** `/preview/<slug>/` holds a whole other build of the site (a branch
+ *   published by preview.yml), and GitHub Pages serves this root 404 for its missing paths too.
+ *   Those stay on the 404 rather than being "rescued" into production.
  *
  * `resolveNotFound` is serialised into the page with `Function.prototype.toString`, so it must stay
  * self-contained: no imports, no module-level helpers, nothing a bundler would have to rewrite.
@@ -67,6 +70,7 @@ export function resolveNotFound(loc: NotFoundLocation, cfg: NotFoundConfig): str
     else if (p.indexOf(base) === 0) p = p.slice(base.length - 1);
   }
   if (p === '/forma' || p.indexOf('/forma/') === 0) p = p.slice('/forma'.length) || '/';
+  if (p === '/preview' || p.indexOf('/preview/') === 0) return null;
   p = p.replace(/\/index\.html?$/, '/').replace(/\.html?$/, '');
   if (p.charAt(p.length - 1) !== '/') p += '/';
 

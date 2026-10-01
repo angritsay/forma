@@ -185,6 +185,11 @@ jobs:
   # the branch itself creates the Pages site, and GITHUB_TOKEN may push it. The branch is rebuilt
   # from scratch and force-pushed every time, so its history stays one commit deep and 500+ built
   # files per deploy never accumulate in the repository.
+  #
+  # Branch previews (preview.yml) live in `preview/` on the same branch and are not part of this
+  # build, so the folder is copied over from the current tip first. The force-push carries a lease
+  # on that tip: if a preview was published in between, the push is refused and the copy is
+  # redone from the new tip instead of erasing it.
   gh_pages_branch:
     needs: build
     if: ${{ vars.DEPLOY_TARGET == '' || vars.DEPLOY_TARGET == 'gh-pages-branch' }}
@@ -209,14 +214,44 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          REMOTE="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          if [ -e dist/preview ]; then
+            echo "::error::The build has its own preview/ folder; it would collide with branch previews."
+            exit 1
+          fi
           cd dist
-          git init -q -b gh-pages
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -q -m "Publish site build ${GITHUB_SHA}"
-          git push -q --force \
-            "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
+          for attempt in 1 2 3 4 5; do
+            rm -rf .git preview
+            git init -q -b gh-pages
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            # The lease: the tip preview/ is copied from, or "" (the branch must not exist yet).
+            LEASE=""
+            FOUND=0
+            git ls-remote --exit-code --heads "$REMOTE" gh-pages > /dev/null || FOUND=$?
+            if [ "$FOUND" = 0 ]; then
+              git fetch -q --depth=1 "$REMOTE" gh-pages
+              LEASE="$(git rev-parse FETCH_HEAD)"
+              if git cat-file -e "${LEASE}:preview" 2>/dev/null; then
+                git archive "$LEASE" preview | tar -x
+                echo "Kept previews: $(ls preview | tr '\n' ' ')"
+              fi
+            elif [ "$FOUND" != 2 ]; then
+              echo "::error::Could not read the gh-pages branch."
+              exit 1
+            fi
+            git add -A
+            git commit -q -m "Publish site build ${GITHUB_SHA}"
+            if git push -q --force-with-lease="gh-pages:${LEASE}" "$REMOTE" HEAD:gh-pages; then
+              break
+            fi
+            if [ "$attempt" = 5 ]; then
+              echo "::error::gh-pages kept moving; the site was not published. Re-run this job."
+              exit 1
+            fi
+            echo "gh-pages moved while publishing; copying preview/ again ($attempt)."
+            sleep $((attempt * 5))
+          done
           OWNER_LC="$(echo "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')"
           echo "page_url=https://${OWNER_LC}.github.io/${GITHUB_REPOSITORY#*/}/" >> "$GITHUB_OUTPUT"
 

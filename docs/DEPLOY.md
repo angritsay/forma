@@ -27,7 +27,9 @@ shows up in the Actions tab next to the "Deploy site" one.
 
 The branch holds only the generated build. It is rebuilt from scratch and force-pushed on every
 deploy, so its history stays one commit deep and the 500+ built files never accumulate in the
-repository. Never edit it by hand — the next deploy overwrites it.
+repository. Never edit it by hand — the next deploy overwrites it. The one exception is
+`preview/`, which holds the branch previews (below) and is carried over from the old tip on every
+deploy.
 
 Its one drawback is the `/<repo>/` path prefix: `robots.txt` at a subpath is not read by crawlers
 (see `docs/SEO.md`). A custom domain or Cloudflare fixes that.
@@ -122,6 +124,37 @@ Two places outside this repository hold the origin as well, and both need the sa
 - **Supabase** → Authentication → URL Configuration → **Site URL** (it is the link in the
   sign-in email).
 - **@BotFather** → the bot → Bot Settings → Menu Button → `https://forma-app.co/app/`.
+
+## Preview links
+
+A branch named `preview/<name>` is published as a private copy of the whole site, next to
+production, so a change can be looked at on a phone before it is merged:
+
+```bash
+git switch -c preview/workout-cards
+git push -u origin preview/workout-cards
+```
+
+The _Preview_ workflow (`.github/workflows/preview.yml`) builds the branch and prints the link in
+its summary and as a notice, e.g. `https://forma-app.co/preview/workout-cards/app/#/`. GitHub
+Pages serves a new push a minute or two after the run turns green.
+
+- **The folder** is the branch name after `preview/`, cut down to lowercase letters, digits and
+  dashes, at most 40 characters (`scripts/preview/preview.mjs`). Every push replaces it.
+- **Same origin, real backend.** The preview uses the production Supabase variables, so stills,
+  clips and the email-code sign-in work. It is the real database: what you do there is real, and
+  the sign-in is shared with the production app in the same browser.
+- **Hidden from search.** Every page is `noindex`, `robots.txt` disallows `/preview/`, and there
+  are no analytics ids, IndexNow or per-page OG images. The production 404 page never redirects a
+  `/preview/` path into the main site.
+- **Production keeps it.** The preview job changes only `preview/<slug>/` on `gh-pages` and
+  pushes without force; _Deploy site_ copies `preview/` over from the current tip and
+  force-pushes with a lease on it, so neither ever erases the other.
+- **Removing one.** Deleting the branch deletes its preview. By hand: Actions → _Preview_ →
+  _Run workflow_ with the branch name and **remove** ticked. The same form (without **remove**)
+  publishes any branch, `preview/` prefix or not.
+
+Previews work only with the `gh-pages` target (Option A), which is the one production uses.
 
 ## Moving this code to its own repository
 
