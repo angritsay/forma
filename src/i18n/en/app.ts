@@ -302,6 +302,19 @@ export const app = {
   nodeLoadKg: '{kg} kg',
   nodeInWorkout: 'In this workout',
   nodeRestAfter: 'rest {s} s',
+  // The block's chip line on the preview (blockChips.ts): "3 rounds · every minute · rest 1 min".
+  nodeChipEveryMinute: 'every minute',
+  nodeChipMaxRounds: 'max rounds',
+  nodeChipMaxReps: 'max reps',
+  nodeChipForTime: 'for time',
+  nodeChipCap: '{n} min cap',
+  nodeChipRestMin: 'rest {m} min',
+  nodeChipRestMinSec: 'rest {m} min {s} s',
+  // The two-sided exercise card in the preview sheet (ExercisePreview.tsx).
+  previewFlipToBack: 'How to',
+  previewFlipToBackLabel: 'Turn the card over: how to do it',
+  previewFlipToFront: 'Video',
+  previewFlipToFrontLabel: 'Turn the card over: video',
   nodeStart: 'Start workout',
   nodeReplaceTitle: 'Another workout is unfinished',
   nodeReplaceBody:

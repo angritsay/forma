@@ -327,6 +327,19 @@ export const app = {
   nodeLoadKg: '{kg} кг',
   nodeInWorkout: 'За тренировку',
   nodeRestAfter: 'отдых {s} с',
+  // The block's chip line on the preview (blockChips.ts): «3 круга · каждую минуту · отдых 1 мин».
+  nodeChipEveryMinute: 'каждую минуту',
+  nodeChipMaxRounds: 'максимум кругов',
+  nodeChipMaxReps: 'максимум повторений',
+  nodeChipForTime: 'на время',
+  nodeChipCap: 'лимит {n} мин',
+  nodeChipRestMin: 'отдых {m} мин',
+  nodeChipRestMinSec: 'отдых {m} мин {s} с',
+  // The two-sided exercise card in the preview sheet (ExercisePreview.tsx).
+  previewFlipToBack: 'Как делать',
+  previewFlipToBackLabel: 'Перевернуть карточку: как делать',
+  previewFlipToFront: 'Видео',
+  previewFlipToFrontLabel: 'Перевернуть карточку: видео',
   nodeStart: 'Начать тренировку',
   nodeReplaceTitle: 'Есть незаконченная тренировка',
   nodeReplaceBody:

@@ -1,37 +1,53 @@
+import { clsx } from 'clsx';
 import { ExerciseStill } from '@/components/media/ExerciseStill';
-import { Chip } from '@/components/ui/Chip';
+import { Pill } from '@/components/ui/Pill';
 import { findExercise } from '@/content/catalogue';
 import { formatDuration } from '@/i18n/index';
 import { useT } from '@/app/hooks/useT';
 import type { PrescribedBlock, PrescribedItem, PrescribedWorkout } from '@/lib/training/types';
 import { mainOnly } from './mainWork';
-import { blockMetaLabel, exerciseName, itemLoadLabel, itemTargetLabel } from './plan';
+import { blockChips } from './blockChips';
+import { itemLoadLabel } from './plan';
 
 /**
- * One movement of a block: a still of the movement, its name (with the swap note and the coach's
- * note under it) and the target on the right.
+ * One movement of a block, as a card that is mostly picture: the colour still, the target large,
+ * the name small.
  *
- * The still is back. For a while the number stood in for it, because a plan is read as a list and
- * 01/02/03 is how the brand numbers one. The owner asked for the pictures again («тут надо добавить
- * картинки превью упражнений»): the name alone does not tell a newcomer what a movement looks
- * like, and the frame does at a glance. The number has not gone. It is the fallback inside the
- * same square when a movement has no frame yet, so the row never shows an empty box or a broken
- * image, and the order stays readable.
+ * It was a list row — a 56px grey thumbnail, the name, the coach's note under it and the target on
+ * the right — and the owner, looking at «Тренировка 1»: the pictures should be in colour and
+ * larger, and there should be far less text. So the frame takes the card's width at 4:3 (a lead
+ * card in an odd count takes both columns at 16:9, so three or five movements still close the grid
+ * without a hole), the number is the one thing set large under it — the prototype's rule: minimum
+ * text, big numbers — and the name sits beneath in small type. The coach's note is not lost: it is
+ * on the back of the card this opens (`ExercisePreview`), where the player keeps it too.
+ *
+ * The load and the rest after the movement, when there is one, shrink to a single small chip. The
+ * number is still the fallback in the frame when a movement has no still yet, so the grid never
+ * shows an empty box and the order stays readable.
+ *
+ * Colour, not `.photo-mono`: these are the coach's own frames of the movement, and on this screen
+ * the owner asked for them as they are (design/CHANGELOG.md §26).
  */
 function PlanItem({
   item,
   n,
+  lead,
   onOpen,
 }: {
   item: PrescribedItem;
   n: number;
+  /** Spans both columns: the first card of an odd count. */
+  lead: boolean;
   onOpen?: ((item: PrescribedItem) => void) | undefined;
 }) {
   const tr = useT();
   const { t, l } = tr;
   const exercise = findExercise(item.exerciseId);
   const name = exercise ? l(exercise.name) : item.exerciseId;
-  const load = itemLoadLabel(tr, item);
+  const extra = [
+    itemLoadLabel(tr, item),
+    item.restAfterSec > 0 ? t('app.nodeRestAfter', { s: item.restAfterSec }) : undefined,
+  ].filter(Boolean);
   /*
    * Строка становится кнопкой, только когда упражнение есть в базе и открывать правда есть что.
    * Иначе это `<li>`, как было: элемент, который выглядит нажимаемым и ничего не делает, хуже
@@ -40,30 +56,34 @@ function PlanItem({
   const open = exercise && onOpen ? () => onOpen(item) : null;
   const inner = (
     <>
-      <span className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-[12px] bg-surface-2">
+      <span
+        className={clsx(
+          'relative flex w-full items-center justify-center overflow-hidden rounded-tile bg-surface-2',
+          lead ? 'aspect-[16/9]' : 'aspect-[4/3]',
+        )}
+      >
         <ExerciseStill
           exerciseId={exercise ? item.exerciseId : undefined}
-          className="photo-mono absolute inset-0 size-full object-cover"
+          className="absolute inset-0 size-full object-cover transition-transform duration-280 ease-(--ease-out) group-hover:scale-[1.03] motion-reduce:transition-none"
           fallback={
-            <span className="numeral tabular text-sm text-muted">{String(n).padStart(2, '0')}</span>
+            <span className="numeral tabular text-2xl text-muted">
+              {String(n).padStart(2, '0')}
+            </span>
           }
         />
       </span>
-      <span className="min-w-0 flex-1">
-        <span className="block truncate text-[15px] font-medium">{name}</span>
-        {item.substituted ? (
-          <span className="block truncate text-xs text-muted">
-            {t('training.substitutedFrom', { name: exerciseName(tr, item.originalExerciseId) })}
+      <span className="flex flex-col gap-1 px-0.5">
+        <span className="flex flex-wrap items-baseline gap-x-1.5">
+          <span className="numeral tabular text-[28px] leading-none">{item.target}</span>
+          <span className="text-xs text-muted">
+            {t(`training.${item.unit}`)}
+            {item.perSide ? ` · ${t('training.perSide')}` : ''}
           </span>
-        ) : null}
-        {item.note ? <span className="block text-xs text-muted">{l(item.note)}</span> : null}
-      </span>
-      <span className="flex shrink-0 flex-col items-end text-right">
-        <span className="tabular text-sm font-semibold">{itemTargetLabel(tr, item)}</span>
-        {load ? <span className="text-xs text-muted">{load}</span> : null}
-        {item.restAfterSec > 0 ? (
-          <span className="text-xs text-muted-2">
-            {t('app.nodeRestAfter', { s: item.restAfterSec })}
+        </span>
+        <span className="line-clamp-2 text-sm leading-snug font-medium">{name}</span>
+        {extra.length > 0 ? (
+          <span className="mt-0.5 self-start rounded-pill border border-border px-2 py-0.5 text-[11px] text-muted">
+            {extra.join(' · ')}
           </span>
         ) : null}
       </span>
@@ -71,23 +91,29 @@ function PlanItem({
   );
 
   return (
-    <li className="border-t border-border first:border-t-0">
+    <li className={clsx('min-w-0', lead && 'col-span-2')}>
       {open ? (
         <button
           type="button"
           onClick={open}
-          className="flex w-full items-center gap-3.5 py-2.5 text-left transition-colors duration-150 ease-(--ease-out) hover:text-text"
+          className="group flex w-full flex-col gap-2.5 rounded-tile text-left"
         >
           {inner}
         </button>
       ) : (
-        <span className="flex items-center gap-3.5 py-2.5">{inner}</span>
+        <span className="flex flex-col gap-2.5">{inner}</span>
       )}
     </li>
   );
 }
 
-/** A block: its title and length on one line, the format chip, the description, then its items. */
+/**
+ * A block: its title and length on one line, its shape as a line of pills, then its movements.
+ *
+ * The coach's paragraph about the block («Три круга. 1-я минута — …») is no longer here: it is
+ * folded under «Что внутри» on the screen, word for word, and what stands in its place is the same
+ * information generated from the block's numbers (`blockChips`).
+ */
 function PlanBlock({
   block,
   onOpen,
@@ -97,7 +123,7 @@ function PlanBlock({
 }) {
   const tr = useT();
   const { t, l, locale } = tr;
-  const between = block.restBetweenSetsSec || block.restBetweenRoundsSec;
+  const odd = block.items.length % 2 === 1;
   return (
     <section className="flex flex-col gap-3 border-t border-border-strong pt-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -108,18 +134,22 @@ function PlanBlock({
           {formatDuration(locale, block.estimatedSec)}
         </span>
       </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <Chip size="sm" tone={block.type === 'test' ? 'accent' : 'default'}>
-          {blockMetaLabel(tr, block)}
-        </Chip>
-        {between > 0 ? (
-          <span className="text-xs text-muted">{t('app.nodeRestAfter', { s: between })}</span>
-        ) : null}
-      </div>
-      {block.description ? <p className="text-sm text-muted">{l(block.description)}</p> : null}
-      <ul className="flex flex-col">
+      <ul className="flex flex-wrap gap-1.5">
+        {blockChips(tr, block).map((chip, i) => (
+          <li key={i} className="flex min-w-0">
+            <Pill tone={block.type === 'test' ? 'sky' : 'neutral'}>{chip}</Pill>
+          </li>
+        ))}
+      </ul>
+      <ul className="grid grid-cols-2 gap-x-3 gap-y-5 pt-1">
         {block.items.map((item, i) => (
-          <PlanItem key={`${item.exerciseId}-${i}`} item={item} n={i + 1} onOpen={onOpen} />
+          <PlanItem
+            key={`${item.exerciseId}-${i}`}
+            item={item}
+            n={i + 1}
+            lead={odd && i === 0}
+            onOpen={onOpen}
+          />
         ))}
       </ul>
     </section>

@@ -64,6 +64,7 @@ import { DifficultySheet } from '@/app/features/path/DifficultySheet';
 import { nodeStatus } from '@/app/features/path/nodeState';
 import { DIFFICULTY_CHOICES, workoutSignatureExercise } from '@/app/features/path/plan';
 import { ExercisePreview } from '@/app/features/path/ExercisePreview';
+import { mainOnly } from '@/app/features/path/mainWork';
 import { PlanBlocks } from '@/app/features/path/PlanBlocks';
 import { useTrainingContext } from '@/app/features/path/useTrainingContext';
 import { WorkoutHero } from '@/app/features/path/WorkoutHero';
@@ -372,6 +373,8 @@ export default function NodePreviewScreen() {
    * pill (`design/CHANGELOG.md` §10), and the 12px radius is for what is pressed.
    */
   const facts = shown ? sessionPills({ t, l, locale }, shown, { calories: true }) : [];
+  // The blocks the plan shows (no warm-up or cool-down, `mainWork.ts`), whose prose «Что внутри» keeps.
+  const workBlocks = shown ? mainOnly(shown.prescribed.blocks, (b) => b.type) : [];
 
   return (
     /*
@@ -565,6 +568,26 @@ export default function NodePreviewScreen() {
                     {l(workout.description)}
                   </p>
                 </div>
+
+                {/*
+                 * The coach's words about each block, which used to stand open above its movements
+                 * («Три круга. 1-я минута — …»). On the plan a generated line of pills says the
+                 * same numbers now (`blockChips`); the paragraph moved here whole, so nothing the
+                 * coach wrote is lost — it is one tap further away.
+                 */}
+                {workBlocks
+                  .filter((b) => b.description)
+                  .map((b) => (
+                    <section
+                      key={b.blockId}
+                      className="flex flex-col gap-2 border-t border-border pt-4"
+                    >
+                      <h3 className="eyebrow">
+                        {b.title ? l(b.title) : t(`training.block_${b.type}`)}
+                      </h3>
+                      <p className="text-[15px] leading-relaxed text-muted">{l(b.description)}</p>
+                    </section>
+                  ))}
 
                 {isTest || isBenchmark ? (
                   <section className="flex flex-col gap-2 border-t border-border pt-4">

@@ -174,6 +174,28 @@ export function ExerciseBack({ exerciseId, item }: ExerciseBackProps) {
   );
 }
 
+/**
+ * What the coach wrote about this movement *in this workout* — the note under it in the plan — and,
+ * when the engine swapped the movement, what it stands in for. Above the movement's own pages on
+ * the back of the player's card, and on the back of the preview's card (`ExercisePreview`), which
+ * is where the note went when it left the plan's rows.
+ */
+export function ItemNotes({ item }: { item: PrescribedItem }) {
+  const { t, l, locale } = useT();
+  const original = item.substituted ? findExercise(item.originalExerciseId) : undefined;
+  if (!item.note && !original) return null;
+  return (
+    <>
+      {item.note ? <p className="text-[15px] leading-relaxed text-muted">{l(item.note)}</p> : null}
+      {original ? (
+        <p className="text-[15px] leading-relaxed text-muted">
+          {t('training.substitutedFrom', { name: original.name[locale] })}
+        </p>
+      ) : null}
+    </>
+  );
+}
+
 export interface CardBackProps {
   step: PlayerStep;
   prescribed: PrescribedWorkout;
@@ -184,24 +206,13 @@ export interface CardBackProps {
  * movement, and the block's running order where the step *is* the block (an AMRAP, a for-time).
  */
 export function CardBack({ step, prescribed }: CardBackProps) {
-  const { t, l, locale } = useT();
+  const { l } = useT();
   const about = stepExerciseId(step, prescribed);
 
   if (about) {
-    const original =
-      step.kind === 'work' && step.item.substituted
-        ? findExercise(step.item.originalExerciseId)
-        : undefined;
     return (
       <div className="flex flex-col gap-5">
-        {step.kind === 'work' && step.item.note ? (
-          <p className="text-[15px] leading-relaxed text-muted">{l(step.item.note)}</p>
-        ) : null}
-        {original ? (
-          <p className="text-[15px] leading-relaxed text-muted">
-            {t('training.substitutedFrom', { name: original.name[locale] })}
-          </p>
-        ) : null}
+        {step.kind === 'work' ? <ItemNotes item={step.item} /> : null}
         <ExerciseBack exerciseId={about.exerciseId} item={about.item} />
       </div>
     );

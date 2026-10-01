@@ -30,7 +30,7 @@ export function exerciseName(tr: Translator, exerciseId: string): string {
   return e ? tr.l(e.name) : exerciseId;
 }
 
-function setsLabel(tr: Translator, n: number): string {
+export function setsLabel(tr: Translator, n: number): string {
   const word = plural(tr.locale, n, {
     one: tr.t('app.nodeSetWordOne'),
     few: tr.t('app.nodeSetWordFew'),
@@ -39,7 +39,7 @@ function setsLabel(tr: Translator, n: number): string {
   return `${n} ${word}`;
 }
 
-function roundsLabel(tr: Translator, n: number): string {
+export function roundsLabel(tr: Translator, n: number): string {
   const word = plural(tr.locale, n, {
     one: tr.t('app.nodeRoundWordOne'),
     few: tr.t('app.nodeRoundWordFew'),

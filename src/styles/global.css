@@ -1210,8 +1210,11 @@ body {
 }
 
 /*
- * Photography is the product's main visual surface, and it is always monochrome with grain over
- * it — colour stock photography is what made the landing read as a stock template.
+ * Photography is the product's main visual surface, and it is monochrome with grain over it —
+ * colour stock photography is what made the landing read as a stock template. One exception, the
+ * owner's: a workout's own exercise stills on its preview (the hero and the plan cards) stay in
+ * colour, because they are the coach's frames of the movement and not stock (design/CHANGELOG.md
+ * §26).
  *
  * `.photo-mono` desaturates the image itself. `.photo-grain` and `.photo-scrim` are *overlay
  * elements*, not pseudo-elements on the frame: they have to sit between the image and any text
