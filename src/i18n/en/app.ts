@@ -310,11 +310,8 @@ export const app = {
   nodeChipCap: '{n} min cap',
   nodeChipRestMin: 'rest {m} min',
   nodeChipRestMinSec: 'rest {m} min {s} s',
-  // The two-sided exercise card in the preview sheet (ExercisePreview.tsx).
-  previewFlipToBack: 'How to',
-  previewFlipToBackLabel: 'Turn the card over: how to do it',
-  previewFlipToFront: 'Video',
-  previewFlipToFrontLabel: 'Turn the card over: video',
+  // The first of the exercise drawer's tabs (ExercisePreview.tsx); the other three are the player's.
+  previewTabVideo: 'Video',
   nodeStart: 'Start workout',
   nodeReplaceTitle: 'Another workout is unfinished',
   nodeReplaceBody:

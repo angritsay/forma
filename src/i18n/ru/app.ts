@@ -335,11 +335,8 @@ export const app = {
   nodeChipCap: 'лимит {n} мин',
   nodeChipRestMin: 'отдых {m} мин',
   nodeChipRestMinSec: 'отдых {m} мин {s} с',
-  // The two-sided exercise card in the preview sheet (ExercisePreview.tsx).
-  previewFlipToBack: 'Как делать',
-  previewFlipToBackLabel: 'Перевернуть карточку: как делать',
-  previewFlipToFront: 'Видео',
-  previewFlipToFrontLabel: 'Перевернуть карточку: видео',
+  // The first of the exercise drawer's tabs (ExercisePreview.tsx); the other three are the player's.
+  previewTabVideo: 'Видео',
   nodeStart: 'Начать тренировку',
   nodeReplaceTitle: 'Есть незаконченная тренировка',
   nodeReplaceBody:
