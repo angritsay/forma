@@ -34,17 +34,10 @@ import { findExercise } from '@/content/catalogue';
 import { getSharedCustomWorkout, listMyAssignedWorkouts } from '@/lib/api/customWorkouts';
 import type { AssignedWorkoutRow } from '@/lib/api/types';
 import { isAppError } from '@/lib/api/errors';
-import {
-  isPlayableStructure,
-  type CustomSectionKind,
-  type CustomWorkoutItem,
-  type CustomWorkoutSection,
-  type CustomWorkoutStructure,
-} from '@/lib/training/customWorkout';
+import { isPlayableStructure, type CustomWorkoutStructure } from '@/lib/training/customWorkout';
 import { TopBar } from '@/app/components/TopBar';
 import { ExercisePreview } from '@/app/features/path/ExercisePreview';
-import { mainOnly } from '@/app/features/path/mainWork';
-import type { TKey } from '@/i18n/index';
+import { PlanBlocks } from '@/app/features/path/PlanBlocks';
 import { useT } from '@/app/hooks/useT';
 import { useCustomWorkoutStart } from '@/app/features/customWorkout/useCustomWorkoutStart';
 import { ReplaceWorkoutModal } from '@/app/features/player/ReplaceWorkout';
@@ -55,44 +48,15 @@ import { exerciseStillUrl } from '@/lib/api/storage';
 import { buildPrescribedFromCustom } from '@/lib/training/customWorkout';
 import { workoutVolume } from '@/lib/training/estimate';
 
-const SECTION_KEY: Record<CustomSectionKind, TKey> = {
-  warmup: 'app.playerSectionWarmup',
-  main: 'app.playerSectionMain',
-  cooldown: 'app.playerSectionCooldown',
-};
-
 type LoadState =
   | { status: 'loading' }
   | { status: 'error'; offline: boolean }
   | { status: 'missing' }
   | { status: 'ready'; workout: AssignedWorkoutRow };
 
-/**
- * Упражнение конструктора в том виде, в каком его ждёт карточка из плеера.
- *
- * Строится здесь, а не берётся из `buildPrescribedFromCustom`: после того как из списка убрали
- * разминку и заминку, порядковые номера в плане и в предписании разошлись, и искать по индексу
- * значило бы однажды открыть не то движение. Нужных полей всего четыре, остальные — нули, потому
- * что превью не считает ни время, ни отдых.
- *
- * Вес не проставляется: в конструкторе его нет, и «Осторожно» покажет противопоказания без него.
- */
-function previewItem(it: CustomWorkoutItem): PrescribedItem {
-  return {
-    exerciseId: it.exerciseId,
-    originalExerciseId: it.exerciseId,
-    substituted: false,
-    unit: it.unit,
-    target: it.target,
-    perSide: it.perSide === true,
-    restAfterSec: 0,
-    estimatedSec: 0,
-  };
-}
-
 export default function CustomWorkoutScreen() {
   const tr = useT();
-  const { t, l } = tr;
+  const { t } = tr;
   const params = useParams();
   const token = params.token;
   const id = params.id;
@@ -187,74 +151,12 @@ export default function CustomWorkoutScreen() {
    *
    * Points are the club's currency and are not shown anywhere in training.
    */
-  const volume = playable ? workoutVolume(buildPrescribedFromCustom(w.shortId, structure!)) : null;
+  const prescribed = playable ? buildPrescribedFromCustom(w.shortId, structure!) : null;
+  const volume = prescribed ? workoutVolume(prescribed) : null;
   const facts = [
     minutes ? t('app.nodeDuration', { min: minutes }) : null,
     volume && volume.reps > 0 ? workLabel(tr, volume) : null,
   ].filter(Boolean) as string[];
-
-  /*
-   * Each part of the workout as a numbered ruled section: 01 and its name as the kicker, the
-   * rounds as a plain figure beside it, then the movements with their amounts on the right.
-   * A coach's workout belongs to no course, so nothing on this screen takes a colour.
-   */
-  const sectionSummary = (section: CustomWorkoutSection, index: number) => {
-    const name = section.title?.trim() || t(SECTION_KEY[section.kind]);
-    return (
-      <section key={index} className="flex flex-col gap-2 border-t border-border pt-4">
-        <div className="flex items-baseline gap-3">
-          <span className="numeral text-sm text-muted">{String(index + 1).padStart(2, '0')}</span>
-          <h3 className="eyebrow">{name}</h3>
-          {section.sets > 1 ? (
-            <span className="numeral tabular ml-auto text-xs text-muted">
-              {t('app.customWorkoutRounds', { n: section.sets })}
-            </span>
-          ) : null}
-        </div>
-        <ul className="flex flex-col">
-          {section.items.map((it, i) => {
-            const ex = findExercise(it.exerciseId);
-            const exName = ex ? l(ex.name) : it.exerciseId;
-            const amount =
-              it.unit === 'seconds'
-                ? t('app.customWorkoutSeconds', { n: it.target })
-                : t('app.customWorkoutReps', { n: it.target });
-            const side = it.perSide ? ` · ${t('app.customWorkoutPerSide')}` : '';
-            return (
-              /*
-               * Нажимается, когда упражнение есть в базе: тогда оно открывается крупно, тем же
-               * компонентом, что в плеере. Нет в базе — обычная строка: элемент, который выглядит
-               * нажимаемым и ничего не делает, хуже ненажимаемого.
-               */
-              <li key={i} className="border-t border-border first:border-t-0">
-                {ex ? (
-                  <button
-                    type="button"
-                    onClick={() => setPreview(previewItem(it))}
-                    className="flex w-full items-baseline justify-between gap-3 py-2.5 text-left text-[15px] transition-colors duration-150 ease-(--ease-out) hover:text-text"
-                  >
-                    <span className="min-w-0 truncate">{exName}</span>
-                    <span className="tabular shrink-0 text-sm text-muted">
-                      {amount}
-                      {side}
-                    </span>
-                  </button>
-                ) : (
-                  <span className="flex items-baseline justify-between gap-3 py-2.5 text-[15px]">
-                    <span className="min-w-0 truncate">{exName}</span>
-                    <span className="tabular shrink-0 text-sm text-muted">
-                      {amount}
-                      {side}
-                    </span>
-                  </span>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      </section>
-    );
-  };
 
   return (
     <Screen
@@ -336,10 +238,17 @@ export default function CustomWorkoutScreen() {
             ) : null}
           </div>
         </div>
-        {playable ? (
-          <div className="flex flex-col gap-5">
-            {mainOnly(structure!.sections, (x) => x.kind).map(sectionSummary)}
-          </div>
+        {/*
+         * The plan as the course's workout shows it — the same picture cards and the same line of
+         * block chips (`PlanBlocks`), built from the same prescription the player will run, so
+         * both screens look alike and the numbers cannot disagree with the workout. A card opens
+         * the exercise drawer, with the coach's note for that movement on «Техника».
+         */}
+        {prescribed ? (
+          <section className="flex flex-col gap-4 border-t border-border pt-4 pb-2">
+            <h3 className="eyebrow">{t('app.nodePlanTitle')}</h3>
+            <PlanBlocks prescribed={prescribed} work onOpen={setPreview} />
+          </section>
         ) : (
           <p className="text-sm text-muted">{t('app.customWorkoutEmpty')}</p>
         )}
