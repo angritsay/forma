@@ -269,6 +269,8 @@ export function ExercisePreview({ item, onClose }: ExercisePreviewProps) {
           <VideoPanel item={item} name={l(exercise.name)} hidden={tab !== 'video'} />
           {tab !== 'video' ? (
             <div
+              // A page per key: «Советы» opens at its top, not where «Техника» was scrolled to.
+              key={tab}
               id={tabPanelId(tab, ID)}
               role="tabpanel"
               aria-labelledby={tabId(tab, ID)}
