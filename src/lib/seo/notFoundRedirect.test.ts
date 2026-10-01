@@ -91,6 +91,14 @@ describe('resolveNotFound', () => {
     expect(go('/about/')).toBeNull();
   });
 
+  it('leaves preview builds alone', () => {
+    expect(go('/preview')).toBeNull();
+    expect(go('/preview/workout-cards/start')).toBeNull();
+    expect(go('/preview/en/club')).toBeNull();
+    expect(go('/preview/test/app')).toBeNull();
+    expect(go('/forma/preview/test/about')).toBeNull();
+  });
+
   it('strips a deploy base and never points outside it', () => {
     const based = { ...cfg, base: '/forma-preview/' };
     expect(go('/forma-preview/About', based)).toBe('/forma-preview/about/');
