@@ -130,6 +130,19 @@ describe('the semantic colour map — registry', () => {
     expect(contrast(COLOUR.accent, worst)).toBeGreaterThanOrEqual(TEXT);
   });
 
+  it('keeps that scrim’s worst case at white now the workout stills are in colour', () => {
+    // The hero still and the plan cards dropped `.photo-mono` (design/CHANGELOG.md §26). The scrim
+    // composites channel by channel and luminance rises with every channel, so no colour frame can
+    // be brighter under it than a white one: the measure above still bounds every pixel. Held here
+    // on the brightest saturated frames a photograph can put there, so the claim is not prose.
+    const white = composite('#ffffff', APP_BG, 0.82);
+    for (const frame of ['#ffff00', '#00ffff', '#ff00ff', '#ffd9b3', COLOUR.action]) {
+      const behind = composite(frame, APP_BG, 0.82);
+      expect(contrast('#ffffff', behind), frame).toBeGreaterThanOrEqual(contrast('#ffffff', white));
+      expect(contrast(COLOUR.accent, behind), frame).toBeGreaterThanOrEqual(TEXT);
+    }
+  });
+
   it('names the same ground as tile.ts and global.css', () => {
     expect(COLOUR.ground).toBe(APP_BG);
     expect(COLOUR.surface).toBe(token('surface'));

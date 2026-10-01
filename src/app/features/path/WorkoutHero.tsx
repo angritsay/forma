@@ -9,7 +9,12 @@
  *
  * It is laid out as the *surface* of the block rather than as a picture inside it: absolutely
  * positioned and cropped to fill, so the workout's name, its programme and its facts can sit on it.
- * Monochrome, like every photograph in the product — colour belongs to the programme, on type.
+ *
+ * In colour. It was monochrome, like every other photograph in the product, and the owner asked for
+ * the workout's pictures as they are («картинки должны быть цветными»): this is the coach's frame of
+ * the movement, not stock, and grey made it read as a placeholder (design/CHANGELOG.md §26). The
+ * scrim over it is measured against a pure white frame, the brightest pixel any frame can put
+ * there, so colour does not move the contrast (`contrast-usage.test.ts`).
  *
  * Where no frame exists yet there is no drawing to fall back to, by design, and no flat field of
  * the programme colour either: the title on this screen *is* that colour now, and a cyan name on a
@@ -28,7 +33,7 @@ export function WorkoutHero({ exercise }: WorkoutHeroProps) {
     <ExerciseStill
       exerciseId={exercise?.id}
       loading="eager"
-      className="photo-mono absolute inset-0 size-full object-cover"
+      className="absolute inset-0 size-full object-cover"
     />
   );
 }
