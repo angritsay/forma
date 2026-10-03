@@ -92,6 +92,16 @@ const COLOUR_TAGS = [
 /** Clips per run and the time after which a run stops claiming (the workflow stops at 25 min). */
 const MAX_CLIPS_PER_RUN = 20;
 const RUN_BUDGET_MS = 18 * 60 * 1000;
+/**
+ * No ffmpeg call outlives this point of the run. The job is killed at 25 minutes; a clip stopped
+ * here is reported as failed (requeued while attempts remain) instead of dying with the runner and
+ * waiting out its lease.
+ */
+const HARD_STOP_MS = 23 * 60 * 1000;
+/** One storage download or upload. */
+const TRANSFER_TIMEOUT_MS = 8 * 60 * 1000;
+/** Mirrors `media_render_max_attempts()` (0060), for the counters only. */
+const MAX_ATTEMPTS = 3;
 /** The lease asked for: longer than a run, so a live run is never overtaken. */
 const LEASE_SECONDS = 1800;
 
@@ -269,10 +279,13 @@ export function findFfmpeg() {
   return 'ffmpeg';
 }
 
-function run(bin, args) {
+function run(bin, args, deadline) {
+  const timeout = deadline ? Math.max(1000, deadline - Date.now()) : 0;
   return new Promise((ok, fail) => {
-    execFile(bin, args, { maxBuffer: 64 * 1024 * 1024 }, (err, _stdout, stderr) => {
-      if (err) {
+    execFile(bin, args, { maxBuffer: 64 * 1024 * 1024, timeout }, (err, _stdout, stderr) => {
+      if (err && err.killed) {
+        fail(new JobError('ffmpeg_timeout'));
+      } else if (err) {
         const e = new Error(
           `ffmpeg: ${String(stderr || err.message)
             .trim()
@@ -302,7 +315,7 @@ export async function loadMediaModules() {
  * `job` is a claimed row; `mods` is what {@link loadMediaModules} answers (or the same functions
  * imported another way, as the test does).
  */
-export async function renderPiece({ ffmpeg, input, job, dir, mods }) {
+export async function renderPiece({ ffmpeg, input, job, dir, mods, deadline }) {
   const { grade: G, crop: C } = mods;
   const version = Number(job.grade_version ?? 1);
   if (version > G.GRADE_VERSION) throw new JobError('grade_version', true);
@@ -324,9 +337,10 @@ export async function renderPiece({ ffmpeg, input, job, dir, mods }) {
   await run(
     ffmpeg,
     clipArgs({ input, output: clip, offset: Number(job.raw_offset_s ?? 0), seconds, filters }),
+    deadline,
   );
-  await run(ffmpeg, stillArgs({ input: clip, output: still, seconds }));
-  await run(ffmpeg, loopArgs({ input: clip, output: loop, seconds }));
+  await run(ffmpeg, stillArgs({ input: clip, output: still, seconds }), deadline);
+  await run(ffmpeg, loopArgs({ input: clip, output: loop, seconds }), deadline);
   return { clip, still, loop, cube: cubePath };
 }
 
@@ -350,9 +364,16 @@ function api(base, key) {
     },
     async download(bucket, path, file) {
       const url = `${base}/storage/v1/object/${bucket}/${path.split('/').map(encodeURIComponent).join('/')}`;
-      const res = await fetch(url, { headers });
-      // Storage answers 400 «not_found» as well as 404 for a missing object.
-      if (res.status === 404 || res.status === 400) throw new JobError('raw_missing', true);
+      // A stalled transfer must not hold the run until the job is killed.
+      const res = await fetch(url, { headers, signal: AbortSignal.timeout(TRANSFER_TIMEOUT_MS) });
+      // Storage answers 400 with a «not found» body as well as 404 for a missing object. Any other
+      // 400 (a bad token, say) is not the piece's fault and must not fail it for good.
+      if (res.status === 404) throw new JobError('raw_missing', true);
+      if (res.status === 400) {
+        const body = await res.text().catch(() => '');
+        if (/not.?found/i.test(body)) throw new JobError('raw_missing', true);
+        throw new JobError('raw_download_400');
+      }
       if (!res.ok || !res.body) throw new JobError(`raw_download_${res.status}`);
       await pipeline(Readable.fromWeb(res.body), createWriteStream(file));
     },
@@ -367,6 +388,7 @@ function api(base, key) {
           'cache-control': `max-age=${cache}`,
         },
         body: readFileSync(file),
+        signal: AbortSignal.timeout(TRANSFER_TIMEOUT_MS),
       });
       if (!res.ok) throw new JobError(`upload_${bucket}_${res.status}`);
     },
@@ -415,7 +437,14 @@ async function worker({ peek }) {
       if (!RAW_PATH_RE.test(job.raw_path ?? '')) throw new JobError('bad_raw_path', true);
       const input = join(dir, `raw.${job.raw_path.split('.').pop()}`);
       await db.download('raw', job.raw_path, input);
-      const out = await renderPiece({ ffmpeg, input, job, dir, mods });
+      const out = await renderPiece({
+        ffmpeg,
+        input,
+        job,
+        dir,
+        mods,
+        deadline: started + HARD_STOP_MS,
+      });
       const withEn = !job.has_video_en;
       for (const u of uploadPlan(job.exercise_id, withEn)) {
         await db.upload(u.bucket, u.path, out[u.kind], u.type, u.cache);
@@ -437,7 +466,7 @@ async function worker({ peek }) {
           p_final: final,
         });
         if (ok !== true) counts.lost++;
-        else if (final || job.attempt >= 3) counts.failed++;
+        else if (final || job.attempt >= MAX_ATTEMPTS) counts.failed++;
         else counts.requeued++;
       } catch {
         // The lease will run out and the next run takes it again.

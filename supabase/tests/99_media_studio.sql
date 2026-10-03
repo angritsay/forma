@@ -143,6 +143,18 @@ begin
               '{"crop":{"x":0.5,"y":0,"w":0.8,"h":1}}');
     raise exception 'a crop outside the frame was accepted';
   exception when others then assert sqlerrm = 'invalid_crop', sqlerrm; end;
+  -- A crop missing a side is refused everywhere, not read as valid (a null check passes `if not`).
+  assert public.media_crop_valid('{"x":0,"y":0,"w":0.5}') = false, 'a crop without h is not valid';
+  assert public.media_crop_valid('{"x":0,"y":0,"w":0.5,"h":"1"}') = false, 'a string side is not valid';
+  begin
+    perform public.admin_media_add_clip(gen_random_uuid(), v_src, 'a/b.mp4', 0, 1, 2, null, '{"x":0.1}');
+    raise exception 'add accepted a crop without w, h and y';
+  exception when others then assert sqlerrm = 'invalid_crop', sqlerrm; end;
+  begin
+    perform public.admin_media_paste(array['00000000-0000-0000-0000-0000000060c1']::uuid[], null,
+                                     '{"x":0,"y":0}', false, true);
+    raise exception 'paste accepted a crop without w and h';
+  exception when others then assert sqlerrm = 'invalid_crop', sqlerrm; end;
   begin
     perform public.admin_media_save_clip('00000000-0000-0000-0000-0000000060c1', '{"grade":[1,2]}');
     raise exception 'a grade that is not an object was accepted';
@@ -406,9 +418,46 @@ begin
     'a changed done clip is a draft again, and the exercise has a video';
   v := public.admin_media_save_clip('00000000-0000-0000-0000-0000000060c2', '{"grade":{"exposure":0.5}}');
   assert v ->> 'status' = 'done', 'an unchanged save leaves a done clip done';
+  assert public.admin_media_queue(array['00000000-0000-0000-0000-0000000060c1']::uuid[]) = 1,
+    'the regraded clip queues again';
+end $$;
+
+-- A re-render refreshes the English copy the studio itself wrote (ms_squat had none before).
+select pg_temp.as_service();
+do $$
+declare
+  r record;
+begin
+  select * into r from public.media_render_claim(1) c;
+  assert r.id = '00000000-0000-0000-0000-0000000060c1' and r.has_video_en = false,
+    'the studio''s own English copy is the worker''s to refresh';
+  -- The run dies; the admin may now change or delete the clip without waiting for the next run.
+  update public.media_clips set claimed_until = now() - interval '1 second' where id = r.id;
+end $$;
+
+select pg_temp.as_user('00000000-0000-0000-0000-0000000060a1', 'ms-admin@example.com');
+do $$
+declare
+  v jsonb;
+begin
+  v := public.admin_media_save_clip('00000000-0000-0000-0000-0000000060c1', '{"grade":{"exposure":0.25}}');
+  assert v ->> 'status' = 'rendering', 'a dead run''s clip can be edited and stays in line';
+  -- Unlabelled, it could never be claimed: it goes back to draft instead of waiting forever.
+  v := public.admin_media_save_clip('00000000-0000-0000-0000-0000000060c1', '{"exercise_id":null}');
+  assert v ->> 'status' = 'draft', 'an unlabelled queued clip is a draft';
+  assert (select not en_from_studio from public.media_clips
+           where id = '00000000-0000-0000-0000-0000000060c1'),
+    'relabelled: the old exercise''s English copy is no longer the studio''s';
   perform public.admin_media_delete_clip('00000000-0000-0000-0000-0000000060c1');
   assert not exists (select 1 from public.media_clips where id = '00000000-0000-0000-0000-0000000060c1'),
     'deleted';
+end $$;
+
+select pg_temp.as_service();
+do $$ begin
+  assert public.media_en_writable('ms_squat') = false,
+    'with no clip owning it, the English copy is left alone';
+  assert public.media_en_writable('ms_press') = false, 'a recording the studio did not write is kept';
 end $$;
 
 -- --- clean up -------------------------------------------------------------------------------------

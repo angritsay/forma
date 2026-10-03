@@ -134,6 +134,8 @@ export async function saveMediaClip(id: string, patch: MediaClipPatch): Promise<
       !same(next.crop, was.crop) ||
       !same(next.grade, was.grade);
     if (changed && was.status === 'done') next.status = 'draft';
+    // As on the server: an unlabelled clip is never claimed, so it does not stay queued.
+    if (next.status === 'queued' && !next.exerciseId) next.status = 'draft';
     next.updatedAt = nowIso();
     clips.set(id, next);
     return next;

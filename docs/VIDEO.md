@@ -310,8 +310,9 @@ seconds of untouched footage — with a resumable upload. Everything heavy runs 
 `draft` → (admin queues it; it must be labelled) → `queued` → (worker claims it) → `rendering` →
 `done`, or back to `queued` after an error, until the third attempt leaves it `failed` with a short
 reason. «Повторить» puts a failed clip back with fresh attempts. Editing a `done` clip makes it a
-`draft` again (what is in the library no longer matches it); a clip being rendered cannot be
-edited.
+`draft` again (what is in the library no longer matches it). A clip a live run is rendering
+cannot be edited or deleted (`clip_busy`); once that run's lease has run out, it can. Removing the
+label from a queued clip makes it a `draft` (an unlabelled clip is never claimed).
 
 The claim is a **lease** (`claimed_until`, 30 minutes, longer than the 25-minute job) taken with
 `for update skip locked`, so two runs never render the same clip, and a run that dies gives its
@@ -327,14 +328,20 @@ One ffmpeg pass, then two small cuts from its output:
    sits inside the uploaded piece.
 2. **Crop** (`ffmpegCrop`, even pixels), **grade** (`lut3d` with the `.cube` from `gradeToLut`,
    trilinear — the same interpolation the WebGL preview gets from a 3D texture), then
-   `scale='min(1080,iw)':-2`, BT.709 in and out.
+   `scale='min(1080,iw)':-2`, converted to and tagged as BT.709.
 3. **x264 exactly as `prepare-videos.mjs`**: preset slow, crf 28, yuv420p, no audio, faststart.
 4. **Still** at 45%, 640 px wide, `-q:v 4` (as `prepare-videos.mjs`); **loop** of 4 s from 1.0 s,
    480 px, veryfast / crf 30 (as the `site-loops` task).
-5. Uploads with upsert: `videos/shared/<id>.ru.mp4` (and `.en.mp4` only when the exercise has no
-   English clip — the clips are silent, so it is the same file), `images/exercises/<id>.jpg`,
-   `images/loops/<id>.mp4`. `media_render_done` then sets `video_ru` (and `video_en` when it was
-   empty).
+5. Uploads with upsert: `videos/shared/<id>.ru.mp4` (and `.en.mp4` when the exercise has no
+   English clip, or only the studio's own copy from an earlier render — the clips are silent, so
+   it is the same file), `images/exercises/<id>.jpg`, `images/loops/<id>.mp4`.
+   `media_render_done` then sets `video_ru` (and `video_en` on the same condition,
+   `media_en_writable`). An English recording the studio did not write is never replaced. If the
+   clip that wrote the English copy is relabelled or deleted, that copy is left alone from then on.
+
+Every ffmpeg call stops at 23 minutes into the run and every storage transfer after 8 minutes; the
+clip is then reported as failed (`ffmpeg_timeout`) and requeued while attempts remain, instead of
+dying with the 25-minute job and waiting out its lease.
 
 The log shows counters only: rendered, requeued, failed, lost (a lease that ran out under it),
 still waiting. An empty queue costs one request; ffmpeg is installed only when there is work.

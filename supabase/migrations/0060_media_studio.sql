@@ -99,6 +99,7 @@ create table if not exists public.media_clips (
   attempts       int not null default 0 check (attempts >= 0),
   claimed_until  timestamptz,
   rendered_at    timestamptz,
+  en_from_studio boolean not null default false,
   created_at     timestamptz not null default now(),
   updated_at     timestamptz not null default now(),
   constraint media_clips_span check (end_s > start_s and end_s - start_s <= 600),
@@ -118,6 +119,11 @@ comment on column public.media_clips.grade is
   'Colour grade parameters (src/lib/media/grade.ts GradeParams). Null — no grade.';
 comment on column public.media_clips.grade_version is
   'Version of the grade math the parameters were made for (GRADE_VERSION). The worker refuses one it does not know.';
+-- Added after the first draft of this migration; a database that ran that draft gets it here.
+alter table public.media_clips add column if not exists en_from_studio boolean not null default false;
+
+comment on column public.media_clips.en_from_studio is
+  'This clip''s render wrote the exercise''s video_en (it had none), so a re-render may refresh it. An English recording the studio did not write is never touched.';
 comment on column public.media_clips.claimed_until is
   'A worker run is rendering this clip until then (lease). A run that dies leaves it to the next one.';
 
@@ -184,19 +190,46 @@ declare
 begin
   if p_crop is null then return true; end if;
   if jsonb_typeof(p_crop) <> 'object' then return false; end if;
-  if jsonb_typeof(p_crop -> 'x') <> 'number' or jsonb_typeof(p_crop -> 'y') <> 'number'
-     or jsonb_typeof(p_crop -> 'w') <> 'number' or jsonb_typeof(p_crop -> 'h') <> 'number' then
+  -- `is distinct from`, not `<>`: a missing key is a null typeof, and a null here would make the
+  -- whole answer null — which `if not media_crop_valid(…)` reads as «valid».
+  if jsonb_typeof(p_crop -> 'x') is distinct from 'number'
+     or jsonb_typeof(p_crop -> 'y') is distinct from 'number'
+     or jsonb_typeof(p_crop -> 'w') is distinct from 'number'
+     or jsonb_typeof(p_crop -> 'h') is distinct from 'number' then
     return false;
   end if;
   v_x := (p_crop ->> 'x')::numeric; v_y := (p_crop ->> 'y')::numeric;
   v_w := (p_crop ->> 'w')::numeric; v_h := (p_crop ->> 'h')::numeric;
-  return v_x >= 0 and v_y >= 0 and v_w >= 0.05 and v_h >= 0.05
-     and v_x + v_w <= 1.000001 and v_y + v_h <= 1.000001;
+  return coalesce(v_x >= 0 and v_y >= 0 and v_w >= 0.05 and v_h >= 0.05
+                  and v_x + v_w <= 1.000001 and v_y + v_h <= 1.000001, false);
 end;
 $$;
 
 revoke execute on function public.media_crop_valid(jsonb) from public, anon;
 grant execute on function public.media_crop_valid(jsonb) to authenticated, service_role;
+
+/*
+ * Whether the worker may write the exercise's video_en: it is empty, or it is the studio's own
+ * copy of the Russian clip (written by an earlier render of a clip still labelled with it). A
+ * recording somebody else put there is never replaced by the silent Russian clip.
+ */
+create or replace function public.media_en_writable(p_exercise_id text)
+returns boolean
+language sql
+stable
+set search_path = pg_catalog, public, extensions
+as $$
+  select coalesce((
+    select coalesce(btrim(e.video_en), '') = ''
+        or (e.video_en = 'storage:videos/shared/' || e.id || '.en.mp4'
+            and exists (select 1 from public.media_clips m
+                         where m.exercise_id = e.id and m.en_from_studio))
+      from public.exercises e
+     where e.id = p_exercise_id
+  ), false);
+$$;
+
+revoke execute on function public.media_en_writable(text) from public, anon, authenticated;
 
 /* One clip as the admin screens read it (snake_case; src/lib/api/mediaStudio.ts maps it). */
 create or replace function public.media_clip_json(p_clip public.media_clips)
@@ -437,7 +470,9 @@ begin
   if not found then
     raise exception 'not_found' using errcode = 'P0001';
   end if;
-  if v_old.status = 'rendering' then
+  -- Busy only while a run holds it. A run that died (lease out) left it to whoever comes next:
+  -- the admin may change or delete it rather than wait for the next worker run.
+  if v_old.status = 'rendering' and v_old.claimed_until >= now() then
     raise exception 'clip_busy' using errcode = 'P0001';
   end if;
 
@@ -481,13 +516,20 @@ begin
          crop = v_new.crop,
          grade = v_new.grade,
          grade_version = v_new.grade_version,
+         -- Relabelled: whatever this clip wrote into the old exercise's video_en is that
+         -- exercise's now, not the studio's to refresh.
+         en_from_studio = c.en_from_studio and v_new.exercise_id is not distinct from v_old.exercise_id,
          status = case
                     when c.status = 'done'
                          and (v_new.exercise_id, v_new.crop, v_new.grade, v_new.grade_version)
                              is distinct from (v_old.exercise_id, v_old.crop, v_old.grade, v_old.grade_version)
                       then 'draft'
+                    -- An unlabelled clip is never claimed; left queued it would wait forever.
+                    when c.status in ('queued', 'rendering') and v_new.exercise_id is null
+                      then 'draft'
                     else c.status
-                  end
+                  end,
+         claimed_until = case when v_new.exercise_id is null then null else c.claimed_until end
    where c.id = p_id
   returning * into v_new;
   return public.media_clip_json(v_new);
@@ -499,7 +541,7 @@ grant execute on function public.admin_media_save_clip(uuid, jsonb) to authentic
 
 /*
  * Paste a copied grade and/or crop onto many clips at once. `p_with_grade` / `p_with_crop` say
- * which halves are pasted (null values clear them). Clips being rendered are skipped; rendered
+ * which halves are pasted (null values clear them). Clips a live run is rendering are skipped; rendered
  * clips that change go back to draft, as in save. Answers how many clips were changed.
  */
 create or replace function public.admin_media_paste(
@@ -548,7 +590,7 @@ begin
            crop = case when p_with_crop then p_crop else c.crop end,
            status = case when c.status = 'done' then 'draft' else c.status end
      where c.id = any (p_ids)
-       and c.status <> 'rendering'
+       and not (c.status = 'rendering' and c.claimed_until >= now())
        and (
          (p_with_grade and (c.grade, c.grade_version) is distinct from (p_grade, p_grade_version))
          or (p_with_crop and c.crop is distinct from p_crop)
@@ -631,7 +673,7 @@ revoke execute on function public.admin_media_retry(uuid[]) from public, anon;
 grant execute on function public.admin_media_retry(uuid[]) to authenticated;
 
 /*
- * Forget a clip (not while it renders). The raw piece in storage is the client's to delete, with
+ * Forget a clip (not while a live run renders it). The raw piece in storage is the client's to delete, with
  * the same admin rights; the exercise keeps whatever was already rendered onto it.
  */
 create or replace function public.admin_media_delete_clip(p_id uuid)
@@ -642,15 +684,16 @@ set search_path = pg_catalog, public, extensions
 as $$
 declare
   v_status text;
+  v_until  timestamptz;
 begin
   if not public.is_admin() then
     raise exception 'not_admin' using errcode = '42501';
   end if;
-  select status into v_status from public.media_clips where id = p_id for update;
+  select status, claimed_until into v_status, v_until from public.media_clips where id = p_id for update;
   if not found then
     return;
   end if;
-  if v_status = 'rendering' then
+  if v_status = 'rendering' and v_until >= now() then
     raise exception 'clip_busy' using errcode = 'P0001';
   end if;
   delete from public.media_clips where id = p_id;
@@ -671,7 +714,9 @@ grant execute on function public.admin_media_delete_clip(uuid) to authenticated;
  * clip with no attempts left is marked failed here instead of being taken again.
  *
  * Thirty minutes by default: longer than a run (the workflow stops at 25), so a live run is never
- * overtaken, and a dead run's clip goes out with a run soon after.
+ * overtaken, and a dead run's clip goes out with a run soon after. *
+ * `has_video_en`: the exercise has an English clip the studio must not touch, so the worker
+ * uploads only the Russian one. False when video_en is empty or the studio's own earlier copy.
  */
 create or replace function public.media_render_claim(
   p_limit         int default 1,
@@ -733,10 +778,9 @@ begin
   )
   select c.id, c.exercise_id, c.raw_path, c.raw_offset_s, c.start_s, c.end_s, c.crop, c.grade,
          c.grade_version, c.attempts,
-         nullif(btrim(e.video_en), '') is not null
+         not public.media_en_writable(c.exercise_id)
     from claimed c
     join due d on d.id = c.id
-    left join public.exercises e on e.id = c.exercise_id
    order by d.updated_at, c.id;
 end;
 $$;
@@ -746,8 +790,9 @@ grant execute on function public.media_render_claim(int, int) to service_role;
 
 /*
  * The worker uploaded the clip to videos/shared/<exercise>.ru.mp4 (and .en.mp4 when p_with_en).
- * Points the exercise at it — video_en only when it had none, so an English recording is never
- * replaced by the silent Russian one — and marks the clip done. Only the run holding the current
+ * Points the exercise at it — video_en only when it had none or holds the studio's own earlier
+ * copy (media_en_writable), so an English recording is never replaced by the silent Russian
+ * one — and marks the clip done. Only the run holding the current
  * attempt can finish it; any other call answers false and changes nothing.
  */
 create or replace function public.media_render_done(
@@ -762,22 +807,23 @@ security definer
 set search_path = pg_catalog, public, extensions
 as $$
 declare
-  v_ex text;
+  v_ex     text;
+  v_en     boolean;
 begin
-  update public.media_clips c
-     set status = 'done', error = null, claimed_until = null, rendered_at = now()
+  select c.exercise_id into v_ex from public.media_clips c
    where c.id = p_id and c.status = 'rendering' and c.attempts = p_attempt
-  returning c.exercise_id into v_ex;
+   for update;
   if not found then
     return false;
   end if;
+  v_en := coalesce(p_with_en, false) and public.media_en_writable(v_ex);
+  update public.media_clips c
+     set status = 'done', error = null, claimed_until = null, rendered_at = now(),
+         en_from_studio = v_en
+   where c.id = p_id;
   update public.exercises e
      set video_ru = 'storage:videos/shared/' || e.id || '.ru.mp4',
-         video_en = case
-                      when coalesce(p_with_en, false) and coalesce(btrim(e.video_en), '') = ''
-                        then 'storage:videos/shared/' || e.id || '.en.mp4'
-                      else e.video_en
-                    end
+         video_en = case when v_en then 'storage:videos/shared/' || e.id || '.en.mp4' else e.video_en end
    where e.id = v_ex;
   return true;
 end;
