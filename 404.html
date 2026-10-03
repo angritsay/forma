@@ -1,0 +1,47 @@
+<!DOCTYPE html><html lang="ru" dir="ltr"> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#121212"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"> <title>404 — Forma</title> <meta name="robots" content="noindex, nofollow"> <meta name="description" content="Страница не найдена / Page not found"> <script>(function(){try{var t=(function resolveNotFound(loc, cfg) {
+  let p = loc.pathname || "/";
+  try {
+    p = decodeURI(p);
+  } catch {
+  }
+  p = p.toLowerCase().replace(/\/{2,}/g, "/");
+  const base = cfg.base.toLowerCase();
+  if (base !== "/") {
+    if (p === base.slice(0, -1)) p = "/";
+    else if (p.indexOf(base) === 0) p = p.slice(base.length - 1);
+  }
+  if (p === "/forma" || p.indexOf("/forma/") === 0) p = p.slice("/forma".length) || "/";
+  if (p === "/preview" || p.indexOf("/preview/") === 0) return null;
+  p = p.replace(/\/index\.html?$/, "/").replace(/\.html?$/, "");
+  if (p.charAt(p.length - 1) !== "/") p += "/";
+  let locale = cfg.defaultLocale;
+  let rest = p;
+  const m = /^\/([a-z]{2})(\/.*)$/.exec(p);
+  if (m && (m[1] === cfg.defaultLocale || cfg.locales.indexOf(m[1]) !== -1)) {
+    locale = m[1];
+    rest = m[2];
+  }
+  const prefixed = locale === cfg.defaultLocale ? rest : "/" + locale + rest;
+  let target = null;
+  if (cfg.routes.indexOf(prefixed) !== -1) target = prefixed;
+  else {
+    const table = cfg.aliases[locale];
+    const alias = table ? table[rest] : void 0;
+    if (alias) target = alias;
+  }
+  if (!target) return null;
+  const hashAt = target.indexOf("#");
+  const targetHash = hashAt === -1 ? "" : target.slice(hashAt);
+  const noHash = hashAt === -1 ? target : target.slice(0, hashAt);
+  const queryAt = noHash.indexOf("?");
+  const path = queryAt === -1 ? noHash : noHash.slice(0, queryAt);
+  if (cfg.routes.indexOf(path) === -1) return null;
+  const href = cfg.base + path.slice(1);
+  if (href === loc.pathname) return null;
+  const query = new URLSearchParams(queryAt === -1 ? "" : noHash.slice(queryAt + 1));
+  new URLSearchParams(loc.search).forEach((value, key) => {
+    if (!query.has(key)) query.append(key, value);
+  });
+  const qs = query.toString();
+  return href + (qs ? "?" + qs : "") + (targetHash || loc.hash || "");
+})(location,{"base":"/","defaultLocale":"ru","locales":["en"],"routes":["/","/about/","/app/","/contact/","/courses/","/courses/start-krossfit-doma-bez-oborudovaniya/","/en/","/en/about/","/en/contact/","/en/courses/","/en/courses/start-home-crossfit-basics/","/en/exercises/","/en/exercises/air-squat/","/en/exercises/ankle-circles/","/en/exercises/arm-circles/","/en/exercises/bench-dip/","/en/exercises/cat-cow/","/en/exercises/childs-pose/","/en/exercises/dead-bug/","/en/exercises/elbow-and-wrist-circles/","/en/exercises/glute-bridge/","/en/exercises/hamstring-stretch/","/en/exercises/hip-circles/","/en/exercises/hip-flexor-stretch/","/en/exercises/inchworm/","/en/exercises/knee-circles/","/en/exercises/knee-push-up/","/en/exercises/leg-swings/","/en/exercises/mountain-climbers/","/en/exercises/neck-circles/","/en/exercises/push-up/","/en/exercises/reverse-lunge/","/en/exercises/russian-twist/","/en/exercises/side-bends/","/en/exercises/sit-up/","/en/exercises/squat-to-stand/","/en/exercises/standing-quad-stretch/","/en/exercises/step-up/","/en/guides/","/en/guides/20-minute-home-workouts/","/en/guides/beginners/","/en/guides/crossfit-at-home-after-40/","/en/guides/crossfit-at-home-for-beginners/","/en/guides/crossfit-for-fat-loss/","/en/guides/crossfit-without-equipment/","/en/guides/crossfit-workout-formats-amrap-emom-tabata/","/en/guides/equipment/","/en/guides/fat-loss/","/en/guides/formats/","/en/guides/home-crossfit-equipment-guide/","/en/guides/how-many-times-a-week-to-work-out-at-home/","/en/guides/how-to-do-a-burpee/","/en/guides/how-to-stay-consistent-with-workouts/","/en/guides/mobility/","/en/guides/motivation/","/en/guides/no-equipment/","/en/guides/programming/","/en/guides/push-up-progression/","/en/guides/recovery/","/en/guides/rest-days-recovery-7000-steps/","/en/guides/rpe-scale-how-hard-should-workouts-be/","/en/guides/warm-up-before-a-home-workout/","/en/privacy/","/en/refund/","/en/subscribe/","/en/terms/","/en/together/","/exercises/","/exercises/gusenitsa/","/exercises/koshka-korova/","/exercises/krugi-golovoy/","/exercises/krugi-kolenyami/","/exercises/krugi-rukami/","/exercises/mahi-nogami/","/exercises/mertvyy-zhuk/","/exercises/naklony-v-storony/","/exercises/obratnye-otzhimaniya-ot-stula/","/exercises/obratnye-vypady/","/exercises/otzhimaniya-s-kolen/","/exercises/otzhimaniya/","/exercises/poza-rebenka/","/exercises/prised-razgibanie/","/exercises/prisedaniya/","/exercises/rastyazhka-kvadritsepsa-stoya/","/exercises/rastyazhka-sgibateley-bedra/","/exercises/rastyazhka-zadney-poverhnosti-bedra/","/exercises/russkiy-tvist/","/exercises/sitap/","/exercises/skalolaz/","/exercises/vrashcheniya-loktyami-i-kistyami/","/exercises/vrashcheniya-stopami/","/exercises/vrashcheniya-tazom/","/exercises/yagodichnyy-mostik/","/exercises/zashagivaniya-na-vozvyshenie/","/guides/","/guides/amrap-emom-for-time-tabata/","/guides/beginners/","/guides/crossfit-bez-oborudovaniya/","/guides/crossfit-dlya-pohudeniya/","/guides/crossfit-doma-dlya-nachinayushchih/","/guides/crossfit-posle-40/","/guides/dni-otdyha-i-7000-shagov/","/guides/equipment/","/guides/fat-loss/","/guides/formats/","/guides/kak-delat-berpi/","/guides/kak-nauchitsya-otzhimatsya/","/guides/kak-ne-brosit-trenirovki/","/guides/mobility/","/guides/motivation/","/guides/no-equipment/","/guides/oborudovanie-dlya-crossfita-doma/","/guides/programming/","/guides/razminka-pered-trenirovkoy-doma/","/guides/recovery/","/guides/rpe-kak-podobrat-nagruzku/","/guides/skolko-raz-v-nedelyu-trenirovatsya-doma/","/guides/trenirovka-20-minut-doma/","/privacy/","/refund/","/subscribe/","/terms/","/together/"],"aliases":{"ru":{"/start/":"/app/?lang=ru#/start","/app/":"/app/?lang=ru","/club/":"/subscribe/","/coach/":"/about/","/trainer/":"/about/","/together/":"/#together","/courses/start/":"/courses/start-krossfit-doma-bez-oborudovaniya/","/course/":"/courses/start-krossfit-doma-bez-oborudovaniya/","/kurs/":"/courses/start-krossfit-doma-bez-oborudovaniya/"},"en":{"/start/":"/app/?lang=en#/start","/app/":"/app/?lang=en","/club/":"/en/subscribe/","/coach/":"/en/about/","/trainer/":"/en/about/","/together/":"/en/#together","/courses/start/":"/en/courses/start-home-crossfit-basics/","/course/":"/en/courses/start-home-crossfit-basics/","/kurs/":"/en/courses/start-home-crossfit-basics/"}}});if(t)location.replace(t);}catch(e){}})();</script> <link rel="stylesheet" href="/_assets/_slug_.2ybBaoZb.css"></head> <body class>   <main class="mx-auto flex min-h-dvh max-w-3xl flex-col justify-center gap-10 px-6 py-16"> <a href="/" class="inline-flex text-2xl text-text"> <span class="inline-flex items-baseline" aria-label="Forma"> <span class="wordmark inline-flex items-baseline" aria-hidden="true"> <span class="wordmark-f">F</span><span>OR</span><span class="wordmark-thin">MA</span> </span> </span> </a> <div class="hero-field relative overflow-hidden rounded-card bg-field px-5 py-6 text-on-field sm:px-7 sm:py-8 md:px-10 md:py-10">  <h1 class="display tabular text-[96px] leading-none text-on-field sm:text-[128px] md:text-[200px]" aria-label="404"> <span aria-hidden="true">4<span class="t-thin text-accent">0</span>4</span> </h1>  </div> <div class="grid gap-x-10 md:grid-cols-2"> <section lang="ru" class="border-t border-border pt-6"> <h2 class="display text-lg">Страница не найдена</h2> <p class="mt-3 text-[15px] text-muted">Такой страницы нет или её адрес изменился.</p> <div class="mt-6 flex flex-wrap gap-3"> <a href="/app/?lang=ru#/start" class="control-label inline-flex h-12 items-center rounded-control bg-action px-6.5 text-[13px] text-on-action hover:opacity-85" data-app-link> Начать бесплатно </a> <a href="/" class="control-label inline-flex h-12 items-center rounded-control border border-border-strong bg-surface-2 px-6.5 text-[13px] hover:bg-surface-3"> На главную </a> </div> </section><section lang="en" class="border-t border-border pt-6 mt-8 md:mt-0"> <h2 class="display text-lg">Page not found</h2> <p class="mt-3 text-[15px] text-muted">This page does not exist or has moved.</p> <div class="mt-6 flex flex-wrap gap-3"> <a href="/app/?lang=en#/start" class="control-label inline-flex h-12 items-center rounded-control bg-action px-6.5 text-[13px] text-on-action hover:opacity-85" data-app-link> Start free </a> <a href="/en/" class="control-label inline-flex h-12 items-center rounded-control border border-border-strong bg-surface-2 px-6.5 text-[13px] hover:bg-surface-3"> Go home </a> </div> </section> </div> </main>  </body></html>

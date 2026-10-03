@@ -1,0 +1,1 @@
+import{cN as f}from"./main.DyBi0WAC.js";import"./jsx-runtime.D_zvdyIk.js";import"./index.D-Pb_x6I.js";import"./consents.Bkn3Nhb2.js";import"./mine.Bd_lFvKb.js";import"./prescribe.LeZJRQme.js";import"./index.Mx6RHwiu.js";export{f as default};

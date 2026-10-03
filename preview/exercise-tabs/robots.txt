@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /preview/exercise-tabs/app/
+Disallow: /preview/exercise-tabs/preview/
+
+Sitemap: https://forma-app.co/preview/exercise-tabs/sitemap.xml
+Host: https://forma-app.co

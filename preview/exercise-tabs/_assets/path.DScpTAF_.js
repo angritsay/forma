@@ -1,0 +1,1 @@
+import{E as o}from"./consents.Oqitwxqk.js";function a(e){return`/admin/people/${encodeURIComponent(e.trim().toLowerCase())}`}function l(e){if(!e)return null;let t=e;if(/%[0-9a-f]{2}/i.test(t))try{t=decodeURIComponent(t)}catch{return null}const n=t.trim().toLowerCase();return o.test(n)?n:null}export{l as e,a as p};

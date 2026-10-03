@@ -1,0 +1,1 @@
+import{i as t,g as n,j as o,s as i}from"./consents.Bkn3Nhb2.js";async function m(s){const a=[...new Set(s.map(e=>e.trim().toLowerCase()).filter(Boolean))];return a.length===0||t()?new Set:n(async()=>{const e=o(await i().rpc("admin_telegram_blocked",{p_emails:a.slice(0,500)}));return new Set((e??[]).map(r=>r.email.toLowerCase()))})}export{m as l};

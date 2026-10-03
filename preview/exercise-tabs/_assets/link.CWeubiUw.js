@@ -1,0 +1,1 @@
+import{bx as e,by as t,aH as a}from"./main.CZna9uX3.js";import{k as f,A as s}from"./mine.Czai9LBX.js";function m(){return typeof window>"u"?`https://${t.domain}`:window.location.origin}function u(r,i,n){const o=f(m(),n,{ref:r,from:s(i)});return e(r,o,a.telegramMiniApp)}export{u as r};

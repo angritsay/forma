@@ -1,0 +1,1 @@
+function t(e){return e.voidedAt!==null?"rejected":e.attempt>1&&e.reviewedAt===null?"redone":"standing"}function n(e){return t(e)==="rejected"}function r(e){return t(e)==="redone"}export{n as i,r as n};
