@@ -7,6 +7,7 @@ export * from './clubAdmin';
 export * from './adminPayments';
 export * from './flags';
 export * from './booking';
+export * from './mediaStudio';
 export {
   getSession,
   getUser,

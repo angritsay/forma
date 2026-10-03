@@ -281,3 +281,92 @@ reference each file, and removes what nothing references.
 The clip's mode lives next to it: `loop` repeats the clip while the step lasts; `fit`, for a pose
 entered once and held, slows the clip to the step's duration (no slower than 0.5×) and holds its
 last frame.
+
+## Studio («Студия»): cut, label and grade in the admin
+
+Since 0060 the owner does not need a laptop for any of the above. She films a whole workout on a
+tripod, and in the admin («Студия») she cuts it into one clip per exercise, labels each clip,
+frames it (crop) and grades it (colour); a worker encodes the result into the exercise library.
+The app shows it at once, with no deploy: stills and loops resolve by exercise id, and the clip by
+`exercises.video_ru`.
+
+**The phone never encodes.** It plays the long video from a local `blob:` URL, cuts each piece by
+stream copy (at the keyframe before the mark, plus a small pad) and uploads the piece — a few
+seconds of untouched footage — with a resumable upload. Everything heavy runs in GitHub Actions.
+
+### Where things are
+
+| What              | Where                                                                                                                |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Uploaded pieces   | private bucket **`raw`**, `raw/<source_id>/<clip_id>.<ext>` (`rawClipPath()`), admins only, `video/*`, 500 MB a file |
+| Sources and clips | `media_sources`, `media_clips` (0060); read and written through the `admin_media_*` RPCs                             |
+| Grade math        | `src/lib/media/grade.ts` — `GradeParams`, `gradeToLut()`, `lutToCube()`, shared by the preview and the worker        |
+| Crop              | `src/lib/media/crop.ts` — normalised `{x, y, w, h}` of the displayed frame, `ffmpegCrop()`                           |
+| Client API        | `src/lib/api/mediaStudio.ts`                                                                                         |
+| Worker            | `scripts/media/render-clips.mjs`, run by `.github/workflows/media-render.yml` (every 10 min and by hand)             |
+
+### A clip's life
+
+`draft` → (admin queues it; it must be labelled) → `queued` → (worker claims it) → `rendering` →
+`done`, or back to `queued` after an error, until the third attempt leaves it `failed` with a short
+reason. «Повторить» puts a failed clip back with fresh attempts. Editing a `done` clip makes it a
+`draft` again (what is in the library no longer matches it); a clip being rendered cannot be
+edited.
+
+The claim is a **lease** (`claimed_until`, 30 minutes, longer than the 25-minute job) taken with
+`for update skip locked`, so two runs never render the same clip, and a run that dies gives its
+clips back when the lease runs out. Done and failed carry the attempt they claimed, so a run that
+was overtaken cannot overwrite the run that took over.
+
+### What the worker does to a piece
+
+One ffmpeg pass, then two small cuts from its output:
+
+1. **Exact trim.** `-ss raw_offset_s` before the input (ffmpeg decodes from the keyframe and drops
+   frames up to the exact time) and `-t end_s − start_s`. `raw_offset_s` is where the marked start
+   sits inside the uploaded piece.
+2. **Crop** (`ffmpegCrop`, even pixels), **grade** (`lut3d` with the `.cube` from `gradeToLut`,
+   trilinear — the same interpolation the WebGL preview gets from a 3D texture), then
+   `scale='min(1080,iw)':-2`, BT.709 in and out.
+3. **x264 exactly as `prepare-videos.mjs`**: preset slow, crf 28, yuv420p, no audio, faststart.
+4. **Still** at 45%, 640 px wide, `-q:v 4` (as `prepare-videos.mjs`); **loop** of 4 s from 1.0 s,
+   480 px, veryfast / crf 30 (as the `site-loops` task).
+5. Uploads with upsert: `videos/shared/<id>.ru.mp4` (and `.en.mp4` only when the exercise has no
+   English clip — the clips are silent, so it is the same file), `images/exercises/<id>.jpg`,
+   `images/loops/<id>.mp4`. `media_render_done` then sets `video_ru` (and `video_en` when it was
+   empty).
+
+The log shows counters only: rendered, requeued, failed, lost (a lease that ran out under it),
+still waiting. An empty queue costs one request; ffmpeg is installed only when there is work.
+
+### The grade
+
+`exposure` (stops, −3…3), `contrast`, `brightness`, `whites`, `blacks` (−1…1) and curves (master,
+then R/G/B; monotone cubic through the points). The exact math is in the header of `grade.ts`.
+Clips store `grade_version`; bump `GRADE_VERSION` when the math changes, and the worker refuses a
+version newer than it knows instead of rendering it differently.
+
+### Checking the worker without Supabase
+
+    node scripts/media/render-clips.mjs --local <video> <params.json> [--out <dir>]
+
+`params.json` is shaped like a claimed clip: `{ "raw_offset_s": 0.4, "start_s": 10, "end_s": 14,
+"crop": null, "grade": { "exposure": 0.5 } }`. It writes `clip.mp4`, `still.jpg`, `loop.mp4` and
+`grade.cube`. `scripts/media/render-clips.test.mjs` (part of `npx vitest run`) does this on a
+synthetic `testsrc2` video and compares a decoded output frame with the same input frame put
+through `gradeToLut` in JavaScript: about 1/255 mean difference with no grade (compression), about
+2.5/255 with a strong grade, against about 14/255 between the graded and ungraded frames.
+
+### Owner checks
+
+- **Upload limit.** The bucket allows 500 MB a file, but the project-wide limit (Storage settings
+  in the Supabase dashboard) may be lower — 50 MB on the default plan. A 40-second 4K iPhone piece
+  can exceed that; raise the project limit if pieces are refused.
+- **Switching it on:** apply `0060_media_studio.sql` (Actions → Supabase apply → migration), then
+  run «Studio render» once by hand. `SUPABASE_ACCESS_TOKEN` is the secret it already shares with
+  the other Supabase tasks; without it the scheduled run is a quiet note, not a failure.
+- **HDR.** iPhones record HDR (HLG) by default. The worker renders what it is given without tone
+  mapping, so an HDR piece can come out flat or washed out next to the preview. Filming with
+  «HDR Video» off (Settings → Camera → Record Video) avoids it.
+- **A new exercise's site page** still needs a content entry and a deploy, as before; the app
+  shows the clip at once.
