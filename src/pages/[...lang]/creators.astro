@@ -133,7 +133,12 @@ const gets = [1, 2, 3, 4].map((n) => ({
 }));
 const white = [1, 2, 3, 4, 5].map((n) => k(`creatorsWhite${n}`));
 const steps = [1, 2, 3, 4, 5].map((n) => k(`creatorsStep${n}`));
-const faq = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => ({
+const compare = [1, 2, 3, 4, 5, 6, 7].map((n) => ({
+  label: k(`creatorsCompare${n}Label`),
+  a: k(`creatorsCompare${n}A`),
+  b: k(`creatorsCompare${n}B`),
+}));
+const faq = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => ({
   q: k(`creatorsFaq${n}Q`),
   a: k(`creatorsFaq${n}A`),
 }));
@@ -364,7 +369,41 @@ const studioLoops = (facts?.moves ?? []).slice(0, 3);
     </ul>
   </Section>
 
-  <Section id="tools" n={4} eyebrow={k('creatorsToolsEyebrow')} title={k('creatorsToolsTitle')}>
+  <Section
+    id="compare"
+    n={4}
+    eyebrow={k('creatorsCompareEyebrow')}
+    title={k('creatorsCompareTitle')}
+    intro={k('creatorsCompareIntro')}
+  >
+    <div class="overflow-hidden rounded-card border border-border">
+      <div
+        class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-4 border-b border-border px-4 py-3 md:grid-cols-[minmax(0,3fr)_minmax(0,4fr)_minmax(0,5fr)] md:px-6"
+      >
+        <span class="hidden md:block" aria-hidden="true"></span>
+        <span class="eyebrow text-muted">{k('creatorsCompareColA')}</span>
+        <span class="eyebrow text-accent">{k('creatorsCompareColB')}</span>
+      </div>
+      <dl class="divide-y divide-border">
+        {
+          compare.map((row) => (
+            <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-x-4 gap-y-1.5 px-4 py-4 md:grid-cols-[minmax(0,3fr)_minmax(0,4fr)_minmax(0,5fr)] md:items-baseline md:px-6">
+              <dt class="col-span-2 font-display text-[15px] leading-snug md:col-span-1 md:text-base">
+                {row.label}
+              </dt>
+              <dd class="m-0 text-[14px] leading-snug text-muted md:text-[15px]">{row.a}</dd>
+              <dd class="m-0 text-[14px] leading-snug text-text md:text-[15px]">{row.b}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+    <p class="mt-5 max-w-xl text-base leading-snug text-muted md:text-lg">
+      {k('creatorsCompareNote')}
+    </p>
+  </Section>
+
+  <Section id="tools" n={5} eyebrow={k('creatorsToolsEyebrow')} title={k('creatorsToolsTitle')}>
     <div
       class="glass-card grid items-center gap-6 rounded-card border border-border p-5 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-10 md:p-8"
     >
@@ -409,7 +448,7 @@ const studioLoops = (facts?.moves ?? []).slice(0, 3);
 
   <Section
     id="custom"
-    n={5}
+    n={6}
     eyebrow={k('creatorsCustomEyebrow')}
     title={k('creatorsCustomTitle')}
     intro={k('creatorsCustomIntro')}
@@ -419,7 +458,7 @@ const studioLoops = (facts?.moves ?? []).slice(0, 3);
     </div>
   </Section>
 
-  <Section id="start" n={6} eyebrow={k('creatorsStepsEyebrow')} title={k('creatorsStepsTitle')}>
+  <Section id="start" n={7} eyebrow={k('creatorsStepsEyebrow')} title={k('creatorsStepsTitle')}>
     <ol class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
       {
         steps.map((s, i) => (
