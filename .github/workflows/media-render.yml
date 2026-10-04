@@ -1,0 +1,107 @@
+# Render the clips queued in the admin «Студия» (0060).
+#
+# The owner cuts a filmed workout into exercise clips on her phone, grades them and presses
+# «Отправить в обработку». The phone only uploads the pieces; this encodes them, every ten minutes
+# and by hand: scripts/media/render-clips.mjs claims what is queued, cuts, crops, grades and
+# encodes it, uploads the clip, its still and its site loop, and points the exercise at it. The
+# app picks it up at once — no deploy.
+#
+# The service_role key is fetched from the Management API with SUPABASE_ACCESS_TOKEN, exactly as
+# the site-loops task in supabase-apply.yml does, and masked on the next line. Nothing prints a
+# key, a URL with a token, a path or a row: only counters. The run page of a public repository is
+# visible to everyone, forever.
+#
+# An empty queue costs one request: ffmpeg is installed only when there is something to render.
+# Before 0060 is applied the script says so and the run stays green.
+
+name: Studio render
+
+on:
+  schedule:
+    # Every 10 minutes. Actions cron is not exact; the queue does not mind.
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+# One run at a time. The claim is already safe against overlap (a lease and skip locked), but two
+# runs would only race each other for the same few clips.
+concurrency:
+  group: media-render
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    # Shorter than the claim's 30-minute lease, so a run is never overtaken while it is alive.
+    timeout-minutes: 25
+    steps:
+      - name: Check the token is present
+        id: token
+        env:
+          TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
+        run: |
+          set -euo pipefail
+          # No token yet means the studio has not been switched on: a note, not a red cross every
+          # ten minutes that teaches everyone to stop looking at the Actions tab.
+          if [ -z "${TOKEN:-}" ] || [ -z "${SUPABASE_URL:-}" ]; then
+            echo "::notice::Studio render is off: SUPABASE_ACCESS_TOKEN or PUBLIC_SUPABASE_URL is not set."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v5
+        if: ${{ steps.token.outputs.ready == 'true' }}
+
+      # Node 22.13+ for the scripts' TypeScript loader (grade.ts is imported, not compiled). The
+      # script needs nothing from node_modules, so there is no npm ci.
+      - uses: actions/setup-node@v5
+        if: ${{ steps.token.outputs.ready == 'true' }}
+        with:
+          node-version: 22
+
+      - name: Render the queue
+        if: ${{ steps.token.outputs.ready == 'true' }}
+        env:
+          TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
+        run: |
+          set -euo pipefail
+          # https://<ref>.supabase.co  →  <ref>
+          PROJECT_REF=$(printf '%s' "$SUPABASE_URL" | sed -E 's#^https?://##; s#\..*$##')
+          # The revealed keys never outlive the step, whichever line fails.
+          trap 'rm -f /tmp/keys.json' EXIT
+
+          code=$(curl -sS -o /tmp/keys.json -w '%{http_code}' \
+            "https://api.supabase.com/v1/projects/$PROJECT_REF/api-keys?reveal=true" \
+            -H "Authorization: Bearer $TOKEN")
+          if [ "$code" -ge 300 ]; then
+            rm -f /tmp/keys.json
+            echo "::error::Supabase returned HTTP $code for the project's API keys."
+            exit 1
+          fi
+          KEY=$(jq -r '[.[] | select(.name == "service_role") | .api_key][0] // ""' < /tmp/keys.json)
+          rm -f /tmp/keys.json
+          if [ -z "$KEY" ]; then
+            echo "::error::The project has no service_role key the Management API would reveal."
+            exit 1
+          fi
+          echo "::add-mask::$KEY"
+          export SUPABASE_SERVICE_ROLE_KEY="$KEY"
+
+          waiting=$(node scripts/media/render-clips.mjs --peek | tail -n 1)
+          case "$waiting" in ''|*[!0-9]*) waiting=0 ;; esac
+          if [ "$waiting" -eq 0 ]; then
+            echo "::notice::studio: nothing waiting"
+            exit 0
+          fi
+
+          if ! command -v ffmpeg >/dev/null 2>&1; then
+            sudo apt-get update -qq >/dev/null
+            sudo apt-get install -y -qq ffmpeg >/dev/null
+          fi
+          # Counters only (rendered, requeued, failed, lost, still waiting).
+          node scripts/media/render-clips.mjs

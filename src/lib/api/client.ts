@@ -27,6 +27,14 @@ export function projectUrl(): string {
   return isConfigured() ? url!.replace(/\/+$/, '') : '';
 }
 
+/**
+ * The public anon key, for the few requests made outside supabase-js (the resumable upload). It
+ * ships in the bundle anyway; it is not a secret. Empty when the env is absent.
+ */
+export function publicApiKey(): string {
+  return isConfigured() ? anonKey! : '';
+}
+
 export function supabase(): SupabaseClient {
   if (!client) {
     if (!isConfigured()) {
