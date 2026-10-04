@@ -13,6 +13,7 @@ import {
   extractHeadings,
   extractImages,
   extractLinks,
+  isUnlistedPage,
   localizedHref,
   parseFrontmatter,
   parseSitemap,
@@ -546,6 +547,13 @@ describe('auditHtml / parseSitemap', () => {
       'noindex on a public page',
     );
   });
+  it('knows the unlisted pages, both locales, and nothing else', () => {
+    expect(isUnlistedPage('creators/index.html')).toBe(true);
+    expect(isUnlistedPage('en/creators/index.html')).toBe(true);
+    expect(isUnlistedPage('courses/index.html')).toBe(false);
+    expect(isUnlistedPage('creators/other/index.html')).toBe(false);
+  });
+
   it('parses sitemap entries', () => {
     const xml = `<?xml version="1.0"?><urlset><url><loc>https://a.b/x/</loc><lastmod>2026-09-01</lastmod></url><url><loc>https://a.b/y/?q=1&amp;r=2</loc></url></urlset>`;
     expect(parseSitemap(xml)).toEqual([

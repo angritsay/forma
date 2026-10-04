@@ -1383,6 +1383,22 @@ export function urlToDistFile(url, dist, base) {
 }
 
 /**
+ * Pages that are built but unlisted: not in the sitemap, the nav or llms.txt, and marked noindex
+ * (not disallowed in robots.txt, so crawlers can read that noindex). They are links somebody sends
+ * by hand — `/creators/` is the pitch Nastia sends to fitness creators (docs/CREATORS.md). Paths
+ * are dist-relative, both locales.
+ */
+export const UNLISTED_PAGES = ['creators/index.html', 'en/creators/index.html'];
+
+/**
+ * Whether a dist-relative HTML path is one of {@link UNLISTED_PAGES}.
+ * @param {string} relPath
+ */
+export function isUnlistedPage(relPath) {
+  return UNLISTED_PAGES.includes(relPath.replace(/\\/g, '/'));
+}
+
+/**
  * Audit the built site in `dist/`: sitemap coverage, per-page checks and internal links.
  * @param {string} dist
  * @param {{ base?: string }} [opts]
@@ -1398,6 +1414,7 @@ export function auditDist(dist, opts = {}) {
   const relHtml = (/** @type {string} */ p) => rel(dist, p);
   const isApp = (/** @type {string} */ p) => /^app\//.test(relHtml(p));
   const is404 = (/** @type {string} */ p) => /^404\.html$|^404\/index\.html$/.test(relHtml(p));
+  const unlisted = (/** @type {string} */ p) => isUnlistedPage(relHtml(p));
 
   /** @type {Set<string>} */
   const inSitemap = new Set();
@@ -1447,7 +1464,12 @@ export function auditDist(dist, opts = {}) {
     if (isApp(file) || is404(file)) continue;
     const html = readFileSync(file, 'utf8');
     const label = `dist/${relHtml(file)}`;
-    const r = auditHtml(html, label);
+    // An unlisted page (`UNLISTED_PAGES`) is shared by hand: it must say noindex, and it is
+    // deliberately absent from the sitemap, so neither is a finding there.
+    const hidden = unlisted(file);
+    const r = auditHtml(html, label, { allowNoindex: hidden });
+    if (hidden && !/noindex/i.test(metaContent(html, 'robots') ?? ''))
+      issues.push({ level: 'error', file: label, message: 'unlisted page without noindex' });
     issues.push(...r.issues);
     if (r.title) {
       const prev = titles.get(r.title);
@@ -1472,9 +1494,11 @@ export function auditDist(dist, opts = {}) {
           file: label,
           message: `canonical points elsewhere: ${r.canonical}`,
         });
-      else if (hasSitemap && !sitemapUrls.has(r.canonical))
+      else if (hidden && sitemapUrls.has(r.canonical))
+        issues.push({ level: 'error', file: label, message: 'unlisted page is in the sitemap' });
+      else if (!hidden && hasSitemap && !sitemapUrls.has(r.canonical))
         issues.push({ level: 'warning', file: label, message: 'page is not in the sitemap' });
-    } else if (hasSitemap && !inSitemap.has(file)) {
+    } else if (!hidden && hasSitemap && !inSitemap.has(file)) {
       issues.push({ level: 'warning', file: label, message: 'page is not in the sitemap' });
     }
     for (const a of r.alternates) {

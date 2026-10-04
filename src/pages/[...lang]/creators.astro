@@ -1,0 +1,464 @@
+---
+/**
+ * `/creators/` — the pitch Nastia sends, herself, to fitness creators she wants on Forma.
+ *
+ * **Unlisted.** Not in `STATIC_PAGES` (so not in the sitemap or llms.txt), not in the nav or the
+ * footer, `noindex` on the page — and deliberately not `Disallow`ed in robots.txt, which would
+ * hide that noindex from crawlers and advertise the path (docs/CREATORS.md). The SEO audit knows it
+ * by name (`UNLISTED_PAGES` in scripts/seo/lib.mjs): there noindex is required rather than an
+ * error, and a sitemap entry would be the error. The terms and the outreach message live in docs/CREATORS.md.
+ *
+ * **Honest by construction.** Every figure is read from where the business keeps it: the course
+ * price and name from the demo course file, the club's prices from `PLANS`, the session lengths,
+ * prices and the 20-minute hold from `BOOKING` and `HOLD_MINUTES`. The split — 80 / 20 for course
+ * and club, 90 / 10 for sessions, after the payment processor's fee — is Nastia's decision and is
+ * stated publicly. So is the shape of the deal: the creator's own bot, site and app on their own
+ * domain, payments into their own Prodamus / lava.top, no Forma branding anywhere, the stores as an
+ * extra. Nothing else is promised: settlement, exclusivity, content rights, prices and the legal
+ * form are each «фиксируем в договоре». No user counts, no reviews.
+ *
+ * **Two worked examples.** `BrandExample` dresses the product as two fictional brands, a CrossFit
+ * coach and a yoga teacher (content/site/creator-examples.ts), listing only what the builder does
+ * today.
+ *
+ * **A deck, not a brochure.** Big type, short lines, the product's own screens: the course's path
+ * (`PathPhone`), a day in the club (`club/ClubDay`), the session tickets without their buttons
+ * (`SessionTickets actions={false}` — this reader is not booking), and the coach's real exercise
+ * loops for the Studio. One blue hero field; one neon, the hero's «Написать Насте». The closing
+ * band repeats it in white so the page still has one neon.
+ */
+import Landing from '@/layouts/Landing.astro';
+import Button from '@/components/landing/Button.astro';
+import Faq from '@/components/landing/Faq.astro';
+import HeroField from '@/components/landing/HeroField.astro';
+import KeyTitle from '@/components/landing/KeyTitle.astro';
+import PathPhone from '@/components/landing/PathPhone.astro';
+import Pill from '@/components/landing/Pill.astro';
+import Section from '@/components/landing/Section.astro';
+import SessionTickets from '@/components/landing/SessionTickets.astro';
+import Stat from '@/components/landing/Stat.astro';
+import ClubDay from '@/components/landing/club/ClubDay.astro';
+import BrandExample from '@/components/landing/creators/BrandExample.astro';
+import LoopTile from '@/components/landing/media/LoopTile.astro';
+import { DEMO_COURSE_ID, firstWorkoutFacts } from '@/components/landing/demo';
+import { COURSE_BY_ID } from '@/content/registry';
+import { SITE_COURSES } from '@/content/published';
+import type { Locale } from '@/content/schema';
+import { l, t } from '@/i18n/index';
+import { HOLD_MINUTES, MOVE_CUTOFF_HOURS } from '@/lib/coach/slots';
+import { appHref, localeStaticPaths, withBase } from '@/lib/util/paths';
+import { BOOKING } from '@content/site/booking';
+import { CREATOR_EXAMPLES } from '@content/site/creator-examples';
+import { CREATOR_CONTACT } from '@content/site/links';
+import { NASTIA } from '@content/site/nastia';
+import { PLAN_BY_ID, planMonthlyPrice } from '@content/site/plans';
+import { formatPrice } from '@content/site/pricing';
+
+export function getStaticPaths() {
+  return localeStaticPaths();
+}
+
+const locale: Locale = Astro.params.lang === 'en' ? 'en' : 'ru';
+const k = (key: string, params?: Record<string, string | number>) =>
+  t(locale, `landing.${key}` as 'landing.creatorsH1', params);
+
+const title = t(locale, 'seo.creatorsTitle');
+const description = t(locale, 'seo.creatorsDescription');
+
+const tryHref = appHref('', { locale });
+const nastiaName = l(NASTIA.name, locale);
+
+/* The course: the one on sale, its own name and price. */
+const course = COURSE_BY_ID.get(DEMO_COURSE_ID) ?? SITE_COURSES[0];
+const coursePrice = course ? formatPrice(locale, course.price) : '';
+const facts = firstWorkoutFacts(locale, course);
+
+/* The club: the year and the 30 days, from the plans that are actually sold. */
+const annual = PLAN_BY_ID.get('annual');
+const monthly = PLAN_BY_ID.get('monthly');
+const clubPrice =
+  annual && monthly
+    ? k('creatorsClubPrice', {
+        year: formatPrice(locale, annual.price),
+        month: formatPrice(locale, planMonthlyPrice(annual)),
+        month30: formatPrice(locale, monthly.price),
+      })
+    : '';
+const clubPoints = [1, 2, 3, 4, 5, 6, 7].map((n) => k(`creatorsClubPoint${n}`));
+
+/* Sessions: the hour is the worked example in the money block. */
+const hour = BOOKING.options.find((o) => o.id === 'hour');
+const hourPrice = hour ? formatPrice(locale, hour.price) : '';
+
+const products = [
+  {
+    id: 'course',
+    title: k('creatorsCourseTitle'),
+    line: k('creatorsCourseLine'),
+    price: course
+      ? k('creatorsCoursePrice', { name: l(course.name, locale), price: coursePrice })
+      : '',
+  },
+  { id: 'club', title: k('creatorsClubTitle'), line: k('creatorsClubLine'), price: clubPrice },
+  {
+    id: 'sessions',
+    title: k('creatorsSessionsTitle'),
+    line: k('creatorsSessionsLine', { n: HOLD_MINUTES, h: MOVE_CUTOFF_HOURS }),
+    price: '',
+  },
+] as const;
+
+const examples = [
+  course && {
+    label: k('creatorsMoneyExampleCourse', { price: coursePrice }),
+    price: coursePrice,
+    share: 80,
+  },
+  hour && {
+    label: k('creatorsMoneyExampleSession', { price: hourPrice }),
+    price: hourPrice,
+    share: 90,
+  },
+].filter((e): e is { label: string; price: string; share: number } => Boolean(e));
+
+const covers = [1, 2, 3, 4, 5, 6, 7, 8].map((n) => k(`creatorsCover${n}`));
+const tools = [1, 2, 3, 4, 5, 6, 7].map((n) => ({
+  title: k(`creatorsTool${n}Title`),
+  line: k(`creatorsTool${n}Line`),
+}));
+const gets = [1, 2, 3, 4].map((n) => ({
+  title: k(`creatorsGet${n}Title`),
+  line: k(`creatorsGet${n}Line`),
+  extra: n === 4,
+}));
+const white = [1, 2, 3, 4, 5].map((n) => k(`creatorsWhite${n}`));
+const steps = [1, 2, 3, 4, 5].map((n) => k(`creatorsStep${n}`));
+const faq = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => ({
+  q: k(`creatorsFaq${n}Q`),
+  a: k(`creatorsFaq${n}A`),
+}));
+
+/* The Studio's picture: three of the coach's real loops, the movements of workout 1. */
+const studioLoops = (facts?.moves ?? []).slice(0, 3);
+---
+
+<Landing locale={locale} title={title} description={description} sitePath="/creators/" noindex>
+  <div class="mx-auto max-w-6xl px-5 pt-8 md:pt-12">
+    <div class="grid items-stretch gap-4 md:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] md:gap-6">
+      <HeroField class="flex flex-col justify-between">
+        <div>
+          <p class="eyebrow">{k('creatorsEyebrow')}</p>
+          <KeyTitle
+            text={k('creatorsH1')}
+            keyWords={1}
+            class="display mt-4 max-w-[14ch] text-[clamp(2.25rem,9vw,4rem)] leading-[1.02]"
+          />
+          <p class="field-lead mt-5 max-w-xl text-base leading-snug md:text-lg">
+            {k('creatorsLead')}
+          </p>
+        </div>
+        <ul class="mt-6 flex flex-wrap gap-2">
+          <li class="flex">
+            <Pill size="md" tone="white" tilt="left">{k('creatorsPillCourse')}</Pill>
+          </li>
+          <li class="flex"><Pill size="md" tone="ghost">{k('creatorsPillClub')}</Pill></li>
+          <li class="flex">
+            <Pill size="md" tone="ghost" tilt="right">{k('creatorsPillSessions')}</Pill>
+          </li>
+        </ul>
+      </HeroField>
+
+      <figure
+        class="relative m-0 aspect-[4/5] max-h-[560px] overflow-hidden rounded-card border border-border bg-surface-2 max-md:aspect-[4/3]"
+      >
+        <img
+          src={withBase(NASTIA.photo)}
+          alt={nastiaName}
+          width="512"
+          height="640"
+          loading="eager"
+          fetchpriority="high"
+          decoding="async"
+          class="photo-mono absolute inset-0 size-full object-cover object-[50%_25%]"
+        />
+        <div class="photo-grain" aria-hidden="true"></div>
+        <figcaption
+          class="glass-card absolute inset-x-3 bottom-3 rounded-tile border border-border p-4"
+        >
+          <p class="font-display text-lg leading-tight">{k('creatorsNastiaHello')}</p>
+          <p class="mt-1 text-[14px] leading-snug text-muted">{k('creatorsNastiaLine')}</p>
+          <ul class="mt-3 flex flex-wrap gap-1.5">
+            {
+              NASTIA.roles.map((r) => (
+                <li class="flex">
+                  <Pill tone="neutral">{l(r, locale)}</Pill>
+                </li>
+              ))
+            }
+          </ul>
+        </figcaption>
+      </figure>
+    </div>
+
+    <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+      <Button href={CREATOR_CONTACT} size="lg" class="w-full sm:w-auto" data-goal="creators_write">
+        {k('creatorsWrite')}
+        <span class="glyph" aria-hidden="true">→</span>
+      </Button>
+      <Button href={tryHref} variant="plain" size="lg" class="w-full sm:w-auto" data-app-link>
+        {k('creatorsTry')}
+      </Button>
+    </div>
+
+    <div class="mt-12 grid grid-cols-3 gap-4 border-t border-border pt-8 md:mt-16">
+      <Stat value="80%" label={k('creatorsStatCourse')} tone="accent" />
+      <Stat value="90%" label={k('creatorsStatSessions')} tone="accent" />
+      <Stat value="0" label={k('creatorsStatWays')} />
+    </div>
+  </div>
+
+  <Section id="get" n={1} eyebrow={k('creatorsGetEyebrow')} title={k('creatorsGetTitle')}>
+    <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      {
+        gets.map((g, i) => (
+          <li
+            class:list={[
+              'glass-card flex min-h-[10rem] flex-col justify-between gap-4 rounded-tile border p-5',
+              g.extra ? 'border-dashed border-border' : 'border-border',
+            ]}
+          >
+            <span class="numeral text-sm text-muted-2" aria-hidden="true">
+              {String(i + 1).padStart(2, '0')}
+            </span>
+            <span>
+              <span class="block font-display text-lg leading-tight text-balance">{g.title}</span>
+              <span class="mt-1.5 block text-[14px] leading-snug text-muted">{g.line}</span>
+              {g.extra && (
+                <span class="mt-3 flex">
+                  <Pill tone="warm">{k('creatorsGet4Tag')}</Pill>
+                </span>
+              )}
+            </span>
+          </li>
+        ))
+      }
+    </ul>
+    <p
+      class="mt-8 max-w-3xl font-display text-[clamp(1.375rem,5vw,2.25rem)] leading-tight text-balance"
+    >
+      {k('creatorsWhiteLabel')}
+    </p>
+    <ul class="mt-5 flex flex-wrap gap-2">
+      {
+        white.map((w, i) => (
+          <li class="flex">
+            <Pill size="md" tone={i === 0 ? 'sky' : 'neutral'}>
+              {w}
+            </Pill>
+          </li>
+        ))
+      }
+    </ul>
+  </Section>
+
+  <Section id="ways" n={2} eyebrow={k('creatorsWaysEyebrow')} title={k('creatorsWaysTitle')}>
+    <ol class="flex flex-col gap-16 md:gap-24">
+      {
+        products.map((p, i) => (
+          <li class="grid items-center gap-8 md:grid-cols-2 md:gap-12">
+            <div class:list={[i % 2 === 1 && 'md:order-2']}>
+              <p class="numeral text-sm text-muted" aria-hidden="true">
+                {String(i + 1).padStart(2, '0')}
+              </p>
+              <h3 class="display mt-2 text-[clamp(2.5rem,10vw,4.5rem)] leading-none">{p.title}</h3>
+              <p class="mt-5 max-w-md text-lg leading-snug text-text md:text-xl">{p.line}</p>
+              {p.id === 'club' && (
+                <ul class="mt-6 flex max-w-md flex-col divide-y divide-border border-y border-border">
+                  {clubPoints.map((point) => (
+                    <li class="flex items-baseline gap-3 py-2.5 text-[15px] leading-snug">
+                      <span class="glyph text-accent" aria-hidden="true">
+                        ›
+                      </span>
+                      {point}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {p.price && (
+                <p class="mt-6 flex">
+                  <Pill size="md" tone={p.id === 'club' ? 'warm' : 'sky'}>
+                    {p.price}
+                  </Pill>
+                </p>
+              )}
+            </div>
+            <div class:list={['min-w-0', i % 2 === 1 && 'md:order-1']}>
+              {p.id === 'course' && <PathPhone locale={locale} />}
+              {p.id === 'club' && <ClubDay locale={locale} />}
+              {p.id === 'sessions' && <SessionTickets locale={locale} actions={false} />}
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </Section>
+
+  <Section id="money" n={3} eyebrow={k('creatorsMoneyEyebrow')} title={k('creatorsMoneyTitle')}>
+    <div class="grid gap-3 sm:grid-cols-2">
+      {
+        [
+          { you: 80, us: 20, label: k('creatorsMoneyCourse') },
+          { you: 90, us: 10, label: k('creatorsMoneySessions') },
+        ].map((s) => (
+          <div class="glass-card flex flex-col justify-between gap-6 rounded-card border border-border p-6 md:p-8">
+            <p class="numeral leading-none tracking-tight">
+              <span class="text-[clamp(4.5rem,20vw,8rem)] text-accent">{s.you}</span>
+              <span class="t-thin text-[clamp(2.25rem,10vw,4rem)] text-muted">/{s.us}</span>
+            </p>
+            <p class="eyebrow">{s.label}</p>
+          </div>
+        ))
+      }
+    </div>
+    <p class="mt-5 max-w-xl text-base leading-snug text-muted md:text-lg">
+      {k('creatorsMoneyNote')}
+    </p>
+    <p class="mt-3 max-w-xl text-base leading-snug md:text-lg">
+      {k('creatorsMoneyIntl')}
+    </p>
+
+    {
+      examples.length > 0 && (
+        <div class="mt-12">
+          <h3 class="eyebrow">{k('creatorsMoneyExampleTitle')}</h3>
+          <ul class="mt-4 flex flex-col divide-y divide-border border-y border-border">
+            {examples.map((e) => (
+              <li class="flex flex-col gap-2 py-5 md:flex-row md:items-baseline md:justify-between md:gap-8">
+                <span class="text-[15px] text-muted">{e.label}</span>
+                <span class="numeral text-[clamp(1.25rem,5.5vw,2rem)] leading-tight">
+                  ({e.price} − {k('creatorsMoneyFee')}) × {e.share}%{' '}
+                  <span class="glyph text-muted" aria-hidden="true">
+                    →
+                  </span>{' '}
+                  <span class="text-accent">{k('creatorsMoneyYou')}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )
+    }
+
+    <h3 class="mt-12 font-display text-2xl md:text-3xl">{k('creatorsMoneyCoversTitle')}</h3>
+    <ul class="mt-6 grid grid-cols-2 gap-2 md:grid-cols-4">
+      {
+        covers.map((c) => (
+          <li class="glass-card flex items-center gap-2.5 rounded-tile border border-border px-4 py-3.5 text-[15px] leading-snug">
+            <span class="glyph text-accent" aria-hidden="true">
+              ✓
+            </span>
+            {c}
+          </li>
+        ))
+      }
+    </ul>
+  </Section>
+
+  <Section id="tools" n={4} eyebrow={k('creatorsToolsEyebrow')} title={k('creatorsToolsTitle')}>
+    <div
+      class="glass-card grid items-center gap-6 rounded-card border border-border p-5 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-10 md:p-8"
+    >
+      <div>
+        <p class="flex"><Pill tone="sky">{k('creatorsStudioTag')}</Pill></p>
+        <h3 class="mt-4 font-display text-2xl leading-tight text-balance md:text-4xl">
+          {k('creatorsStudioTitle')}
+        </h3>
+        <p class="mt-4 text-[15px] leading-snug text-muted md:text-base">
+          {k('creatorsStudioLine')}
+        </p>
+      </div>
+      {
+        studioLoops.length > 0 && (
+          <ul class="grid grid-cols-3 gap-2 md:gap-3">
+            {studioLoops.map((m) => (
+              <li>
+                <LoopTile id={m.exerciseId} name={m.name} ratio="tall" />
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </div>
+
+    <ul class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      {
+        tools.map((tool, i) => (
+          <li class="glass-card flex min-h-[8.5rem] flex-col justify-between gap-4 rounded-tile border border-border p-5">
+            <span class="numeral text-sm text-muted-2" aria-hidden="true">
+              {String(i + 1).padStart(2, '0')}
+            </span>
+            <span>
+              <span class="block font-display text-lg leading-tight">{tool.title}</span>
+              <span class="mt-1.5 block text-[14px] leading-snug text-muted">{tool.line}</span>
+            </span>
+          </li>
+        ))
+      }
+    </ul>
+  </Section>
+
+  <Section
+    id="custom"
+    n={5}
+    eyebrow={k('creatorsCustomEyebrow')}
+    title={k('creatorsCustomTitle')}
+    intro={k('creatorsCustomIntro')}
+  >
+    <div class="grid gap-4 lg:grid-cols-2">
+      {CREATOR_EXAMPLES.map((example) => <BrandExample example={example} locale={locale} />)}
+    </div>
+  </Section>
+
+  <Section id="start" n={6} eyebrow={k('creatorsStepsEyebrow')} title={k('creatorsStepsTitle')}>
+    <ol class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      {
+        steps.map((s, i) => (
+          <li class="glass-card flex items-center gap-4 rounded-tile border border-border p-4 lg:min-h-[10rem] lg:flex-col lg:items-start lg:justify-between lg:p-5">
+            <span class="numeral text-3xl leading-none text-accent md:text-4xl" aria-hidden="true">
+              {String(i + 1).padStart(2, '0')}
+            </span>
+            <span class="font-display text-[15px] leading-snug text-balance md:text-base">{s}</span>
+          </li>
+        ))
+      }
+    </ol>
+  </Section>
+
+  <Section id="faq" title={t(locale, 'landing.faqTitle')}>
+    <Faq items={faq} />
+  </Section>
+
+  <section class="mx-auto max-w-6xl px-5 py-8 md:py-12">
+    <div class="border-t border-border pt-12 md:pt-16">
+      <h2 class="display max-w-[16ch] text-[clamp(2.25rem,9vw,4rem)] leading-[1.02] text-balance">
+        {k('creatorsFinalTitle')}
+      </h2>
+      <p class="mt-5 max-w-xl text-lg text-muted">{k('creatorsFinalText')}</p>
+      <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <Button
+          href={CREATOR_CONTACT}
+          variant="plain"
+          size="lg"
+          class="w-full sm:w-auto"
+          data-goal="creators_write"
+        >
+          {k('creatorsWrite')}
+          <span class="glyph" aria-hidden="true">→</span>
+        </Button>
+        <Button href={tryHref} variant="secondary" size="lg" class="w-full sm:w-auto" data-app-link>
+          {k('creatorsTry')}
+        </Button>
+      </div>
+    </div>
+  </section>
+</Landing>
