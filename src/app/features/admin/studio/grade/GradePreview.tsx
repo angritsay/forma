@@ -50,6 +50,11 @@ export interface GradePreviewProps {
   cropRatio: number | null;
   /** The video's displayed pixel size, once known (for aspect presets). */
   onVideoSize: (size: Size) => void;
+  /**
+   * Sign the piece again. A signed URL expires; a video that stalls on a network error after a
+   * long pause is usually that, and reloading the same URL would fail the same way.
+   */
+  onRetrySource?: () => void;
   readOnly?: boolean;
 }
 
@@ -63,6 +68,7 @@ export function GradePreview({
   onCropChange,
   cropRatio,
   onVideoSize,
+  onRetrySource,
   readOnly,
 }: GradePreviewProps) {
   const { t } = useT();
@@ -161,9 +167,9 @@ export function GradePreview({
       if (el.height !== b.h) el.height = b.h;
     }
     draw(false);
-    // `content` follows from the same inputs as `box`.
+    // `content` follows from the same inputs as `box`; `glKey` is a new canvas (300×150) to size.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [box.w, box.h, uniform, bypass, draw]);
+  }, [box.w, box.h, uniform, bypass, draw, glKey]);
 
   // A new source: reset the player state.
   useEffect(() => {
@@ -222,6 +228,14 @@ export function GradePreview({
       if (!v.requestVideoFrameCallback) raf = requestAnimationFrame(onRaf);
     };
     const onPause = () => setPlaying(false);
+    /*
+     * The piece usually ends where the clip does, so the last frame sits less than the slack
+     * before `win.to` and the wrap in `tick` never fires: the video just ends. Loop from here.
+     */
+    const onEnded = () => {
+      v.currentTime = live.current.win.from;
+      v.play().catch(() => setPlaying(false));
+    };
     const onSeeked = () => {
       setNow(v.currentTime);
       draw(true);
@@ -233,6 +247,7 @@ export function GradePreview({
     v.addEventListener('loadeddata', onData);
     v.addEventListener('play', onPlay);
     v.addEventListener('pause', onPause);
+    v.addEventListener('ended', onEnded);
     v.addEventListener('seeked', onSeeked);
     v.addEventListener('timeupdate', onSeeked);
     v.addEventListener('error', onError);
@@ -247,17 +262,24 @@ export function GradePreview({
       v.removeEventListener('loadeddata', onData);
       v.removeEventListener('play', onPlay);
       v.removeEventListener('pause', onPause);
+      v.removeEventListener('ended', onEnded);
       v.removeEventListener('seeked', onSeeked);
       v.removeEventListener('timeupdate', onSeeked);
       v.removeEventListener('error', onError);
     };
   }, [src, draw, glKey]);
 
-  // Stop the decoder when the screen goes away: a WebView keeps playing a detached video.
+  /*
+   * Stop and release the decoder when the screen goes away: a WebView keeps playing a detached
+   * video, and iOS holds a decoded HEVC piece in memory until its source is dropped.
+   */
   useEffect(() => {
     const v = video.current;
     return () => {
-      v?.pause();
+      if (!v) return;
+      v.pause();
+      v.removeAttribute('src');
+      v.load();
     };
   }, []);
 
@@ -342,7 +364,8 @@ export function GradePreview({
                   variant="secondary"
                   onClick={() => {
                     setPlayProblem(null);
-                    video.current?.load();
+                    if (onRetrySource) onRetrySource();
+                    else video.current?.load();
                   }}
                 >
                   {t('common.retry')}
@@ -427,7 +450,7 @@ export function GradePreview({
           }}
           onKeyUp={() => setBypass(false)}
           onContextMenu={(e) => e.preventDefault()}
-          className="select-none"
+          className="select-none [-webkit-touch-callout:none]"
         >
           {t('app.studioHoldBefore')}
         </Button>

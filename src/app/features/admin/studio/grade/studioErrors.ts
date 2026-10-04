@@ -90,8 +90,9 @@ export const PLAYBACK_KEYS: Readonly<Record<PlaybackProblem, TKey>> = {
 
 /** A `<video>`'s `MediaError.code` as a problem to show. */
 export function mediaErrorProblem(code: number | null | undefined): PlaybackProblem {
-  // 2 MEDIA_ERR_NETWORK, 3 MEDIA_ERR_DECODE, 4 MEDIA_ERR_SRC_NOT_SUPPORTED (1 is an abort).
-  if (code === 2) return 'network';
+  // 1 MEDIA_ERR_ABORTED, 2 MEDIA_ERR_NETWORK, 3 MEDIA_ERR_DECODE, 4 MEDIA_ERR_SRC_NOT_SUPPORTED.
+  // An aborted fetch is worth another try, so it reads as the network, not as a bad format.
+  if (code === 1 || code === 2) return 'network';
   if (code === 3) return 'decode';
   return 'unsupported';
 }

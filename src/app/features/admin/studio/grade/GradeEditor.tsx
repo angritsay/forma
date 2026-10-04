@@ -254,6 +254,7 @@ export function GradeEditor({
           onCropChange={setCrop}
           cropRatio={ratio}
           onVideoSize={onVideoSize}
+          onRetrySource={() => setSignTry((n) => n + 1)}
           readOnly={readOnly}
         />
         {problem === 'sign' || problem === 'network' ? (

@@ -195,6 +195,11 @@ export class GradeRenderer {
     return this.gl.isContextLost();
   }
 
+  /**
+   * Free everything, the context included. Each clip opened in the editor is a new canvas, and
+   * a WebView keeps only a handful of live contexts (iOS: around sixteen) before it starts losing
+   * the oldest — which can be the one on screen. Losing ours on purpose keeps the count at one.
+   */
   dispose(): void {
     const gl = this.gl;
     if (gl.isContextLost()) return;
@@ -203,5 +208,6 @@ export class GradeRenderer {
     gl.deleteBuffer(this.buffer);
     gl.deleteVertexArray(this.vao);
     gl.deleteProgram(this.program);
+    gl.getExtension('WEBGL_lose_context')?.loseContext();
   }
 }

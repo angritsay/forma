@@ -1155,7 +1155,7 @@ export const app = {
   studioQueueOne: 'Process',
   studioQueued: 'Sent for processing: {n}',
   studioQueuedHint:
-    'Processing runs every 10 minutes. The finished video appears in the exercise by itself.',
+    'Processing starts about every 10 minutes. The finished video appears in the exercise by itself.',
   studioQueuedNone: 'Nothing was sent: the clips are already queued or have no exercise',
   studioQueueNeedsLabel: 'These clips have no exercise — label them when cutting.',
   studioQueueNothing: 'These clips are already queued',

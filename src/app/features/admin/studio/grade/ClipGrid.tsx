@@ -54,7 +54,7 @@ type Status = 'loading' | 'ready' | 'error' | 'offline';
 
 export interface ClipGridProps {
   onOpen: (clipId: string) => void;
-  /** Reports whether a reload is running, for the header's refresh control. */
+  /** Bumped by the header's refresh control: re-read without dropping what is on screen. */
   reloadSignal: number;
 }
 
@@ -74,7 +74,8 @@ export function ClipGrid({ onOpen, reloadSignal }: ClipGridProps) {
   const [pasting, setPasting] = useState(false);
   const [pasteBusy, setPasteBusy] = useState(false);
 
-  const load = useCallback((quiet = false) => {
+  /** `quiet` keeps the list on screen; `report` says so when a re-read the person asked for fails. */
+  const load = useCallback((quiet = false, report = false) => {
     if (!quiet) setStatus('loading');
     Promise.all([listMediaSources(), listMediaClips(null)])
       .then(([s, c]) => {
@@ -86,11 +87,19 @@ export function ClipGrid({ onOpen, reloadSignal }: ClipGridProps) {
       .catch((e: unknown) => {
         // A quiet re-read that fails keeps what is on screen.
         if (!quiet) setStatus(isNetworkError(e) ? 'offline' : 'error');
+        else if (report) {
+          toast.show({
+            kind: 'error',
+            title: isNetworkError(e) ? t('app.studioLoadOffline') : t('app.studioLoadError'),
+          });
+        }
       });
+    // `t` and `toast` are stable for the screen's life; the poll must not restart on them.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    load(reloadSignal > 0);
+    load(reloadSignal > 0, reloadSignal > 0);
   }, [load, reloadSignal]);
 
   const reload = useCallback(() => load(true), [load]);

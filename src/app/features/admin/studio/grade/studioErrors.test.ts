@@ -69,6 +69,7 @@ describe('workerErrorText', () => {
 
 describe('mediaErrorProblem', () => {
   it('reads a MediaError code', () => {
+    expect(mediaErrorProblem(1)).toBe('network');
     expect(mediaErrorProblem(2)).toBe('network');
     expect(mediaErrorProblem(3)).toBe('decode');
     expect(mediaErrorProblem(4)).toBe('unsupported');

@@ -30,7 +30,7 @@ export function useQueueActions(
   clips: readonly MediaClip[],
   /** Called after the server answered, to reload. */
   onDone: () => void,
-  /** Runs before queueing (the editor saves unsaved changes); false stops the queue. */
+  /** Runs before a queue or a retry (the editor saves unsaved changes); false stops it. */
   before?: () => Promise<boolean>,
 ): QueueActions {
   const tr = useT();
@@ -86,17 +86,21 @@ export function useQueueActions(
       const list = retryIds(clips, ids);
       if (list.length === 0) return;
       setBusy(true);
-      retryMediaClips(list)
-        .then((n) => {
+      // Unsaved changes go first, as for a queue: a retry renders what is saved.
+      void (async () => {
+        try {
+          if (before && !(await before())) return;
+          const n = await retryMediaClips(list);
           toast.show({ kind: 'success', title: t('app.studioRetried', { n }) });
           onDone();
-        })
-        .catch((e: unknown) =>
-          toast.show({ kind: 'error', title: studioErrorTitle(tr, e, 'app.studioQueueError') }),
-        )
-        .finally(() => setBusy(false));
+        } catch (e) {
+          toast.show({ kind: 'error', title: studioErrorTitle(tr, e, 'app.studioQueueError') });
+        } finally {
+          setBusy(false);
+        }
+      })();
     },
-    [clips, onDone, t, toast, tr],
+    [before, clips, onDone, t, toast, tr],
   );
 
   const plan = asking;
