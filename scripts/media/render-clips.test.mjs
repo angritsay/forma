@@ -287,9 +287,9 @@ describe('render-clips arguments', () => {
     const args = sampleArgs({ input: 'in', offset: 0.4, seconds: 10, frames: 8, width: 64 });
     expect(args.slice(args.indexOf('-ss'), args.indexOf('-ss') + 6)).toEqual([
       '-ss',
-      '0.400',
+      '1.025',
       '-t',
-      '10.000',
+      '9.375',
       '-i',
       'in',
     ]);

@@ -158,17 +158,23 @@ export function clipFilters({ cropFilter, cubePath, enhance = false }) {
 /**
  * The auto pass's samples: `frames` frames spread evenly over the clip, 64 px wide, as packed RGB
  * on stdout. The whole frame, before the crop — as the preview samples it (autoEnhance.ts).
+ *
+ * The middle of each of `frames` equal slices, as the preview seeks (`autoSample.ts`
+ * `sampleTimes`): `fps` takes the frame nearest each tick from the input's first frame on, so the
+ * input starts half a slice in.
  */
 export function sampleArgs({ input, offset, seconds, frames, width }) {
-  const rate = Math.max(frames / Math.max(seconds, 0.1), 0.01);
+  const len = Math.max(seconds, 0.1);
+  const rate = Math.max(frames / len, 0.01);
+  const half = len / frames / 2;
   return [
     '-nostdin',
     '-v',
     'error',
     '-ss',
-    secs(offset),
+    secs(offset + half),
     '-t',
-    secs(seconds),
+    secs(len - half),
     '-i',
     input,
     '-map',

@@ -112,8 +112,10 @@ revoke execute on function public.media_clip_json(public.media_clips) from publi
 -- -----------------------------------------------------------------------------
 
 /*
- * 0060's add, unchanged but for one line: a re-registered piece whose span got shorter than its
- * chosen still frame forgets the frame instead of failing the span check.
+ * 0060's add, unchanged but for two things a re-registered piece does: one whose span got shorter
+ * than its chosen still frame forgets the frame instead of failing the span check, and one whose
+ * footage changed forgets the auto values measured on the old footage (the preview would show them
+ * in preference to its own measurement until the next render).
  */
 create or replace function public.admin_media_add_clip(
   p_id           uuid,
@@ -170,7 +172,11 @@ begin
         exercise_id = coalesce(excluded.exercise_id, m.exercise_id),
         crop = coalesce(excluded.crop, m.crop),
         still_at_s = case when m.still_at_s <= excluded.end_s - excluded.start_s
-                          then m.still_at_s end
+                          then m.still_at_s end,
+        auto_params = case when (m.raw_path, m.raw_offset_s, m.start_s, m.end_s)
+                                is not distinct from
+                                (excluded.raw_path, excluded.raw_offset_s, excluded.start_s, excluded.end_s)
+                           then m.auto_params end
     where m.status in ('draft', 'failed') and m.source_id = excluded.source_id;
 
   select * into v_clip from public.media_clips where id = p_id;

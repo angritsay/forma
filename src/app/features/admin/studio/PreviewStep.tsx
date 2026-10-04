@@ -40,7 +40,7 @@ import { StepHeading } from '@/app/features/player/steps/StepHeading';
 import { useAutoParams } from './grade/autoSample';
 import { ClipStatusChip } from './grade/ClipStatus';
 import type { Size } from './grade/previewGeometry';
-import { isBusy, isQueueable, isRetryable } from './grade/selection';
+import { isBusy, isRetryable, isUnsent } from './grade/selection';
 import { PLAYBACK_KEYS, studioErrorTitle, workerErrorText } from './grade/studioErrors';
 import { clipDuration, previewWindow } from './grade/time';
 import { useQueueActions } from './grade/useQueueActions';
@@ -84,7 +84,7 @@ export function PreviewStep({ clips, activeId, onActive, onSaved, onReload }: Pr
   const { t } = useT();
   const active = clips.find((c) => c.id === activeId) ?? clips[0] ?? null;
   const actions = useQueueActions(clips, onReload);
-  const queueable = clips.filter(isQueueable);
+  const queueable = clips.filter(isUnsent);
   const failed = clips.filter(isRetryable);
   const index = active ? clips.indexOf(active) : -1;
 
@@ -212,16 +212,32 @@ function ClipPreview({
   const latest = useRef({ crop, dirty });
   latest.current = { crop, dirty };
 
+  const [saveTick, setSaveTick] = useState(0);
+  // One save at a time: a gesture that ends while one is out saves again after it, so an older
+  // answer never lands last and puts back a framing she has already moved on from.
+  const inflight = useRef(false);
+  const again = useRef(false);
   const save = useCallback(async () => {
+    if (inflight.current) {
+      again.current = true;
+      return;
+    }
     const { crop: c, dirty: d } = latest.current;
     if (!d || busy) return;
+    inflight.current = true;
     setSaving(true);
     try {
       onSaved(await saveMediaClip(clip.id, { crop: c }));
     } catch (e) {
+      again.current = false;
       toast.show({ kind: 'error', title: studioErrorTitle(tr, e, 'app.studioSaveError') });
     } finally {
+      inflight.current = false;
       setSaving(false);
+      if (again.current) {
+        again.current = false;
+        setSaveTick((n) => n + 1);
+      }
     }
   }, [busy, clip.id, onSaved, toast, tr]);
 
@@ -243,7 +259,6 @@ function ClipPreview({
   const onProblem = useCallback((p: FramedProblem | null) => setProblem(p), []);
 
   // A gesture's save runs after the render that holds its last framing.
-  const [saveTick, setSaveTick] = useState(0);
   useEffect(() => {
     if (saveTick > 0) void save();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -358,7 +373,13 @@ function ClipPreview({
       ) : null}
 
       <div className="mx-auto flex w-full max-w-md flex-col gap-3">
-        <div className="flex flex-col gap-1">
+        {/* The slider is a gesture too: saved when it is let go, like a drag or a pinch. */}
+        <div
+          className="flex flex-col gap-1"
+          onPointerUp={onGestureEnd}
+          onKeyUp={onGestureEnd}
+          onBlur={onGestureEnd}
+        >
           <span className="flex items-baseline justify-between text-[13px] text-muted">
             <span>{t('app.studioZoom')}</span>
             <span className="numeral tabular">×{framing.zoom.toFixed(2)}</span>

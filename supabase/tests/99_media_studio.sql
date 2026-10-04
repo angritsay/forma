@@ -555,6 +555,17 @@ declare
 begin
   v := public.admin_media_save_clip('00000000-0000-0000-0000-0000000060c3', '{"play_mode":"still"}');
   assert v ->> 'status' = 'draft', 'a new play mode makes a done clip a draft';
+  -- A resumed upload of the same footage keeps the auto values; other footage forgets them.
+  v := public.admin_media_add_clip('00000000-0000-0000-0000-0000000060c3',
+         '00000000-0000-0000-0000-000000006005',
+         '00000000-0000-0000-0000-000000006005/00000000-0000-0000-0000-0000000060c3.mp4',
+         0, 100, 110);
+  assert v -> 'auto_params' ->> 'v' = '1', 'the same span keeps the measured auto values';
+  v := public.admin_media_add_clip('00000000-0000-0000-0000-0000000060c3',
+         '00000000-0000-0000-0000-000000006005',
+         '00000000-0000-0000-0000-000000006005/00000000-0000-0000-0000-0000000060c3.mp4',
+         0.5, 100, 109);
+  assert v -> 'auto_params' = 'null'::jsonb, 'a new span forgets auto values measured on the old one';
   perform public.admin_media_queue(array['00000000-0000-0000-0000-0000000060c3']::uuid[]);
 end $$;
 

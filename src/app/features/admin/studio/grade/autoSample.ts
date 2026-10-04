@@ -3,7 +3,7 @@
  * preview shows what the render will do (`src/lib/media/autoEnhance.ts`).
  *
  * A second, hidden `<video>` on the same signed URL is seeked to {@link AUTO_SAMPLE_FRAMES} times
- * spread over the clip — the middles of equal slices, as ffmpeg's `fps` filter picks them — and
+ * spread over the clip — the middles of equal slices, the frames the worker's `sampleArgs` takes — and
  * each frame is drawn into a {@link AUTO_SAMPLE_WIDTH}-pixel canvas. The whole frame, never the
  * crop: the framing is chosen later and must not move the colour. The player's own video is left
  * alone, so sampling never jumps the picture she is looking at.
