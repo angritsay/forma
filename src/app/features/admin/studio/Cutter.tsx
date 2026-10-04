@@ -1,13 +1,16 @@
 /**
- * «Нарезка»: the long workout video in, one uploaded piece per exercise out.
+ * «Нарезка», the studio's first step: the long workout video in, one uploaded piece per exercise
+ * out. Naming, colour and framing are the next steps (`flow.ts`); this screen only cuts.
  *
  * 1. She picks the video. It plays from a local `blob:` URL; nothing big leaves the phone.
  * 2. She marks each exercise with «Начало» and «Конец» (I / O on a computer), frame-accurate with
- *    the ±1 frame and ±1 s steps. Tapping a piece selects it; the marks then move its edges.
- * 3. Each piece gets its exercise (search, or a new one by name) and, if needed, a crop frame.
- * 4. «Загрузить» cuts each piece by stream copy (`remux.ts`), uploads it over TUS
+ *    the ±1 frame and ±1 s steps. Tapping a piece selects it; the marks then move its edges. A
+ *    range that is cut shows on the scrubber as a hatched «вырезано» band with its number, and
+ *    cannot be cut again (`timeline.ts`): «Начало» is off while the playhead is inside one.
+ * 3. «Загрузить» cuts each piece by stream copy (`remux.ts`), uploads it over TUS
  *    (`rawUpload.ts`) and registers the clip (`addMediaClip`), one piece at a time, with progress
  *    per piece. A dropped connection resumes; a failed piece says why and offers a retry.
+ * 4. «Дальше — названия» opens the next step for this video.
  *
  * The marks are kept per file in localStorage (`cutDraft.ts`): picking the same video again after
  * a reload brings them back, with the same clip ids, so uploads resume onto the same objects.
@@ -23,6 +26,7 @@ import {
   useRef,
   useState,
   type ChangeEvent,
+  type CSSProperties,
   type ReactNode,
   type Ref,
 } from 'react';
@@ -39,18 +43,15 @@ import { formatBytes } from '@/i18n/index';
 import {
   addMediaClip,
   deleteMediaClip,
+  listMediaClips,
   RAW_FILE_SIZE_LIMIT,
   rawClipPath,
-  saveMediaClip,
   saveMediaSource,
-  type MediaClipPatch,
 } from '@/lib/api/mediaStudio';
 import { UploadAbortedError, uploadRawPiece } from '@/lib/api/rawUpload';
-import type { Crop } from '@/lib/media/crop';
 import { adminErrorTitle } from '@/app/features/admin/adminError';
 import { useWakeLock } from '@/app/features/player/useWakeLock';
 import { useT } from '@/app/hooks/useT';
-import { CropSheet } from './CropSheet';
 import {
   draftKey,
   parseDraft,
@@ -59,14 +60,14 @@ import {
   titleFromFileName,
   type FileIdentity,
 } from './cutDraft';
-import { ExerciseSheet, type PickedExercise } from './ExerciseSheet';
 import { THUMB_WIDTH } from './limits';
 import { runSegment } from './pipeline';
 import { openSource, type SourceInfo, type SourceReader } from './remux';
 import { cutterActionForKey, type CutterAction } from './shortcuts';
-import { STUDIO_GRADE_PATH } from './StudioOverview';
+import { studioStepPath } from './flow';
 import {
   clampTime,
+  cutAt,
   formatTimecode,
   markIn,
   markOut,
@@ -75,7 +76,8 @@ import {
   segmentSeconds,
   stepFrame,
   stepSeconds,
-  type MarkResult,
+  withUploaded,
+  type MarkProblem,
   type MarkState,
   type Segment,
   type SegmentUploadState,
@@ -95,7 +97,9 @@ const PROBLEM_KEY = {
   reversed: 'app.studioProblemReversed',
   locked: 'app.studioProblemLocked',
   no_in: 'app.studioProblemNoIn',
-} as const;
+  inside_cut: 'app.studioProblemInsideCut',
+  overlap: 'app.studioProblemOverlap',
+} as const satisfies Record<MarkProblem, string>;
 
 const newId = (): string => crypto.randomUUID();
 
@@ -135,7 +139,15 @@ function writeStore(key: string, value: string): void {
   }
 }
 
-export function Cutter() {
+export interface CutterProps {
+  /**
+   * The source this cut adds to (`/admin/studio/s/<id>/cut`). A file with a draft of its own keeps
+   * the draft's source; a file without one starts on this source instead of a new one.
+   */
+  sourceId?: string;
+}
+
+export function Cutter({ sourceId: forSource }: CutterProps = {}) {
   const tr = useT();
   const { t } = tr;
   const toast = useToast();
@@ -161,7 +173,7 @@ export function Cutter() {
   const [openError, setOpenError] = useState<UploadErrorKind | null>(null);
   const [playbackError, setPlaybackError] = useState(false);
 
-  const [sourceId, setSourceId] = useState<string>(newId);
+  const [sourceId, setSourceId] = useState<string>(() => forSource ?? newId());
   const [title, setTitle] = useState('');
   const [marks, setMarks] = useState<MarkState>(EMPTY_MARKS);
   // The upload loop reads the pieces as they are now, not as they were when it started.
@@ -169,13 +181,11 @@ export function Cutter() {
   marksRef.current = marks;
   const [thumbs, setThumbs] = useState<Record<string, string>>({});
   const pendingThumb = useRef<string | null>(null);
-  const [problem, setProblem] = useState<MarkResult['problem']>(null);
+  const [problem, setProblem] = useState<MarkProblem | null>(null);
 
   const [now, setNow] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [labelFor, setLabelFor] = useState<string | null>(null);
-  const [cropFor, setCropFor] = useState<string | null>(null);
   const [removeFor, setRemoveFor] = useState<string | null>(null);
 
   const durationS = info?.durationS ?? null;
@@ -183,7 +193,7 @@ export function Cutter() {
   const segments = marks.segments;
   const selected = segments.find((s) => s.id === marks.selectedId) ?? null;
   const toUpload = useMemo(() => pendingUploads(segments), [segments]);
-  const sheetOpen = labelFor !== null || cropFor !== null || removeFor !== null;
+  const sheetOpen = removeFor !== null;
 
   useWakeLock(uploading);
 
@@ -228,9 +238,18 @@ export function Cutter() {
       if (draft.segments.length > 0)
         toast.show({ kind: 'info', title: t('app.studioDraftRestored') });
     } else {
-      setSourceId(newId());
+      setSourceId(forSource ?? newId());
       setTitle(titleFromFileName(f.name));
       setMarks(EMPTY_MARKS);
+    }
+    // More of a video already cut here: its uploaded clips are cut ranges too, draft or no draft.
+    if (forSource && (draft?.sourceId ?? forSource) === forSource) {
+      listMediaClips(forSource)
+        .then((clips) => {
+          if (seq !== pickSeq.current) return;
+          setMarks((m) => ({ ...m, segments: withUploaded(m.segments, clips) }));
+        })
+        .catch(() => undefined);
     }
 
     setOpening(true);
@@ -302,7 +321,7 @@ export function Cutter() {
 
   // --- marks ----------------------------------------------------------------------------------
 
-  const applyMark = useCallback((result: MarkResult) => {
+  const applyMark = useCallback((result: { state: MarkState; problem: MarkProblem | null }) => {
     setProblem(result.problem);
     setMarks(result.state);
   }, []);
@@ -406,47 +425,6 @@ export function Cutter() {
       segments: m.segments.map((s) => (s.id === id ? { ...s, ...patch } : s)),
     }));
   }, []);
-
-  /** A label or frame: local until the piece is uploaded, then saved on the clip at once. */
-  const editSegment = async (seg: Segment, local: Partial<Segment>, server: MediaClipPatch) => {
-    if (seg.upload !== 'done') {
-      patchSegment(seg.id, local);
-      return;
-    }
-    try {
-      await saveMediaClip(seg.id, server);
-      patchSegment(seg.id, local);
-      toast.show({ kind: 'success', title: t('app.studioSaved') });
-    } catch (e) {
-      const kind = classifyUploadError(e, navigator.onLine);
-      toast.show({
-        kind: 'error',
-        title:
-          kind === 'busy'
-            ? t(UPLOAD_ERROR_KEY.busy)
-            : kind === 'offline'
-              ? t('common.errorOffline')
-              : adminErrorTitle(tr, e, 'app.studioSaveError'),
-      });
-    }
-  };
-
-  const onPickExercise = (picked: PickedExercise | null) => {
-    const seg = segments.find((s) => s.id === labelFor);
-    setLabelFor(null);
-    if (!seg) return;
-    void editSegment(
-      seg,
-      { exerciseId: picked?.id ?? null, exerciseName: picked?.name ?? null },
-      { exerciseId: picked?.id ?? null },
-    );
-  };
-
-  const onSaveCrop = (crop: Crop | null) => {
-    const seg = segments.find((s) => s.id === cropFor);
-    if (!seg) return;
-    void editSegment(seg, { crop }, { crop });
-  };
 
   const removeSegment = async () => {
     const seg = segments.find((s) => s.id === removeFor);
@@ -620,11 +598,11 @@ export function Cutter() {
       : marks.pendingIn !== null
         ? t('app.studioPendingIn', { time: formatTimecode(marks.pendingIn) })
         : t('app.studioMarkHint');
-  const frameAspect = info && info.height > 0 ? info.width / info.height : 16 / 9;
-  const cropSeg = segments.find((s) => s.id === cropFor) ?? null;
-  const labelSeg = segments.find((s) => s.id === labelFor) ?? null;
+  // A new piece cannot start inside one already cut; a selected piece's own range is its to move.
+  const inCut = marks.selectedId === null && cutAt(segments, now) !== null;
   const removeSeg = segments.find((s) => s.id === removeFor) ?? null;
   const allDone = segments.length > 0 && toUpload.length === 0;
+  const anyUploaded = segments.some((s) => s.upload === 'done');
 
   return (
     <div className="flex flex-col gap-4 pt-4 lg:flex-row lg:items-start lg:gap-8">
@@ -756,7 +734,7 @@ export function Cutter() {
         <div className="grid grid-cols-2 gap-2">
           <Button
             variant={marks.pendingIn !== null && !selected ? 'secondary' : 'primary'}
-            disabled={!info}
+            disabled={!info || inCut}
             onClick={doMarkIn}
           >
             {t('app.studioMarkIn')}
@@ -809,8 +787,6 @@ export function Cutter() {
                 playing={under?.id === s.id}
                 busy={uploading}
                 onSelect={() => select(s)}
-                onLabel={() => setLabelFor(s.id)}
-                onCrop={() => setCropFor(s.id)}
                 onRemove={() => setRemoveFor(s.id)}
                 onRetry={() => void upload(s.id)}
               />
@@ -827,40 +803,34 @@ export function Cutter() {
               </Button>
             </>
           ) : allDone ? (
-            <Button fullWidth onClick={() => navigate(STUDIO_GRADE_PATH)}>
+            <Button fullWidth onClick={() => navigate(studioStepPath(sourceId, 'name'))}>
               {t('app.studioUploadNext')}
             </Button>
           ) : (
-            <Button
-              fullWidth
-              disabled={!info || toUpload.length === 0}
-              onClick={() => void upload()}
-            >
-              {t('app.studioUpload', { n: toUpload.length })}
-            </Button>
+            <>
+              <Button
+                fullWidth
+                disabled={!info || toUpload.length === 0}
+                onClick={() => void upload()}
+              >
+                {t('app.studioUpload', { n: toUpload.length })}
+              </Button>
+              {anyUploaded ? (
+                <Button
+                  fullWidth
+                  variant="ghost"
+                  onClick={() => navigate(studioStepPath(sourceId, 'name'))}
+                >
+                  {t('app.studioUploadNextPartial')}
+                </Button>
+              ) : null}
+            </>
           )}
         </div>
       </section>
 
       <FileInput ref={fileInput} onPick={pick} />
 
-      <ExerciseSheet
-        open={labelSeg !== null}
-        onClose={() => setLabelFor(null)}
-        onPick={onPickExercise}
-        canClear={Boolean(labelSeg?.exerciseId)}
-        onToast={(kind, msg) => toast.show({ kind, title: msg })}
-      />
-      <CropSheet
-        open={cropSeg !== null}
-        onClose={() => setCropFor(null)}
-        videoUrl={videoUrl}
-        atS={cropSeg?.startS ?? 0}
-        frameAspect={frameAspect}
-        crop={cropSeg?.crop ?? null}
-        onSave={onSaveCrop}
-        onToast={(msg) => toast.show({ kind: 'info', title: msg })}
-      />
       <Modal
         open={removeSeg !== null}
         onClose={() => setRemoveFor(null)}
@@ -902,8 +872,18 @@ function FileInput({
 }
 
 /**
- * The scrubber: a range input over a strip that draws the marked pieces, the pending start and
- * the playhead, so where the next exercise begins is visible at a glance.
+ * Diagonal hatching for a range that is cut: a cut range must not read as free footage, nor as the
+ * plain bar of the free strip around it.
+ */
+const CUT_HATCH: CSSProperties = {
+  backgroundImage:
+    'repeating-linear-gradient(135deg, color-mix(in srgb, currentColor 35%, transparent) 0 2px, transparent 2px 6px)',
+};
+
+/**
+ * The scrubber: a range input over a strip that draws the cut pieces, the pending start and the
+ * playhead, so where the next exercise begins is visible at a glance. A cut piece is a dimmed,
+ * hatched band labelled with its number and «вырезано» (when it is wide enough for the word).
  */
 function Scrubber({
   now,
@@ -922,24 +902,33 @@ function Scrubber({
   onSeek: (t: number) => void;
   label: string;
 }) {
+  const { t } = useT();
   const d = durationS && durationS > 0 ? durationS : 0;
   const pct = (v: number) => (d > 0 ? `${Math.min(100, Math.max(0, (v / d) * 100))}%` : '0%');
   return (
     <div className="relative h-11">
-      <div className="pointer-events-none absolute inset-x-0 top-1/2 h-2 -translate-y-1/2 bg-surface-3">
-        {segments.map((s) => (
+      <div className="pointer-events-none absolute inset-x-0 top-1/2 h-6 -translate-y-1/2 bg-surface-3">
+        {segments.map((s, i) => (
           <span
             key={s.id}
             className={clsx(
-              'absolute inset-y-0',
+              'absolute inset-y-0 flex items-center overflow-hidden border-x px-1 text-[10px] leading-none whitespace-nowrap',
               s.id === selectedId
-                ? 'bg-accent'
+                ? 'border-accent bg-accent/60 text-ink'
                 : s.upload === 'done'
-                  ? 'bg-success/70'
-                  : 'bg-text/40',
+                  ? 'border-success bg-success/25 text-text'
+                  : 'border-text/50 bg-text/15 text-text',
             )}
-            style={{ left: pct(s.startS), width: `calc(${pct(s.endS)} - ${pct(s.startS)})` }}
-          />
+            style={{
+              ...CUT_HATCH,
+              left: pct(s.startS),
+              width: `calc(${pct(s.endS)} - ${pct(s.startS)})`,
+            }}
+          >
+            <span className="truncate">
+              {i + 1} · {t('app.studioCutBand')}
+            </span>
+          </span>
         ))}
         {pendingIn !== null ? (
           <span className="absolute -inset-y-1 w-0.5 bg-accent" style={{ left: pct(pendingIn) }} />
@@ -978,8 +967,6 @@ function SegmentRow({
   playing,
   busy,
   onSelect,
-  onLabel,
-  onCrop,
   onRemove,
   onRetry,
 }: {
@@ -990,8 +977,6 @@ function SegmentRow({
   playing: boolean;
   busy: boolean;
   onSelect: () => void;
-  onLabel: () => void;
-  onCrop: () => void;
   onRemove: () => void;
   onRetry: () => void;
 }) {
@@ -1022,13 +1007,8 @@ function SegmentRow({
           {playing ? <span className="absolute inset-x-0 bottom-0 h-0.5 bg-accent" /> : null}
         </span>
         <span className="flex min-w-0 flex-1 flex-col">
-          <span
-            className={clsx(
-              'truncate text-[15px]',
-              seg.exerciseName ? 'font-medium' : 'text-muted',
-            )}
-          >
-            {seg.exerciseName ?? seg.exerciseId ?? t('app.studioNoLabel')}
+          <span className="truncate text-[15px] font-medium">
+            {seg.exerciseName ?? t('app.studioPieceN', { n: index + 1 })}
           </span>
           <span className="tabular text-[13px] text-muted-2">
             {t('app.studioClipSpan', {
@@ -1081,13 +1061,6 @@ function SegmentRow({
       ) : null}
 
       <div className="flex flex-wrap gap-1.5 px-1">
-        <Chip size="sm" onClick={onLabel} disabled={working}>
-          {t('app.studioSegmentLabel')}
-        </Chip>
-        <Chip size="sm" onClick={onCrop} disabled={working}>
-          {t('app.studioSegmentCrop')}:{' '}
-          {seg.crop ? t('app.studioCropSet') : t('app.studioCropFull')}
-        </Chip>
         <Chip size="sm" tone="danger" onClick={onRemove} disabled={working || busy}>
           {t('app.studioSegmentRemove')}
         </Chip>

@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { MAX_CLIP_SECONDS } from '@/lib/api/mediaStudio';
 import {
   clampTime,
+  cutAt,
   FALLBACK_FPS,
+  freeRoom,
   formatTimecode,
   isLocked,
   markIn,
@@ -15,6 +17,7 @@ import {
   spanProblem,
   stepFrame,
   stepSeconds,
+  withUploaded,
   type MarkState,
 } from './timeline';
 
@@ -148,6 +151,92 @@ describe('marks', () => {
     st = { ...st, selectedId: null };
     st = markOut(markIn(st, 5).state, 15, ids('early')).state;
     expect(st.segments.map((s) => s.id)).toEqual(['early', 'late']);
+  });
+});
+
+describe('no overlaps', () => {
+  /** Two cut pieces, [10, 20] and [30, 40], nothing selected. */
+  const two = (): MarkState => {
+    let st = markOut(markIn(EMPTY, 10).state, 20, ids('a')).state;
+    st = markOut(markIn({ ...st, selectedId: null }, 30).state, 40, ids('b')).state;
+    return { ...st, selectedId: null };
+  };
+
+  it('refuses a start inside a range already cut', () => {
+    const st = two();
+    const r = markIn(st, 15);
+    expect(r.problem).toBe('inside_cut');
+    expect(r.state).toBe(st);
+    // The end of a piece is free: the next one may start right there.
+    expect(markIn(st, 20).problem).toBeNull();
+  });
+
+  it('stops an end at the start of the next cut range', () => {
+    const st = markIn(two(), 22).state;
+    const r = markOut(st, 35, ids('c'));
+    expect(r.problem).toBeNull();
+    expect(r.state.segments.find((s) => s.id === 'c')).toMatchObject({ startS: 22, endS: 30 });
+    // An end past several pieces stops at the first of them.
+    const far = markOut(markIn(two(), 5).state, 45, ids('d')).state;
+    expect(far.segments.find((s) => s.id === 'd')).toMatchObject({ startS: 5, endS: 10 });
+  });
+
+  it('refuses an end that leaves less than half a second before the next piece', () => {
+    const st = markIn(two(), 29.8).state;
+    const r = markOut(st, 35, ids('x'));
+    expect(r.problem).toBe('overlap');
+    expect(r.state).toBe(st);
+    expect(r.state.segments).toHaveLength(2);
+  });
+
+  it('keeps a selected piece out of its neighbours', () => {
+    const st = { ...two(), selectedId: 'a' };
+    // The start cannot move into another piece…
+    expect(markIn({ ...st, selectedId: 'b' }, 15).problem).toBe('inside_cut');
+    // …the end stops at the next one…
+    const grown = markOut(st, 33, ids('x')).state;
+    expect(grown.segments.find((s) => s.id === 'a')).toMatchObject({ startS: 10, endS: 30 });
+    // …and a start moved back past a piece stops at its end.
+    const back = markIn({ ...st, selectedId: 'b' }, 5).state;
+    expect(back.segments.find((s) => s.id === 'b')).toMatchObject({ startS: 20, endS: 40 });
+  });
+
+  it('never leaves two pieces overlapping, whatever is pressed', () => {
+    let st: MarkState = EMPTY;
+    let n = 0;
+    const presses = [3, 8, 6, 12, 11, 25, 9, 14, 13, 16, 2, 30, 18.2, 18.4, 18.1, 50];
+    for (let i = 0; i < presses.length; i++) {
+      st = { ...st, selectedId: null };
+      st = (i % 2 === 0 ? markIn(st, presses[i]!) : markOut(st, presses[i]!, () => `s${n++}`))
+        .state;
+    }
+    const sorted = [...st.segments].sort((a, b) => a.startS - b.startS);
+    for (let i = 1; i < sorted.length; i++) {
+      expect(sorted[i]!.startS).toBeGreaterThanOrEqual(sorted[i - 1]!.endS);
+    }
+    expect(sorted.length).toBeGreaterThan(1);
+  });
+
+  it('counts clips already uploaded to the source as cut, once', () => {
+    const st = two();
+    const uploaded = [
+      { id: 'a', startS: 10, endS: 20, exerciseId: null, exerciseName: null },
+      { id: 'old', startS: 50, endS: 55, exerciseId: 'squat', exerciseName: 'Присед' },
+    ];
+    const list = withUploaded(st.segments, uploaded);
+    expect(list.map((s) => s.id)).toEqual(['a', 'b', 'old']);
+    expect(list[2]).toMatchObject({ upload: 'done', exerciseName: 'Присед' });
+    expect(markIn({ ...st, segments: list }, 52).problem).toBe('inside_cut');
+  });
+
+  it('finds the cut range and the free room around a span', () => {
+    const st = two();
+    expect(cutAt(st.segments, 15)?.id).toBe('a');
+    expect(cutAt(st.segments, 15, 'a')).toBeNull();
+    expect(cutAt(st.segments, 20)).toBeNull();
+    expect(freeRoom(st.segments, 22, 25)).toEqual({ lo: 20, hi: 30 });
+    expect(freeRoom(st.segments, 45, 45)).toEqual({ lo: 40, hi: Number.POSITIVE_INFINITY });
+    expect(freeRoom(st.segments, 10, 20, 'a')).toEqual({ lo: 0, hi: 30 });
   });
 });
 

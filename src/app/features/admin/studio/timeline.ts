@@ -2,6 +2,11 @@
  * Time and segment math of the cutter («Нарезка»): where the playhead may go, how a frame step and
  * a second step move it, and how the «Начало» / «Конец» marks turn into a list of segments.
  *
+ * Segments never overlap: a range that is cut is cut once. A start inside a cut range is refused
+ * («Этот кусок уже вырезан»); an end that would run into the next cut range stops at its start,
+ * and is refused when that leaves less than {@link MIN_SEGMENT_SECONDS}. Moving the edges of a
+ * selected segment keeps to the same rule, so the list stays a set of separate spans.
+ *
  * Pure, so the rules are tested without a `<video>`: the screen only feeds it the playhead and the
  * duration and renders what comes back.
  */
@@ -114,6 +119,33 @@ export function newSegment(id: string, startS: number, endS: number): Segment {
   };
 }
 
+/**
+ * Clips already uploaded to a source, as locked segments, for the ones the list does not have yet:
+ * cutting more of a video whose draft is gone must still see what is cut.
+ */
+export function withUploaded(
+  list: readonly Segment[],
+  uploaded: readonly {
+    id: string;
+    startS: number;
+    endS: number;
+    exerciseId: string | null;
+    exerciseName: string | null;
+  }[],
+): Segment[] {
+  const have = new Set(list.map((s) => s.id));
+  const extra = uploaded
+    .filter((c) => !have.has(c.id))
+    .map((c) => ({
+      ...newSegment(c.id, c.startS, c.endS),
+      exerciseId: c.exerciseId,
+      exerciseName: c.exerciseName,
+      upload: 'done' as const,
+      progress: 1,
+    }));
+  return extra.length === 0 ? [...list] : sortSegments([...list, ...extra]);
+}
+
 /** Segments in the order they were filmed. */
 export function sortSegments(list: readonly Segment[]): Segment[] {
   return [...list].sort((a, b) => a.startS - b.startS || a.endS - b.endS);
@@ -132,24 +164,85 @@ export interface MarkState {
   selectedId: string | null;
 }
 
-export type MarkResult = { state: MarkState; problem: SpanProblem | 'locked' | 'no_in' | null };
+/**
+ * What can be wrong with a mark: the span itself, a locked segment, an end with no start, a start
+ * inside a range already cut (`inside_cut`), or an end that the next cut range leaves too little
+ * room for (`overlap`).
+ */
+export type MarkProblem = SpanProblem | 'locked' | 'no_in' | 'inside_cut' | 'overlap';
+
+export type MarkResult = { state: MarkState; problem: MarkProblem | null };
+
+/** The cut segment `t` falls inside (its end excluded), leaving out `exceptId`. */
+export function cutAt(
+  list: readonly Segment[],
+  t: number,
+  exceptId: string | null = null,
+): Segment | null {
+  return list.find((s) => s.id !== exceptId && t >= s.startS && t < s.endS) ?? null;
+}
+
+/**
+ * The free room around `[from, to]` among the other segments: from the end of the last one
+ * before it to the start of the first one after it (0 and ∞ when there is none).
+ */
+export function freeRoom(
+  list: readonly Segment[],
+  from: number,
+  to: number,
+  exceptId: string | null = null,
+): { lo: number; hi: number } {
+  let lo = 0;
+  let hi = Number.POSITIVE_INFINITY;
+  for (const s of list) {
+    if (s.id === exceptId) continue;
+    if (s.endS <= from + 1e-9) lo = Math.max(lo, s.endS);
+    else if (s.startS >= to - 1e-9) hi = Math.min(hi, s.startS);
+  }
+  return { lo, hi };
+}
+
+/**
+ * An end at `t` for a span starting at `from`, stopped at the next cut range (`hi`). Answers the
+ * end, or the problem: the span's own, or `overlap` when stopping left it too short.
+ */
+function endBefore(
+  from: number,
+  t: number,
+  hi: number,
+): { end: number; problem: MarkProblem | null } {
+  const clamped = t > hi;
+  const end = clamped ? hi : t;
+  const problem = spanProblem(from, end);
+  if (problem === 'too_short' || (problem === 'reversed' && clamped)) {
+    return { end, problem: clamped ? 'overlap' : problem };
+  }
+  return { end, problem };
+}
 
 /**
  * «Начало» at `t`. With a segment selected it moves that segment's start (when the span stays
- * valid); otherwise it remembers `t` as the start of the next segment.
+ * valid, and not into another cut range: a start before the previous segment's end stops there);
+ * otherwise it remembers `t` as the start of the next segment — unless `t` is already cut.
  */
 export function markIn(state: MarkState, t: number): MarkResult {
   const sel = state.segments.find((s) => s.id === state.selectedId);
-  if (!sel) return { state: { ...state, pendingIn: round3(t) }, problem: null };
+  if (!sel) {
+    if (cutAt(state.segments, t)) return { state, problem: 'inside_cut' };
+    return { state: { ...state, pendingIn: round3(t) }, problem: null };
+  }
   if (isLocked(sel)) return { state, problem: 'locked' };
-  const problem = spanProblem(t, sel.endS);
-  if (problem) return { state, problem };
+  if (cutAt(state.segments, t, sel.id)) return { state, problem: 'inside_cut' };
+  const { lo } = freeRoom(state.segments, sel.startS, sel.endS, sel.id);
+  const start = Math.max(t, lo);
+  const problem = spanProblem(start, sel.endS);
+  if (problem) return { state, problem: problem === 'too_short' && t < lo ? 'overlap' : problem };
   return {
     state: {
       ...state,
       segments: sortSegments(
         state.segments.map((s) =>
-          s.id === sel.id ? { ...s, startS: round3(t), upload: 'idle', error: null } : s,
+          s.id === sel.id ? { ...s, startS: round3(start), upload: 'idle', error: null } : s,
         ),
       ),
     },
@@ -159,21 +252,22 @@ export function markIn(state: MarkState, t: number): MarkResult {
 
 /**
  * «Конец» at `t`. With a segment selected it moves that segment's end; otherwise it closes the
- * pending start into a new segment (id from `makeId`), which is then selected so its label and
- * frame are the next thing to set.
+ * pending start into a new segment (id from `makeId`), which is then selected. Either way an end
+ * that runs into the next cut range stops at its start.
  */
 export function markOut(state: MarkState, t: number, makeId: () => string): MarkResult {
   const sel = state.segments.find((s) => s.id === state.selectedId);
   if (sel) {
     if (isLocked(sel)) return { state, problem: 'locked' };
-    const problem = spanProblem(sel.startS, t);
+    const { hi } = freeRoom(state.segments, sel.startS, sel.endS, sel.id);
+    const { end, problem } = endBefore(sel.startS, t, hi);
     if (problem) return { state, problem };
     return {
       state: {
         ...state,
         segments: sortSegments(
           state.segments.map((s) =>
-            s.id === sel.id ? { ...s, endS: round3(t), upload: 'idle', error: null } : s,
+            s.id === sel.id ? { ...s, endS: round3(end), upload: 'idle', error: null } : s,
           ),
         ),
       },
@@ -181,9 +275,12 @@ export function markOut(state: MarkState, t: number, makeId: () => string): Mark
     };
   }
   if (state.pendingIn === null) return { state, problem: 'no_in' };
-  const problem = spanProblem(state.pendingIn, t);
+  // The start was free when it was marked; a draft restored from an older version may not be.
+  if (cutAt(state.segments, state.pendingIn)) return { state, problem: 'inside_cut' };
+  const { hi } = freeRoom(state.segments, state.pendingIn, state.pendingIn);
+  const { end, problem } = endBefore(state.pendingIn, t, hi);
   if (problem) return { state, problem };
-  const seg = newSegment(makeId(), state.pendingIn, t);
+  const seg = newSegment(makeId(), state.pendingIn, end);
   return {
     state: {
       segments: sortSegments([...state.segments, seg]),
