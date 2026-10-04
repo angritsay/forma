@@ -20,12 +20,28 @@ export interface TabsProps<T extends string> {
    * working — there are no pills any more, only the frame.
    */
   variant?: 'underline' | 'fill' | 'pills';
+  /**
+   * Cells as wide as their words instead of sharing the row. For a row that may be narrower than
+   * its labels: put it in an `overflow-x-auto` box and it scrolls sideways, nothing truncates.
+   */
+  fit?: boolean;
+  /**
+   * Prefix for the ids the tabs and their panels get, for a second set of tabs that can be on the
+   * page at the same time as another with the same tab ids. Pass the same prefix to `tabPanelId`
+   * and `tabId`.
+   */
+  idPrefix?: string;
   className?: string;
 }
 
 /** Id of the panel a tab controls — use it as the panel element's `id` with `role="tabpanel"`. */
-export function tabPanelId(tabId: string): string {
-  return `tabpanel-${tabId}`;
+export function tabPanelId(id: string, idPrefix = ''): string {
+  return `${idPrefix}tabpanel-${id}`;
+}
+
+/** Id of the tab itself — the panel's `aria-labelledby`. */
+export function tabId(id: string, idPrefix = ''): string {
+  return `${idPrefix}tab-${id}`;
 }
 
 /*
@@ -40,6 +56,8 @@ export function Tabs<T extends string>({
   onChange,
   label,
   variant = 'underline',
+  fit = false,
+  idPrefix = '',
   className,
 }: TabsProps<T>) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -83,7 +101,7 @@ export function Tabs<T extends string>({
          * corners over the rounded border and undo it.
          */
         fill
-          ? 'overflow-hidden rounded-control border border-border-strong'
+          ? clsx('overflow-hidden rounded-control border border-border-strong', fit && 'w-max')
           : 'gap-5 border-b border-border',
         className,
       )}
@@ -98,9 +116,9 @@ export function Tabs<T extends string>({
             }}
             type="button"
             role="tab"
-            id={`tab-${tab.id}`}
+            id={tabId(tab.id, idPrefix)}
             aria-selected={selected}
-            aria-controls={tabPanelId(tab.id)}
+            aria-controls={tabPanelId(tab.id, idPrefix)}
             tabIndex={selected ? 0 : -1}
             disabled={tab.disabled}
             onClick={() => onChange(tab.id)}
@@ -115,7 +133,11 @@ export function Tabs<T extends string>({
                     // Cells are ruled off from each other by a hairline, not by a gap.
                     // `min-w-0` so three long labels shrink their cells instead of running over
                     // each other — a Russian «Противопоказания» is wider than a third of a phone.
-                    'tap-target-y h-10 min-w-0 flex-1 justify-center border-l border-border-strong px-2 first:border-l-0',
+                    'tap-target-y h-10 justify-center border-l border-border-strong first:border-l-0',
+                    // The frame clips anything drawn outside a cell, the global focus ring
+                    // included (2px out): inside the cell it stays visible.
+                    'focus-visible:-outline-offset-2',
+                    fit ? 'shrink-0 px-3.5 whitespace-nowrap' : 'min-w-0 flex-1 px-2',
                     // The chosen cell is electric blue with white words, like the tab bar's seat
                     // (style A, global.css header): selection has one colour across the app.
                     selected ? 'bg-field text-on-field' : 'text-muted hover:text-text',
@@ -128,7 +150,7 @@ export function Tabs<T extends string>({
                   ),
             )}
           >
-            <span className={clsx(fill && 'min-w-0 truncate')}>{tab.label}</span>
+            <span className={clsx(fill && !fit && 'min-w-0 truncate')}>{tab.label}</span>
             {tab.count !== undefined ? (
               <span className="tabular text-[11px] font-medium opacity-70">{tab.count}</span>
             ) : null}

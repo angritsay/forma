@@ -19,7 +19,7 @@ import { itemLoadLabel } from './plan';
  * card in an odd count takes both columns at 16:9, so three or five movements still close the grid
  * without a hole), the number is the one thing set large under it — the prototype's rule: minimum
  * text, big numbers — and the name sits beneath in small type. The coach's note is not lost: it is
- * on the back of the card this opens (`ExercisePreview`), where the player keeps it too.
+ * on «Техника» in the drawer this opens (`ExercisePreview`), as on the back of the player's card.
  *
  * The load and the rest after the movement, when there is one, shrink to a single small chip. The
  * number is still the fallback in the frame when a movement has no still yet, so the grid never

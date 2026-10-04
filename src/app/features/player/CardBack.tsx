@@ -13,16 +13,20 @@
 import { useState } from 'react';
 import { Chip } from '@/components/ui/Chip';
 import { Glyph } from '@/components/ui/Icon';
-import { Tabs, tabPanelId } from '@/components/ui/Tabs';
+import { Tabs, tabId, tabPanelId } from '@/components/ui/Tabs';
 import { useT } from '@/app/hooks/useT';
 import type { TKey } from '@/i18n/index';
 import type { PlayerStep, PrescribedItem, PrescribedWorkout } from '@/lib/training/types';
 import { ItemList } from './ItemList';
 import { contraindicationsFor, findBlock, findExercise, limitationLabel } from './model';
 
-type Tab = 'technique' | 'cues' | 'cautions';
+export type ExerciseTab = 'technique' | 'cues' | 'cautions';
 
-const TABS: { id: Tab; key: TKey }[] = [
+/**
+ * The movement's pages and their labels. Exported so the exercise drawer (`ExercisePreview`) sets
+ * the very same tabs, word for word, in its own row.
+ */
+export const EXERCISE_TABS: readonly { id: ExerciseTab; key: TKey }[] = [
   { id: 'technique', key: 'app.playerTabTechnique' },
   { id: 'cues', key: 'app.playerTabCues' },
   { id: 'cautions', key: 'app.playerTabCautions' },
@@ -90,85 +94,112 @@ function CueList({ lines, glyph }: { lines: readonly string[]; glyph: string }) 
 export interface ExerciseBackProps {
   exerciseId: string;
   item: PrescribedItem;
+  /** The page shown, when the caller owns it. Without it the component keeps its own (the player). */
+  tab?: ExerciseTab;
+  onTab?: (tab: ExerciseTab) => void;
+  /**
+   * The caller draws the tab row and the `tabpanel` around this itself (the drawer, beside its ✕):
+   * only the page's content is rendered here, with no tablist and no panel of its own.
+   */
+  hideTabs?: boolean;
 }
 
-export function ExerciseBack({ exerciseId, item }: ExerciseBackProps) {
+export function ExerciseBack({
+  exerciseId,
+  item,
+  tab: controlled,
+  onTab,
+  hideTabs = false,
+}: ExerciseBackProps) {
   const { t, l } = useT();
-  const [tab, setTab] = useState<Tab>('technique');
+  const [own, setOwn] = useState<ExerciseTab>('technique');
+  const tab = controlled ?? own;
+  const setTab = (next: ExerciseTab) => {
+    if (controlled === undefined) setOwn(next);
+    onTab?.(next);
+  };
   const exercise = findExercise(exerciseId);
   if (!exercise) return null;
 
   const cautions = contraindicationsFor(exercise, item.loadLabel);
+
+  const page = (
+    <>
+      {tab === 'technique' ? (
+        <div className="flex flex-col gap-5">
+          <NumberedList lines={exercise.howTo.map((line) => l(line))} />
+          {exercise.breathing ? (
+            <div className="flex flex-col gap-2 border-t border-border pt-4">
+              <GroupHeading>{t('app.playerBreathing')}</GroupHeading>
+              <p className="text-[15px] leading-relaxed text-muted">{l(exercise.breathing)}</p>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      {tab === 'cues' ? (
+        <div className="flex flex-col gap-5">
+          {exercise.cues.length > 0 ? (
+            <div className="flex flex-col gap-2.5">
+              <GroupHeading>{t('app.playerCuesTitle')}</GroupHeading>
+              <CueList lines={exercise.cues.map((c) => l(c))} glyph="›" />
+            </div>
+          ) : null}
+          {exercise.mistakes.length > 0 ? (
+            <div className="flex flex-col gap-2.5 border-t border-border pt-4">
+              <GroupHeading>{t('app.playerMistakesTitle')}</GroupHeading>
+              <CueList lines={exercise.mistakes.map((m) => l(m))} glyph="×" />
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      {tab === 'cautions' ? (
+        <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-2.5">
+            <GroupHeading>{t('app.playerCautionsTitle')}</GroupHeading>
+            {cautions.length > 0 ? (
+              <>
+                <p className="text-sm text-muted">{t('app.playerCautionsLead')}</p>
+                <div className="flex flex-wrap gap-2">
+                  {cautions.map((lim) => (
+                    <Chip key={lim} tone="warning">
+                      {limitationLabel(t, lim)}
+                    </Chip>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-muted">{t('app.playerCautionsNone')}</p>
+            )}
+          </div>
+          <div className="flex flex-col gap-2.5 border-t border-border pt-4">
+            <GroupHeading>{t('app.playerTabMuscles')}</GroupHeading>
+            <div className="flex flex-wrap gap-2">
+              {exercise.muscles.map((m) => (
+                <Chip key={m}>{t(`seo.muscle_${m}` as TKey)}</Chip>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </>
+  );
+
+  if (hideTabs) return page;
 
   return (
     <div className="flex flex-col gap-5">
       <Tabs
         variant="fill"
         label={t('app.playerCardBackLabel')}
-        tabs={TABS.map((x) => ({ id: x.id, label: t(x.key) }))}
+        tabs={EXERCISE_TABS.map((x) => ({ id: x.id, label: t(x.key) }))}
         value={tab}
         onChange={setTab}
       />
 
-      <div id={tabPanelId(tab)} role="tabpanel" aria-labelledby={`tab-${tab}`}>
-        {tab === 'technique' ? (
-          <div className="flex flex-col gap-5">
-            <NumberedList lines={exercise.howTo.map((line) => l(line))} />
-            {exercise.breathing ? (
-              <div className="flex flex-col gap-2 border-t border-border pt-4">
-                <GroupHeading>{t('app.playerBreathing')}</GroupHeading>
-                <p className="text-[15px] leading-relaxed text-muted">{l(exercise.breathing)}</p>
-              </div>
-            ) : null}
-          </div>
-        ) : null}
-
-        {tab === 'cues' ? (
-          <div className="flex flex-col gap-5">
-            {exercise.cues.length > 0 ? (
-              <div className="flex flex-col gap-2.5">
-                <GroupHeading>{t('app.playerCuesTitle')}</GroupHeading>
-                <CueList lines={exercise.cues.map((c) => l(c))} glyph="›" />
-              </div>
-            ) : null}
-            {exercise.mistakes.length > 0 ? (
-              <div className="flex flex-col gap-2.5 border-t border-border pt-4">
-                <GroupHeading>{t('app.playerMistakesTitle')}</GroupHeading>
-                <CueList lines={exercise.mistakes.map((m) => l(m))} glyph="×" />
-              </div>
-            ) : null}
-          </div>
-        ) : null}
-
-        {tab === 'cautions' ? (
-          <div className="flex flex-col gap-5">
-            <div className="flex flex-col gap-2.5">
-              <GroupHeading>{t('app.playerCautionsTitle')}</GroupHeading>
-              {cautions.length > 0 ? (
-                <>
-                  <p className="text-sm text-muted">{t('app.playerCautionsLead')}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {cautions.map((lim) => (
-                      <Chip key={lim} tone="warning">
-                        {limitationLabel(t, lim)}
-                      </Chip>
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <p className="text-sm text-muted">{t('app.playerCautionsNone')}</p>
-              )}
-            </div>
-            <div className="flex flex-col gap-2.5 border-t border-border pt-4">
-              <GroupHeading>{t('app.playerTabMuscles')}</GroupHeading>
-              <div className="flex flex-wrap gap-2">
-                {exercise.muscles.map((m) => (
-                  <Chip key={m}>{t(`seo.muscle_${m}` as TKey)}</Chip>
-                ))}
-              </div>
-            </div>
-          </div>
-        ) : null}
+      <div id={tabPanelId(tab)} role="tabpanel" aria-labelledby={tabId(tab)}>
+        {page}
       </div>
     </div>
   );
@@ -177,8 +208,8 @@ export function ExerciseBack({ exerciseId, item }: ExerciseBackProps) {
 /**
  * What the coach wrote about this movement *in this workout* — the note under it in the plan — and,
  * when the engine swapped the movement, what it stands in for. Above the movement's own pages on
- * the back of the player's card, and on the back of the preview's card (`ExercisePreview`), which
- * is where the note went when it left the plan's rows.
+ * the back of the player's card, and on top of «Техника» in the exercise drawer (`ExercisePreview`),
+ * which is where the note went when it left the plan's rows.
  */
 export function ItemNotes({ item }: { item: PrescribedItem }) {
   const { t, l, locale } = useT();
