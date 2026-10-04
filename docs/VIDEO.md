@@ -319,6 +319,43 @@ The claim is a **lease** (`claimed_until`, 30 minutes, longer than the 25-minute
 clips back when the lease runs out. Done and failed carry the attempt they claimed, so a run that
 was overtaken cannot overwrite the run that took over.
 
+### The cutter (`/admin/studio/cut`)
+
+The screens are `/admin/studio` (sources and clips with their status) and `/admin/studio/cut`;
+the code is `src/app/features/admin/studio/`. «Цвет и кадр» links to the grader at
+`/admin/studio/grade`.
+
+1. **Pick.** The video plays from a `blob:` URL. mediabunny (loaded only on this screen) reads its
+   length, frame rate and keyframes with random access, so a 4 GB file is not loaded whole. A file
+   it cannot read (not MP4/MOV, no picture track) says so at once.
+2. **Mark.** «Начало» / «Конец» (I / O on a computer; space plays and pauses, ← → step one frame,
+   with Shift one second). Tapping a piece selects it, and the marks then move its edges. Pieces
+   are 0.5 s to 10 min. Each piece gets its exercise (search, or a new one by name: the id is
+   transliterated from it, `exerciseId.ts`) and, if needed, a crop frame (drag, corners, pinch;
+   4:3 / 9:16 / free). The frame can be copied and pasted; the clipboard is shared with the grader.
+3. **Upload,** one piece at a time:
+   - **Cut by stream copy** (`remux.ts`), starting on the keyframe at or before the start mark and
+     ending 0.5 s after the end mark. `raw_offset_s` is the start mark minus that keyframe. A
+     keyframe more than 60 s back is refused (a screen recording), and a piece that cannot be
+     copied is never re-encoded on the phone. The audio is dropped.
+   - **Size check** against the bucket's 500 MB before anything is sent.
+   - **TUS upload** (`src/lib/api/rawUpload.ts`) to `<project>/storage/v1/upload/resumable`, 6 MB
+     chunks, the user's own access token (re-read before every request), upsert. The upload URL is
+     kept in localStorage under a fingerprint of the object, its size and its cut points, so a
+     dropped connection or a reload resumes at the last chunk. That is safe although the piece is
+     cut again after a reload: the MP4 is written with its index at the end, so every byte before
+     the index is the same on every cut, and the index differs only in its creation time.
+   - **Register** with `admin_media_add_clip` (safe to repeat with the same id).
+
+   The screen stays awake while it uploads (Wake Lock, where the browser has it). Without signal
+   or access the remaining pieces stop with that reason instead of failing one by one.
+
+The marks are kept per file in localStorage (`cutDraft.ts`, keyed by the file's name, size and
+modification time, for 7 days): picking the same video again brings back the same source id,
+pieces and clip ids. A piece that was uploading when the page went away comes back as «not
+uploaded» and resumes; an uploaded one stays uploaded, with its edges fixed. Its label and frame
+are then saved straight onto the clip.
+
 ### What the worker does to a piece
 
 One ffmpeg pass, then two small cuts from its output:
@@ -368,7 +405,8 @@ through `gradeToLut` in JavaScript: about 1/255 mean difference with no grade (c
 
 - **Upload limit.** The bucket allows 500 MB a file, but the project-wide limit (Storage settings
   in the Supabase dashboard) may be lower — 50 MB on the default plan. A 40-second 4K iPhone piece
-  can exceed that; raise the project limit if pieces are refused.
+  can exceed that; raise the project limit if pieces are refused. The cutter checks the 500 MB
+  itself; a lower project limit shows up as the same «too large» error after the upload starts.
 - **Switching it on:** apply `0060_media_studio.sql` (Actions → Supabase apply → migration), then
   run «Studio render» once by hand. `SUPABASE_ACCESS_TOKEN` is the secret it already shares with
   the other Supabase tasks; without it the scheduled run is a quiet note, not a failure.

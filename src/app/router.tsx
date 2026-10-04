@@ -261,6 +261,12 @@ export function AppRoutes() {
                   element={<LazyScreen name="AdminExercisesScreen" />}
                 />
                 <Route path="/admin/media" element={<LazyScreen name="AdminMediaScreen" />} />
+                {/* «Студия» (0060): sources and clips; the cutter. The grader is /admin/studio/grade. */}
+                <Route path="/admin/studio" element={<LazyScreen name="AdminStudioScreen" />} />
+                <Route
+                  path="/admin/studio/cut"
+                  element={<LazyScreen name="AdminStudioCutScreen" />}
+                />
                 <Route path="/admin/courses" element={<LazyScreen name="AdminCoursesScreen" />} />
                 <Route
                   path="/admin/courses/:id"

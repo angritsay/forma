@@ -34,6 +34,9 @@ export const SCREEN_NAMES = [
   'AdminExercisesScreen',
   // Every clip, recording and still in the buckets, with the exercises that use them (0048).
   'AdminMediaScreen',
+  // «Студия»: a filmed workout cut into exercise clips on the device and uploaded (0060).
+  'AdminStudioScreen',
+  'AdminStudioCutScreen',
   'AdminCoursesScreen',
   'AdminCourseScreen',
   'AdminMarathonsScreen',
