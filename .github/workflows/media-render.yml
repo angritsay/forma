@@ -1,10 +1,10 @@
-# Render the clips queued in the admin «Студия» (0060).
+# Render the clips queued in the admin «Студия» (0060; play modes and the auto pass, 0061).
 #
 # The owner cuts a filmed workout into exercise clips on her phone, grades them and presses
 # «Отправить в обработку». The phone only uploads the pieces; this encodes them, every ten minutes
 # and by hand: scripts/media/render-clips.mjs claims what is queued, cuts, crops, grades and
-# encodes it, uploads the clip, its still and its site loop, and points the exercise at it. The
-# app picks it up at once — no deploy.
+# encodes it (with the automatic colour pass unless the clip turned it off), uploads the clip, its
+# still and its site loop, and points the exercise at it. The app picks it up at once — no deploy.
 #
 # The service_role key is fetched from the Management API with SUPABASE_ACCESS_TOKEN, exactly as
 # the site-loops task in supabase-apply.yml does, and masked on the next line. Nothing prints a

@@ -718,6 +718,9 @@ grant execute on function public.admin_media_delete_clip(uuid) to authenticated;
  * `has_video_en`: the exercise has an English clip the studio must not touch, so the worker
  * uploads only the Russian one. False when video_en is empty or the studio's own earlier copy.
  */
+-- 0061 adds result columns, and a result type cannot be changed in place: dropped first, so a
+-- re-run of this file (the bundle is re-run to upgrade a project) after 0061 does not stop here.
+drop function if exists public.media_render_claim(int, int);
 create or replace function public.media_render_claim(
   p_limit         int default 1,
   p_lease_seconds int default 1800

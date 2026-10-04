@@ -12,16 +12,24 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import * as auto from '@/lib/media/autoEnhance';
 import * as grade from '@/lib/media/grade';
 import * as crop from '@/lib/media/crop';
 import {
+  AUTO_DENOISE,
+  AUTO_SHARPEN,
   clipFilters,
   clipArgs,
   findFfmpeg,
   loopArgs,
   renderPiece,
+  sampleArgs,
   shortError,
   stillArgs,
+  stillAt,
+  stillClipArgs,
+  STILL_CLIP_FPS,
+  STILL_CLIP_SECONDS,
   uploadPlan,
 } from './render-clips.mjs';
 
@@ -125,7 +133,7 @@ const job = (over) => ({
 describe.skipIf(!hasFfmpeg)('render-clips --local on a synthetic video', () => {
   let dir;
   let input;
-  const mods = { grade, crop };
+  const mods = { grade, crop, auto };
 
   beforeAll(() => {
     dir = mkdtempSync(join(tmpdir(), 'render-clips-test-'));
@@ -201,6 +209,40 @@ describe.skipIf(!hasFfmpeg)('render-clips --local on a synthetic video', () => {
     expect(size(files.clip)).toEqual([160, 132]);
   }, 60_000);
 
+  it('auto pass: computes its values from the clip and grades through them', async () => {
+    const out = mkdtempSync(join(dir, 'auto-'));
+    const files = await renderPiece({
+      ffmpeg,
+      input,
+      job: job({ auto_enhance: true }),
+      dir: out,
+      mods,
+    });
+    expect(files.autoParams).toMatchObject({ v: auto.AUTO_VERSION });
+    expect(auto.parseAutoParams(files.autoParams)).toEqual(files.autoParams);
+    expect(readFileSync(files.cube, 'utf8')).toContain('LUT_3D_SIZE 33');
+    expect(size(files.clip)).toEqual([W, H]);
+  }, 60_000);
+
+  it('still: one frame held for three seconds', async () => {
+    const out = mkdtempSync(join(dir, 'still-'));
+    const files = await renderPiece({
+      ffmpeg,
+      input,
+      job: job({ play_mode: 'still', still_at_s: 1 }),
+      dir: out,
+      mods,
+    });
+    expect(files.autoParams).toBeNull();
+    expect(size(files.clip)).toEqual([W, H]);
+    // Every frame is the chosen one: input frame 25 (1 s at 25 fps) after the pad.
+    const first = frame(files.clip, 0);
+    expect(mad(frame(files.clip, STILL_CLIP_SECONDS * STILL_CLIP_FPS - 1), first)).toBeLessThan(
+      0.01,
+    );
+    expect(mad(first, frame(input, 25 + OFFSET_FRAMES))).toBeLessThan(0.02);
+  }, 60_000);
+
   it('refuses a grade made by newer math', async () => {
     const out = mkdtempSync(join(dir, 'ver-'));
     await expect(
@@ -229,6 +271,49 @@ describe('render-clips arguments', () => {
         "scale=w='min(1080,iw)':h=-2:out_color_matrix=bt709:out_range=tv,format=yuv420p",
     );
     expect(clipFilters({ cropFilter: null, cubePath: null })).not.toContain('lut3d');
+  });
+
+  it('adds the auto denoise before the look and the sharpen after the scale', () => {
+    const chain = clipFilters({ cropFilter: 'crop=1', cubePath: '/t/a.cube', enhance: true });
+    const order = ['crop=1', AUTO_DENOISE, 'lut3d=', 'scale=', AUTO_SHARPEN, 'format=yuv420p'].map(
+      (f) => chain.indexOf(f),
+    );
+    expect(order.every((i) => i >= 0)).toBe(true);
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
+    expect(clipFilters({ cropFilter: null, cubePath: null })).not.toContain('hqdn3d');
+  });
+
+  it('samples eight small frames of the clip, whole, as raw RGB', () => {
+    const args = sampleArgs({ input: 'in', offset: 0.4, seconds: 10, frames: 8, width: 64 });
+    expect(args.slice(args.indexOf('-ss'), args.indexOf('-ss') + 6)).toEqual([
+      '-ss',
+      '1.025',
+      '-t',
+      '9.375',
+      '-i',
+      'in',
+    ]);
+    expect(args).toEqual(
+      expect.arrayContaining(['fps=0.800000,scale=64:-2', '-frames:v', '8', 'rgb24', '-']),
+    );
+    expect(args.join(' ')).not.toContain('crop');
+  });
+
+  it('holds a still frame for three seconds through the same filters', () => {
+    const args = stillClipArgs({ input: 'in', output: 'out', offset: 0.4, at: 2, filters: 'f' });
+    expect(args[args.indexOf('-ss') + 1]).toBe('2.400');
+    expect(args[args.indexOf('-vf') + 1]).toBe(
+      'f,trim=end_frame=1,loop=loop=89:size=1:start=0,setpts=N/30/TB',
+    );
+    expect(args).toEqual(expect.arrayContaining(['-frames:v', '90', '-r', '30', '-an']));
+  });
+
+  it('takes the chosen still frame, inside the clip, or the 45% default', () => {
+    expect(stillAt({ still_at_s: 2 }, 10)).toBe(2);
+    expect(stillAt({ still_at_s: '2.5' }, 10)).toBe(2.5);
+    expect(stillAt({ still_at_s: null }, 10)).toBe(4.5);
+    expect(stillAt({}, 10)).toBe(4.5);
+    expect(stillAt({ still_at_s: 12 }, 10)).toBeCloseTo(9.95, 5);
   });
 
   it('cuts the still at 45% and the loop like the site loops', () => {

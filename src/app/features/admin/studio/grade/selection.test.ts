@@ -4,6 +4,7 @@ import {
   filterClips,
   filterCounts,
   isQueueable,
+  isUnsent,
   pasteIds,
   planQueue,
   pruneSelection,
@@ -17,6 +18,7 @@ const clip = (id: string, over: Partial<MediaClip> = {}): MediaClip => ({
   sourceId: 's',
   exerciseId: `ex_${id}`,
   exerciseName: null,
+  exerciseUnit: null,
   exerciseHasVideo: false,
   rawPath: `s/${id}.mp4`,
   rawOffsetS: 0,
@@ -25,6 +27,10 @@ const clip = (id: string, over: Partial<MediaClip> = {}): MediaClip => ({
   crop: null,
   grade: null,
   gradeVersion: 1,
+  playMode: 'loop',
+  stillAtS: null,
+  autoEnhance: true,
+  autoParams: null,
   status: 'draft',
   error: null,
   attempts: 0,
@@ -76,6 +82,12 @@ describe('planQueue', () => {
     const twins = [clip('x', { exerciseId: 'squat' }), clip('y', { exerciseId: 'squat' })];
     expect(planQueue(twins, ['x', 'y']).sharedExercises).toEqual(['squat']);
     expect(planQueue(twins, ['x']).sharedExercises).toEqual([]);
+  });
+});
+
+describe("the preview step's send", () => {
+  it('sends only labelled drafts: done has nothing new, failed is retried', () => {
+    expect(clips.filter(isUnsent).map((c) => c.id)).toEqual(['a']);
   });
 });
 

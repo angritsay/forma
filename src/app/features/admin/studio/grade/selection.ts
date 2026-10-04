@@ -53,6 +53,14 @@ export const isBusy = (c: Pick<MediaClip, 'status'>): boolean => c.status === 'r
 export const isQueueable = (c: Pick<MediaClip, 'status' | 'exerciseId'>): boolean =>
   c.exerciseId !== null && (c.status === 'draft' || c.status === 'done' || c.status === 'failed');
 
+/**
+ * A clip «Отправить в обработку» on the preview step sends: labelled and not sent since its last
+ * change. A rendered clip that changes is a draft again, so a done one has nothing new to render
+ * (sending it would only replace its video with the same one); a failed one is «Повторить»'s.
+ */
+export const isUnsent = (c: Pick<MediaClip, 'status' | 'exerciseId'>): boolean =>
+  c.exerciseId !== null && c.status === 'draft';
+
 export const isRetryable = (c: Pick<MediaClip, 'status'>): boolean => c.status === 'failed';
 
 export interface QueuePlan {

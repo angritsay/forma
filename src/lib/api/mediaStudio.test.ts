@@ -10,8 +10,11 @@ import {
   mediaSourceFromDb,
   pasteMediaSettings,
   queueMediaClips,
+  PLAY_MODES,
   rawClipPath,
   saveMediaSource,
+  stillToDb,
+  videoModeForPlayMode,
   type DbMediaClip,
 } from './mediaStudio';
 
@@ -136,6 +139,66 @@ describe('mappers', () => {
       grade: { ...defaultGrade(), exposure: 1 },
       grade_version: 1,
     });
+  });
+});
+
+describe('play modes (0061)', () => {
+  it('map to the exercise video mode the way media_video_mode() does', () => {
+    expect(videoModeForPlayMode('loop')).toBe('loop');
+    expect(videoModeForPlayMode('once')).toBe('fit');
+    expect(videoModeForPlayMode('still')).toBe('loop');
+    expect(PLAY_MODES.map(videoModeForPlayMode)).toEqual(['loop', 'fit', 'loop']);
+  });
+
+  it('reads the new fields, and a server before 0061 as the defaults', () => {
+    const before = mediaClipFromDb(dbClip());
+    expect(before).toMatchObject({
+      playMode: 'loop',
+      stillAtS: null,
+      autoEnhance: true,
+      autoParams: null,
+      exerciseUnit: null,
+    });
+    const after = mediaClipFromDb(
+      dbClip({
+        play_mode: 'still',
+        still_at_s: '2.500',
+        auto_enhance: false,
+        auto_params: {
+          v: 1,
+          lo: 0.02,
+          hi: 0.97,
+          gain: [1, 1, 1],
+          gamma: 1,
+          contrast: 0,
+          vibrance: 0.15,
+        },
+        exercise_unit: 'seconds',
+      }),
+    );
+    expect(after).toMatchObject({
+      playMode: 'still',
+      stillAtS: 2.5,
+      autoEnhance: false,
+      exerciseUnit: 'seconds',
+    });
+    expect(after.autoParams?.lo).toBe(0.02);
+    expect(mediaClipFromDb(dbClip({ play_mode: 'bounce', exercise_unit: 'laps' }))).toMatchObject({
+      playMode: 'loop',
+      exerciseUnit: null,
+    });
+  });
+
+  it('sends the play mode, the still frame and the auto switch only when changed', () => {
+    expect(clipPatchToDb({ playMode: 'once' })).toEqual({ play_mode: 'once' });
+    expect(clipPatchToDb({ playMode: 'still', stillAtS: 1.23456 })).toEqual({
+      play_mode: 'still',
+      still_at_s: 1.235,
+    });
+    expect(clipPatchToDb({ stillAtS: null })).toEqual({ still_at_s: null });
+    expect(clipPatchToDb({ autoEnhance: false })).toEqual({ auto_enhance: false });
+    expect(stillToDb(-1)).toBe(0);
+    expect(stillToDb(Number.NaN)).toBeNull();
   });
 });
 

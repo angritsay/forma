@@ -31,6 +31,8 @@ const VALIDATION_KEYS: Readonly<Record<string, TKey>> = {
   invalid_duration: 'app.studioErrDuration',
   too_many: 'app.studioErrTooMany',
   invalid_id: 'app.studioErrNotFound',
+  invalid_still: 'app.studioErrStill',
+  invalid_play_mode: 'app.studioErrPlayMode',
 };
 
 /**

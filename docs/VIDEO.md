@@ -282,11 +282,12 @@ The clip's mode lives next to it: `loop` repeats the clip while the step lasts; 
 entered once and held, slows the clip to the step's duration (no slower than 0.5×) and holds its
 last frame.
 
-## Studio («Студия»): cut, label and grade in the admin
+## Studio («Студия»): cut, name, colour and preview in the admin
 
 Since 0060 the owner does not need a laptop for any of the above. She films a whole workout on a
-tripod, and in the admin («Студия») she cuts it into one clip per exercise, labels each clip,
-frames it (crop) and grades it (colour); a worker encodes the result into the exercise library.
+tripod, and in the admin («Студия») she cuts it into one clip per exercise, names each clip and
+chooses how it plays, grades it (colour, with an automatic pass) and frames it against the workout
+card and the player (crop); a worker encodes the result into the exercise library.
 The app shows it at once, with no deploy: stills and loops resolve by exercise id, and the clip by
 `exercises.video_ru`.
 
@@ -299,8 +300,9 @@ seconds of untouched footage — with a resumable upload. Everything heavy runs 
 | What              | Where                                                                                                                |
 | ----------------- | -------------------------------------------------------------------------------------------------------------------- |
 | Uploaded pieces   | private bucket **`raw`**, `raw/<source_id>/<clip_id>.<ext>` (`rawClipPath()`), admins only, `video/*`, 500 MB a file |
-| Sources and clips | `media_sources`, `media_clips` (0060); read and written through the `admin_media_*` RPCs                             |
+| Sources and clips | `media_sources`, `media_clips` (0060, 0061); read and written through the `admin_media_*` RPCs                       |
 | Grade math        | `src/lib/media/grade.ts` — `GradeParams`, `gradeToLut()`, `lutToCube()`, shared by the preview and the worker        |
+| Auto pass         | `src/lib/media/autoEnhance.ts` — `computeAutoParams()`, `studioLut()` (auto pass + grade), shared the same way       |
 | Crop              | `src/lib/media/crop.ts` — normalised `{x, y, w, h}` of the displayed frame, `ffmpegCrop()`                           |
 | Client API        | `src/lib/api/mediaStudio.ts`                                                                                         |
 | Worker            | `scripts/media/render-clips.mjs`, run by `.github/workflows/media-render.yml` (every 10 min and by hand)             |
@@ -319,20 +321,63 @@ The claim is a **lease** (`claimed_until`, 30 minutes, longer than the 25-minute
 clips back when the lease runs out. Done and failed carry the attempt they claimed, so a run that
 was overtaken cannot overwrite the run that took over.
 
-### The cutter (`/admin/studio/cut`)
+### The four steps (0061)
 
-The screens are `/admin/studio` (sources and clips with their status) and `/admin/studio/cut`;
-the code is `src/app/features/admin/studio/`. «Цвет и кадр» links to the grader at
-`/admin/studio/grade`.
+`/admin/studio` lists the sources and their clips; each source opens at the step it is at. One
+video's steps live at `/admin/studio/s/<source>/{cut,name,color,preview}` under a stepper
+«Нарезка · Названия · Цвет · Превью» (`AdminStudioFlowScreen.tsx`, `features/admin/studio/flow.ts`):
+
+| Step         | Opens when                 | What happens                                                                                             |
+| ------------ | -------------------------- | -------------------------------------------------------------------------------------------------------- |
+| **Нарезка**  | always                     | cut and upload (`/admin/studio/cut` for a new video)                                                     |
+| **Названия** | one clip is uploaded       | each clip's exercise (a new one is created «на повторы» or «на время») and play mode                     |
+| **Цвет**     | every clip has an exercise | the auto pass and the manual grade of one clip; copy its colour, tick others, «Вставить в выбранные (N)» |
+| **Превью**   | every clip has an exercise | the card and the player, the framing, «Отправить в обработку»                                            |
+
+The old `/admin/studio/grade` addresses redirect into these steps.
+
+**Play mode** (`media_clips.play_mode`): **Луп** loops while the step lasts; **Один раз** plays once
+and holds the last frame — the worker sets the exercise's `video_mode` to `fit`; **Стоп-кадр**
+shows one frame (`still_at_s`, chosen with a scrubber inside the clip), rendered as a 3-second clip
+of that frame and as the still — `video_mode` `loop`.
+
+**The clipboard** is one now (`clipboard.ts`, `localStorage` `forma.studio.clipboard`): the old
+cutter's and the old grader's were separate and never saw each other's copies. It carries colour
+only — the grade and the auto switch. Framing is per clip.
+
+**The preview** draws the clip twice from one WebGL picture: as the workout card (`PlanBlocks`'
+`PlanItem`: 4:3, the target, the name) and in a 390 × 844 copy of the phone player — the stage of
+`PLAYER_STAGE`, the clip full-width and lifted −11.5 % (`.player-art-lift`), with `BigClock`
+«0:40» for an exercise `unit: 'seconds'` or the `Stepper` count «12» otherwise. Dragging the
+player's picture moves it; a pinch, the wheel or the slider zooms it. The frame is always the
+player's 9:16 (`preview/framing.ts`) and is stored as the clip's crop, which the worker renders.
+
+### The automatic pass («Авто-улучшение»)
+
+On by default per clip (`auto_enhance`). Frame statistics, no model: about eight frames across the
+clip, 64 px wide, give levels (0.5 / 99.5 percentiles, clamped), grey-world white balance (±8 % a
+channel at most), a midtone gamma toward a mid-luma band, a mild S-curve for a flat picture and
++15 % vibrance that spares skin tones. The result (`AutoParams`) and the manual grade make one 3D
+LUT (`studioLut`). The browser reads the frames from a second `<video>` into a canvas; the worker
+gets the same frames from ffmpeg (`fps=8/len,scale=64:-2 -f rawvideo -pix_fmt rgb24`), computes the
+same values, stores them on the clip (`auto_params`) and writes the same LUT. Only the worker adds
+a light denoise (`hqdn3d`) before the look and a light sharpen (`unsharp`) after the scale. The
+statistics are taken on the whole frame, before the crop, so framing never moves the colour.
+
+### The cutter (`/admin/studio/cut`, `/admin/studio/s/<source>/cut`)
+
+The code is `src/app/features/admin/studio/`. The cutter only cuts and uploads; names, colour and
+framing are the next steps.
 
 1. **Pick.** The video plays from a `blob:` URL. mediabunny (loaded only on this screen) reads its
    length, frame rate and keyframes with random access, so a 4 GB file is not loaded whole. A file
    it cannot read (not MP4/MOV, no picture track) says so at once.
 2. **Mark.** «Начало» / «Конец» (I / O on a computer; space plays and pauses, ← → step one frame,
    with Shift one second). Tapping a piece selects it, and the marks then move its edges. Pieces
-   are 0.5 s to 10 min. Each piece gets its exercise (search, or a new one by name: the id is
-   transliterated from it, `exerciseId.ts`) and, if needed, a crop frame (drag, corners, pinch;
-   4:3 / 9:16 / free). The frame can be copied and pasted; the clipboard is shared with the grader.
+   are 0.5 s to 10 min and never overlap (`timeline.ts`): a cut range shows on the scrubber as a
+   hatched «вырезано» band with its number, «Начало» is off while the playhead is inside one, an
+   end that runs into the next piece stops at its start, and one that would leave less than
+   0.5 s is refused.
 3. **Upload,** one piece at a time:
    - **Cut by stream copy** (`remux.ts`), starting on the keyframe at or before the start mark and
      ending 0.5 s after the end mark. `raw_offset_s` is the start mark minus that keyframe. A
@@ -353,7 +398,6 @@ the code is `src/app/features/admin/studio/`. «Цвет и кадр» links to 
    The screen stays awake while it uploads (Wake Lock, where the browser has it). Without signal
    or access the remaining pieces stop with that reason instead of failing one by one; a run
    stopped by lost signal starts again by itself when the browser reports it is back online.
-   A label or frame changed while its piece uploads is the one the clip is registered with.
 
    **iPhone:** picking from Photos may hand the page a compressed copy. The screen says so and
    shows the picked file's resolution and size; saving the video to Files and picking it there
@@ -362,8 +406,7 @@ the code is `src/app/features/admin/studio/`. «Цвет и кадр» links to 
 The marks are kept per file in localStorage (`cutDraft.ts`, keyed by the file's name, size and
 modification time, for 7 days): picking the same video again brings back the same source id,
 pieces and clip ids. A piece that was uploading when the page went away comes back as «not
-uploaded» and resumes; an uploaded one stays uploaded, with its edges fixed. Its label and frame
-are then saved straight onto the clip.
+uploaded» and resumes; an uploaded one stays uploaded, with its edges fixed.
 
 ### What the worker does to a piece
 
@@ -372,9 +415,12 @@ One ffmpeg pass, then two small cuts from its output:
 1. **Exact trim.** `-ss raw_offset_s` before the input (ffmpeg decodes from the keyframe and drops
    frames up to the exact time) and `-t end_s − start_s`. `raw_offset_s` is where the marked start
    sits inside the uploaded piece.
-2. **Crop** (`ffmpegCrop`, even pixels), **grade** (`lut3d` with the `.cube` from `gradeToLut`,
-   trilinear — the same interpolation the WebGL preview gets from a 3D texture), then
-   `scale='min(1080,iw)':-2`, converted to and tagged as BT.709.
+2. **Crop** (`ffmpegCrop`, even pixels), with the auto pass a light **denoise** (`hqdn3d`), the
+   **look** (`lut3d` with the `.cube` from `studioLut` — the auto pass, if on, then the grade —
+   trilinear, the same interpolation the WebGL preview gets from a 3D texture), then
+   `scale='min(1080,iw)':-2`, with the auto pass a light **sharpen** (`unsharp`), converted to and
+   tagged as BT.709. A **still** clip is instead its one frame through the same filters, held for
+   3 s at 30 fps (`trim`, `loop`, `setpts`).
 3. **x264 exactly as `prepare-videos.mjs`**: preset slow, crf 28, yuv420p, no audio, faststart.
 4. **Still** at 45%, 640 px wide, `-q:v 4` (as `prepare-videos.mjs`); **loop** of 4 s from 1.0 s,
    480 px, veryfast / crf 30 (as the `site-loops` task).
@@ -382,7 +428,8 @@ One ffmpeg pass, then two small cuts from its output:
    English clip, or only the studio's own copy from an earlier render — the clips are silent, so
    it is the same file), `images/exercises/<id>.jpg`, `images/loops/<id>.mp4`.
    `media_render_done` then sets `video_ru` (and `video_en` on the same condition,
-   `media_en_writable`). An English recording the studio did not write is never replaced. If the
+   `media_en_writable`), the exercise's `video_mode` from the play mode (once → `fit`, loop and
+   still → `loop`) and keeps the computed auto values on the clip. An English recording the studio did not write is never replaced. If the
    clip that wrote the English copy is relabelled or deleted, that copy is left alone from then on.
 
 Every ffmpeg call stops at 23 minutes into the run and every storage transfer after 8 minutes; the
@@ -399,27 +446,21 @@ then R/G/B; monotone cubic through the points). The exact math is in the header 
 Clips store `grade_version`; bump `GRADE_VERSION` when the math changes, and the worker refuses a
 version newer than it knows instead of rendering it differently.
 
-### The colour and frame screen (`/admin/studio/grade`)
+### The colour step
 
-`src/app/screens/AdminStudioGradeScreen.tsx`, with its parts in
-`src/app/features/admin/studio/grade/`.
+`ColorStep.tsx`, with the editor and its parts in `src/app/features/admin/studio/grade/`.
 
-- **Grid** (`/admin/studio/grade`): every clip, filtered by shoot and status, with a checkbox on
-  each. With a selection: «Вставить» (the copied settings onto all of them, through
-  `admin_media_paste`), «В обработку», «Повторить» for the failed ones. While anything is queued
-  the list re-reads itself once a minute.
-- **Editor** (`/admin/studio/grade/<clip id>`): the raw piece, signed from `raw`, played through a
-  WebGL2 shader that samples `gradeToLut(params)` as a 3D texture (`glPreview.ts`) — the table the
-  worker writes to `.cube`. Only the clip's own span plays (`raw_offset_s` to
-  `raw_offset_s + end_s − start_s`), looped. «Свет» holds the five sliders, «Кривые» the curves
-  (tap to add a point, drag, pull out of the box or double-tap to remove), «Кадр» the crop with
-  9:16 / 4:3 / 1:1 / free. The crop is applied in the picture except on «Кадр», where the whole
-  frame shows under the frame overlay. A held «как снято» button shows the clip ungraded.
-- **Clipboard:** «Копировать настройки» keeps the clip's grade and crop in the app (and in
-  `localStorage`, `forma.studioClipboard`, so it survives a reload). A paste asks which halves to
-  carry, colour and/or frame; «no grade» and «whole frame» are pasted too.
-- **Queueing** asks first when an exercise already has a video (the render replaces it) or when two
-  selected clips carry the same exercise (only the last render would stay).
+- **List:** the video's clips with a checkbox each; a tap opens one in the editor (asking first
+  when the open one has unsaved changes). «Вставить в выбранные (N)» pastes the copied colour
+  onto every ticked clip through `admin_media_paste`.
+- **Editor** (`GradeEditor`): the raw piece, signed from `raw`, played through a WebGL2 shader that
+  samples `studioLut(grade, auto)` as a 3D texture (`glPreview.ts`) — the table the worker writes to
+  `.cube`. Only the clip's own span plays (`raw_offset_s` to `raw_offset_s + end_s − start_s`),
+  looped. «Авто-улучшение» switches the pass; «Свет» holds the five sliders, «Кривые» the curves
+  (tap to add a point, drag, pull out of the box or double-tap to remove). A held «как снято»
+  button shows the clip with neither.
+- **Queueing** (on «Превью») asks first when an exercise already has a video (the render replaces
+  it) or when two clips carry the same exercise (only the last render would stay).
 - **Without WebGL2** (or when storage will not let the frames be read), the plain video plays,
   cropped with CSS, under a line saying the colour is not previewed but will be applied.
 
@@ -428,8 +469,9 @@ version newer than it knows instead of rendering it differently.
     node scripts/media/render-clips.mjs --local <video> <params.json> [--out <dir>]
 
 `params.json` is shaped like a claimed clip: `{ "raw_offset_s": 0.4, "start_s": 10, "end_s": 14,
-"crop": null, "grade": { "exposure": 0.5 } }`. It writes `clip.mp4`, `still.jpg`, `loop.mp4` and
-`grade.cube`. `scripts/media/render-clips.test.mjs` (part of `npx vitest run`) does this on a
+"crop": null, "grade": { "exposure": 0.5 } }`, plus `"auto_enhance": true` for the auto pass and
+`"play_mode": "still", "still_at_s": 2` for a still. It writes `clip.mp4`, `still.jpg`, `loop.mp4`
+and `grade.cube`, and prints the auto values it computed. `scripts/media/render-clips.test.mjs` (part of `npx vitest run`) does this on a
 synthetic `testsrc2` video and compares a decoded output frame with the same input frame put
 through `gradeToLut` in JavaScript: about 1/255 mean difference with no grade (compression), about
 2.5/255 with a strong grade, against about 14/255 between the graded and ungraded frames.
@@ -440,9 +482,11 @@ through `gradeToLut` in JavaScript: about 1/255 mean difference with no grade (c
   in the Supabase dashboard) may be lower — 50 MB on the default plan. A 40-second 4K iPhone piece
   can exceed that; raise the project limit if pieces are refused. The cutter checks the 500 MB
   itself; a lower project limit shows up as the same «too large» error after the upload starts.
-- **Switching it on:** apply `0060_media_studio.sql` (Actions → Supabase apply → migration), then
-  run «Studio render» once by hand. `SUPABASE_ACCESS_TOKEN` is the secret it already shares with
-  the other Supabase tasks; without it the scheduled run is a quiet note, not a failure.
+- **Switching it on:** apply `0060_media_studio.sql` and `0061_studio_flow.sql` (Actions →
+  Supabase apply → migration), then run «Studio render» once by hand. Without 0061 the new
+  steps' choices (play mode, still frame, auto switch, the pasted colour) are not kept, and the
+  worker renders without the automatic pass. `SUPABASE_ACCESS_TOKEN` is the secret it already
+  shares with the other Supabase tasks; without it the scheduled run is a quiet note, not a failure.
 - **HDR.** iPhones record HDR (HLG) by default. The worker renders what it is given without tone
   mapping, so an HDR piece can come out flat or washed out next to the preview. Filming with
   «HDR Video» off (Settings → Camera → Record Video) avoids it.

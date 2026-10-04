@@ -1,88 +1,127 @@
 /**
- * The studio's clipboard: a copied grade and/or crop, waiting to be pasted onto other clips.
+ * «Скопировать настройки» / «Вставить в выбранные»: one clip's colour, carried to many.
  *
- * It is plain JSON in localStorage, so a frame copied in the cutter is still there in the grader
- * (and after a reload). The two halves are independent: copying a crop keeps a grade copied
- * earlier, so «grade from this clip, frame from that one» is two copies and one paste.
+ * The studio had two clipboards — the cutter's crop clipboard (`forma.studio.clipboard`, halves
+ * merged copy by copy) and the grader's (`forma.studioClipboard`, both halves at once) — that
+ * neither saw the other: a copy in one was never there to paste in the other. There is one now,
+ * and it carries colour only: the grade and the auto-enhance switch. Framing is per clip, set on
+ * the «Превью» step against the card and the player, and is never pasted.
  *
- * `toPaste` builds the `MediaPaste` the API takes from the halves that are both on the clipboard
- * and ticked — a half left out of the object is not touched on the server, a half set to null
- * clears it there.
+ * The clipboard is the app's own, not the system's: a grade is JSON the person never reads, and
+ * the system clipboard in a Telegram WebView asks for a permission on every paste. It lives in a
+ * small store (`clipboardStore.ts`) and in `localStorage`, so a copy survives switching clips,
+ * reloading the Mini App and coming back the next evening to grade the rest of the shoot. A copy
+ * left under the old key or in an old shape is read once and moved here.
+ *
+ * «No grade» is a setting too (the clip as filmed): pasting it is how a batch is put back.
  */
 import type { MediaPaste } from '@/lib/api/mediaStudio';
-import { clampCrop, type Crop } from '@/lib/media/crop';
-import { clampGrade, type GradeParams } from '@/lib/media/grade';
+import { clampGrade, isIdentityGrade, type GradeParams } from '@/lib/media/grade';
 
 export const CLIPBOARD_KEY = 'forma.studio.clipboard';
+/** The grader's old key; the old cutter's was {@link CLIPBOARD_KEY} itself, in another shape. */
+export const LEGACY_CLIPBOARD_KEY = 'forma.studioClipboard';
+const FORMAT = 2;
 
 export interface StudioClipboard {
-  /** Absent — nothing copied; null — «no grade» was copied (pasting it clears the grade). */
-  grade?: GradeParams | null;
-  /** Absent — nothing copied; null — the whole frame was copied. */
-  crop?: Crop | null;
+  /** Null — no grade. Always clamped. */
+  grade: GradeParams | null;
+  /** The auto-enhance switch of the clip it was copied from. */
+  autoEnhance: boolean;
+  /** The clip it was copied from, to mark it in the list. */
+  fromClipId: string | null;
+  /** The exercise name of that clip, for «Скопировано из …». */
+  fromLabel: string | null;
+  copiedAt: string;
 }
 
-/** Lay a new copy over what is already on the clipboard, half by half. */
-export function mergeClipboard(prev: StudioClipboard, next: StudioClipboard): StudioClipboard {
-  const out: StudioClipboard = {};
-  if ('grade' in next) out.grade = next.grade ?? null;
-  else if ('grade' in prev) out.grade = prev.grade ?? null;
-  if ('crop' in next) out.crop = next.crop ?? null;
-  else if ('crop' in prev) out.crop = prev.crop ?? null;
-  return out;
+/** A clip's colour: the part of it the clipboard carries. */
+export interface ClipColour {
+  grade: GradeParams | null;
+  autoEnhance: boolean;
 }
 
-export function hasGrade(c: StudioClipboard): boolean {
-  return 'grade' in c;
+const normGrade = (g: unknown): GradeParams | null => {
+  if (g === null || g === undefined) return null;
+  const c = clampGrade(g);
+  return isIdentityGrade(c) ? null : c;
+};
+
+const text = (x: unknown): string | null => (typeof x === 'string' && x !== '' ? x : null);
+
+export function makeClipboard(
+  colour: ClipColour,
+  from: { id?: string | null; label?: string | null } = {},
+  now: Date = new Date(),
+): StudioClipboard {
+  return {
+    grade: normGrade(colour.grade),
+    autoEnhance: colour.autoEnhance,
+    fromClipId: from.id ?? null,
+    fromLabel: from.label ?? null,
+    copiedAt: now.toISOString(),
+  };
 }
 
-export function hasCrop(c: StudioClipboard): boolean {
-  return 'crop' in c;
+export function serializeClipboard(cb: StudioClipboard): string {
+  return JSON.stringify({ v: FORMAT, ...cb });
 }
 
-/** The paste for the ticked halves; null when nothing ticked is on the clipboard. */
-export function toPaste(
-  c: StudioClipboard,
-  ticked: { grade: boolean; crop: boolean },
-): MediaPaste | null {
-  const out: MediaPaste = {};
-  if (ticked.grade && hasGrade(c)) out.grade = c.grade ?? null;
-  if (ticked.crop && hasCrop(c)) out.crop = c.crop ?? null;
-  return Object.keys(out).length > 0 ? out : null;
-}
-
-/** The clipboard from its stored text; anything unreadable is an empty clipboard. */
-export function parseClipboard(text: string | null): StudioClipboard {
-  if (!text) return {};
-  let raw: unknown;
+/**
+ * The clipboard back from storage, in this format or either old one:
+ *
+ *  - v2 (this): the grade, the auto switch, where it came from;
+ *  - v1 (the old grader's, `{ v: 1, grade, crop, … }`): the grade, with the auto pass on (it did
+ *    not exist yet); the crop is dropped;
+ *  - unversioned (the old cutter's, `{ grade?, crop? }`): only a copied grade counts — a crop
+ *    alone is no colour, and reads as empty.
+ *
+ * Anything else (hand-edited, cut short, a newer format) reads as empty rather than as a broken
+ * grade: the values go through the same clamps the server applies.
+ */
+export function parseClipboard(raw: string | null | undefined): StudioClipboard | null {
+  if (!raw) return null;
+  let v: unknown;
   try {
-    raw = JSON.parse(text);
+    v = JSON.parse(raw);
   } catch {
-    return {};
+    return null;
   }
-  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return {};
-  const v = raw as Record<string, unknown>;
-  const out: StudioClipboard = {};
-  if ('grade' in v) out.grade = v.grade === null ? null : clampGrade(v.grade);
-  if ('crop' in v) out.crop = clampCrop(v.crop);
-  return out;
+  if (typeof v !== 'object' || v === null || Array.isArray(v)) return null;
+  const o = v as Record<string, unknown>;
+  const from = {
+    fromClipId: text(o.fromClipId),
+    fromLabel: text(o.fromLabel),
+    copiedAt: text(o.copiedAt) ?? new Date(0).toISOString(),
+  };
+  if (o.v === FORMAT) {
+    return { grade: normGrade(o.grade), autoEnhance: o.autoEnhance !== false, ...from };
+  }
+  if (o.v === 1 || (o.v === undefined && 'grade' in o)) {
+    return { grade: normGrade(o.grade), autoEnhance: true, ...from };
+  }
+  return null;
 }
 
-export function readClipboard(): StudioClipboard {
-  try {
-    return parseClipboard(localStorage.getItem(CLIPBOARD_KEY));
-  } catch {
-    return {};
-  }
+/** What `pasteMediaSettings` takes: the grade and the switch, never a crop. */
+export function pastePayload(cb: StudioClipboard): MediaPaste {
+  return { grade: cb.grade, autoEnhance: cb.autoEnhance };
 }
 
-/** Copy onto the clipboard (merged with what is there) and answer the result. */
-export function writeClipboard(next: StudioClipboard): StudioClipboard {
-  const merged = mergeClipboard(readClipboard(), next);
-  try {
-    localStorage.setItem(CLIPBOARD_KEY, JSON.stringify(merged));
-  } catch {
-    // Storage full or blocked: the copy still holds for this screen.
-  }
-  return merged;
+/** Whether a paste would change this clip's colour (to say «уже такие» instead of nothing). */
+export function pasteChanges(current: ClipColour, cb: StudioClipboard): boolean {
+  return (
+    JSON.stringify(normGrade(current.grade)) !== JSON.stringify(cb.grade) ||
+    current.autoEnhance !== cb.autoEnhance
+  );
+}
+
+/** The stored clipboard: under the one key first, then under the old grader's. */
+export function readStoredClipboard(storage: {
+  getItem: (key: string) => string | null;
+}): StudioClipboard | null {
+  return (
+    parseClipboard(storage.getItem(CLIPBOARD_KEY)) ??
+    parseClipboard(storage.getItem(LEGACY_CLIPBOARD_KEY))
+  );
 }

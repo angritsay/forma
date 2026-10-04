@@ -1,6 +1,7 @@
 /**
- * «Нарезка» (admins only): pick the long workout video, mark one piece per exercise, label and
- * frame each, and upload the pieces. See `features/admin/studio/Cutter.tsx`.
+ * «Нарезка» of a new video (admins only): pick the long workout video, mark one piece per exercise
+ * and upload the pieces; then on to the video's own steps (`/admin/studio/s/:sourceId/name`). See
+ * `features/admin/studio/Cutter.tsx`.
  *
  * The heavy modules (mediabunny, tus-js-client) load inside the cutter on first use, so this
  * screen's own chunk stays small and nothing outside the admin pays for them.
