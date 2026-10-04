@@ -18,7 +18,7 @@ import { adminErrorTitle } from '@/app/features/admin/adminError';
 
 /** Server messages (P0001 / validation) that have their own line. */
 const VALIDATION_KEYS: Readonly<Record<string, TKey>> = {
-  clip_busy: 'app.studioErrBusy',
+  clip_busy: 'app.studioGradeErrBusy',
   invalid_crop: 'app.studioErrCrop',
   invalid_grade: 'app.studioErrGrade',
   invalid_span: 'app.studioErrSpan',
@@ -46,7 +46,7 @@ export function studioErrorKey(e: unknown, fallback: TKey): TKey | null {
       return 'app.studioErrNetwork';
     case 'auth':
     case 'forbidden':
-      return 'app.studioErrPermission';
+      return 'app.studioGradeErrPermission';
     case 'not_found':
       return VALIDATION_KEYS[e.message] ?? 'app.studioErrNotFound';
     default:
@@ -74,7 +74,7 @@ export function workerErrorText(error: string | null | undefined): WorkerErrorTe
   const raw = (error ?? '').trim();
   const known = WORKER_KEYS[raw];
   if (known) return { key: known, detail: null };
-  return { key: 'app.studioWorkerFailed', detail: raw === '' ? null : raw.slice(0, 200) };
+  return { key: 'app.studioGradeWorkerFailed', detail: raw === '' ? null : raw.slice(0, 200) };
 }
 
 /** Why the raw piece will not play in the preview. */

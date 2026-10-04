@@ -7,7 +7,7 @@ import { useT } from '@/app/hooks/useT';
 const LABEL: Record<MediaClipStatus, TKey> = {
   draft: 'app.studioStatusDraft',
   queued: 'app.studioStatusQueued',
-  rendering: 'app.studioStatusRendering',
+  rendering: 'app.studioGradeStatusRendering',
   done: 'app.studioStatusDone',
   failed: 'app.studioStatusFailed',
 };

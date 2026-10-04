@@ -90,7 +90,7 @@ export function ClipGrid({ onOpen, reloadSignal }: ClipGridProps) {
         else if (report) {
           toast.show({
             kind: 'error',
-            title: isNetworkError(e) ? t('app.studioLoadOffline') : t('app.studioLoadError'),
+            title: isNetworkError(e) ? t('app.studioLoadOffline') : t('app.studioGradeLoadError'),
           });
         }
       });
@@ -156,9 +156,9 @@ export function ClipGrid({ onOpen, reloadSignal }: ClipGridProps) {
   const filterLabels: Record<ClipFilter, string> = {
     all: t('app.studioFilterAll'),
     todo: t('app.studioFilterTodo'),
-    queued: t('app.studioFilterQueued'),
-    done: t('app.studioFilterDone'),
-    failed: t('app.studioFilterFailed'),
+    queued: t('app.studioGradeFilterQueued'),
+    done: t('app.studioGradeFilterDone'),
+    failed: t('app.studioGradeFilterFailed'),
   };
 
   if (status === 'loading') return <LoadingBlock />;
@@ -166,7 +166,7 @@ export function ClipGrid({ onOpen, reloadSignal }: ClipGridProps) {
     return (
       <div role="alert">
         <EmptyState
-          title={status === 'offline' ? t('app.studioLoadOffline') : t('app.studioLoadError')}
+          title={status === 'offline' ? t('app.studioLoadOffline') : t('app.studioGradeLoadError')}
           description={status === 'offline' ? t('app.studioLoadOfflineBody') : undefined}
           action={
             <Button variant="secondary" onClick={() => load()}>
@@ -178,7 +178,12 @@ export function ClipGrid({ onOpen, reloadSignal }: ClipGridProps) {
     );
   }
   if (clips.length === 0) {
-    return <EmptyState title={t('app.studioEmptyTitle')} description={t('app.studioEmptyBody')} />;
+    return (
+      <EmptyState
+        title={t('app.studioGradeEmptyTitle')}
+        description={t('app.studioGradeEmptyBody')}
+      />
+    );
   }
 
   const allShownSelected = shown.length > 0 && shown.every((c) => selected.has(c.id));

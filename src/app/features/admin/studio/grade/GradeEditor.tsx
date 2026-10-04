@@ -372,7 +372,7 @@ export function GradeEditor({
         ) : (
           <div className="flex flex-col gap-3">
             <SegmentedControl<CropAspect>
-              label={t('app.studioAspect')}
+              label={t('app.studioGradeAspect')}
               value={aspect}
               onChange={chooseAspect}
               fullWidth
@@ -388,7 +388,7 @@ export function GradeEditor({
                 ? t('app.studioCropSize', { w: cropW, h: cropH })
                 : t('app.studioCropWaiting')}
             </p>
-            <p className="text-[13px] text-muted">{t('app.studioCropHint')}</p>
+            <p className="text-[13px] text-muted">{t('app.studioGradeCropHint')}</p>
             <div>
               <Button
                 size="sm"
@@ -399,7 +399,7 @@ export function GradeEditor({
                   setAspect('free');
                 }}
               >
-                {t('app.studioCropFull')}
+                {t('app.studioGradeCropFull')}
               </Button>
             </div>
           </div>

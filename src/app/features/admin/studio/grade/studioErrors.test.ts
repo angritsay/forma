@@ -10,13 +10,13 @@ describe('studioErrorKey', () => {
       'app.studioErrNetwork',
     );
     expect(studioErrorKey(new AppError('forbidden', 'forbidden'), FALLBACK)).toBe(
-      'app.studioErrPermission',
+      'app.studioGradeErrPermission',
     );
     expect(studioErrorKey(new AppError('auth', 'not_signed_in'), FALLBACK)).toBe(
-      'app.studioErrPermission',
+      'app.studioGradeErrPermission',
     );
     expect(studioErrorKey(new AppError('validation', 'clip_busy'), FALLBACK)).toBe(
-      'app.studioErrBusy',
+      'app.studioGradeErrBusy',
     );
   });
 
@@ -60,10 +60,10 @@ describe('workerErrorText', () => {
 
   it('shows an unknown error as it is, cut short', () => {
     const t = workerErrorText('Invalid data found when processing input');
-    expect(t.key).toBe('app.studioWorkerFailed');
+    expect(t.key).toBe('app.studioGradeWorkerFailed');
     expect(t.detail).toBe('Invalid data found when processing input');
     expect(workerErrorText('x'.repeat(500)).detail).toHaveLength(200);
-    expect(workerErrorText(null)).toEqual({ key: 'app.studioWorkerFailed', detail: null });
+    expect(workerErrorText(null)).toEqual({ key: 'app.studioGradeWorkerFailed', detail: null });
   });
 });
 

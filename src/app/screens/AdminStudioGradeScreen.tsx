@@ -120,7 +120,9 @@ function EditorScreen({ clipId }: { clipId: string }) {
       ) : status !== 'ready' ? (
         <div role="alert">
           <EmptyState
-            title={status === 'offline' ? t('app.studioLoadOffline') : t('app.studioLoadError')}
+            title={
+              status === 'offline' ? t('app.studioLoadOffline') : t('app.studioGradeLoadError')
+            }
             description={status === 'offline' ? t('app.studioLoadOfflineBody') : undefined}
             action={
               <Button variant="secondary" onClick={() => load()}>
