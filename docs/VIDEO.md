@@ -353,6 +353,30 @@ then R/G/B; monotone cubic through the points). The exact math is in the header 
 Clips store `grade_version`; bump `GRADE_VERSION` when the math changes, and the worker refuses a
 version newer than it knows instead of rendering it differently.
 
+### The colour and frame screen (`/admin/studio/grade`)
+
+`src/app/screens/AdminStudioGradeScreen.tsx`, with its parts in
+`src/app/features/admin/studio/grade/`.
+
+- **Grid** (`/admin/studio/grade`): every clip, filtered by shoot and status, with a checkbox on
+  each. With a selection: «Вставить» (the copied settings onto all of them, through
+  `admin_media_paste`), «В обработку», «Повторить» for the failed ones. While anything is queued
+  the list re-reads itself once a minute.
+- **Editor** (`/admin/studio/grade/<clip id>`): the raw piece, signed from `raw`, played through a
+  WebGL2 shader that samples `gradeToLut(params)` as a 3D texture (`glPreview.ts`) — the table the
+  worker writes to `.cube`. Only the clip's own span plays (`raw_offset_s` to
+  `raw_offset_s + end_s − start_s`), looped. «Свет» holds the five sliders, «Кривые» the curves
+  (tap to add a point, drag, pull out of the box or double-tap to remove), «Кадр» the crop with
+  9:16 / 4:3 / 1:1 / free. The crop is applied in the picture except on «Кадр», where the whole
+  frame shows under the frame overlay. A held «как снято» button shows the clip ungraded.
+- **Clipboard:** «Копировать настройки» keeps the clip's grade and crop in the app (and in
+  `localStorage`, `forma.studioClipboard`, so it survives a reload). A paste asks which halves to
+  carry, colour and/or frame; «no grade» and «whole frame» are pasted too.
+- **Queueing** asks first when an exercise already has a video (the render replaces it) or when two
+  selected clips carry the same exercise (only the last render would stay).
+- **Without WebGL2** (or when storage will not let the frames be read), the plain video plays,
+  cropped with CSS, under a line saying the colour is not previewed but will be applied.
+
 ### Checking the worker without Supabase
 
     node scripts/media/render-clips.mjs --local <video> <params.json> [--out <dir>]

@@ -34,6 +34,8 @@ export const SCREEN_NAMES = [
   'AdminExercisesScreen',
   // Every clip, recording and still in the buckets, with the exercises that use them (0048).
   'AdminMediaScreen',
+  // «Студия»: grade and frame the clips cut from a shoot, then queue them for rendering (0060).
+  'AdminStudioGradeScreen',
   'AdminCoursesScreen',
   'AdminCourseScreen',
   'AdminMarathonsScreen',
