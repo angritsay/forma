@@ -30,20 +30,29 @@ Decided (stated publicly on the page):
 | Club (year or 30 days) | 80%     | 20%   |
 | One-to-one sessions    | 90%     | 10%   |
 
-- Payments are taken by **Prodamus** (roubles) and **lava.top** (cards from any country, priced in
-  dollars), not by Forma. The processor keeps its fee first; shares are counted on what is left.
+- **What the creator gets, all under their own name:** their own Telegram bot, a promo site on
+  their own domain, and the web app on phone and computer (opens from a link, installs to the home
+  screen). App Store and Google Play publishing is extra and discussed individually.
+- **White-label.** No Forma branding anywhere the creator's people look: domain, bot, app and the
+  payment receipt carry the creator's name.
+- Payments land in the **creator's own Prodamus** (roubles) and **lava.top** (cards from any
+  country, priced in dollars) accounts; Forma sets them up. The processor keeps its fee first;
+  shares are counted on what is left, and Forma's 20% (10% for sessions) is settled per the
+  contract.
 - For a Russian audience we also connect international card payments through lava.top.
 - Forma's share covers: the app and the site, setting up Prodamus and lava.top, the bot and its reminders, member
   support, video hosting, the tools, customisation for the creator and production help (cutting,
   labelling and grading clips in Studio).
-- Customisation: course structure, the creator's own exercises and clips, screen layout, timings,
-  formats (EMOM, AMRAP, rounds, intervals), club tasks, the creator's session calendar.
+- Customisation: name, logo, colours and typefaces; course structure; the creator's own exercises
+  and clips; rounds, reps or seconds, work and rest to the second; club tasks; the creator's
+  session calendar. The page shows it on two fictional brands, a CrossFit coach and a yoga teacher
+  (`content/site/creator-examples.ts`) — keep their «tuned» lists to what the builder does today.
 - How we start: message Nastia → call → the creator films (Studio cuts it) → we build, the
-  creator approves → launch, sales, payouts.
+  creator approves → launch, sales.
 
 Not decided — the page says each is agreed and set in the contract, and promises nothing:
 
-- payout schedule;
+- how and when Forma's share is settled;
 - exclusivity;
 - content ownership and rights;
 - who sets the prices (the page shows Forma's current prices as examples);
@@ -61,8 +70,9 @@ Nastia sends it personally, with both links. Keep it short; edit freely.
 >
 > Пишу, потому что мне нравится, как ты тренируешь, и хочу упаковать твой метод в приложение: твой
 > курс, твой клуб, твои занятия один на один. Всё собираем и настраиваем под тебя, помогаем с
-> монтажом, подключаем приём оплаты через Prodamus и lava.top (в том числе международными
-> картами), берём на себя бота и поддержку. Тебе — 80% с курса и клуба и 90% с занятий, после
+> монтажом. У тебя будет свой бот, сайт на твоём домене и приложение для телефона и компьютера —
+> под твоим именем, Forma нигде не видно. Оплата — на твой Prodamus и lava.top (в том числе
+> международными картами), бота и поддержку берём на себя. Тебе — 80% с курса и клуба и 90% с занятий, после
 > комиссии Prodamus / lava.top.
 >
 > Первая тренировка — бесплатно: forma-app.co/app/
@@ -76,9 +86,10 @@ Nastia sends it personally, with both links. Keep it short; edit freely.
 > nutritionist with over ten years in design, and I build Forma with coach Sergey Titov.
 >
 > I'm writing because I like the way you train, and I'd love to put your method in an app: your
-> course, your club, your one-to-one sessions. We build and tune it all around you, help with the
-> editing, set up payments through Prodamus and lava.top (cards from any country), and run the bot
-> and support. You keep 80% of course and club sales and 90% of sessions, after the Prodamus /
+> course, your club, your one-to-one sessions. We build and tune it all around you and help with
+> the editing. You get your own bot, a site on your domain and an app for phone and computer, all under
+> your name with no Forma in sight. Payments go to your own Prodamus and lava.top (cards from any
+> country); we run the bot and support. You keep 80% of course and club sales and 90% of sessions, after the Prodamus /
 > lava.top fee.
 >
 > Workout 1 is free: forma-app.co/app/

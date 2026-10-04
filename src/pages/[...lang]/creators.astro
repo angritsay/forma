@@ -12,8 +12,14 @@
  * price and name from the demo course file, the club's prices from `PLANS`, the session lengths,
  * prices and the 20-minute hold from `BOOKING` and `HOLD_MINUTES`. The split — 80 / 20 for course
  * and club, 90 / 10 for sessions, after the payment processor's fee — is Nastia's decision and is
- * stated publicly. Nothing else about the deal is promised: payouts, exclusivity, content rights,
- * prices and the legal form are each «фиксируем в договоре». No user counts, no reviews.
+ * stated publicly. So is the shape of the deal: the creator's own bot, site and app on their own
+ * domain, payments into their own Prodamus / lava.top, no Forma branding anywhere, the stores as an
+ * extra. Nothing else is promised: settlement, exclusivity, content rights, prices and the legal
+ * form are each «фиксируем в договоре». No user counts, no reviews.
+ *
+ * **Two worked examples.** `BrandExample` dresses the product as two fictional brands, a CrossFit
+ * coach and a yoga teacher (content/site/creator-examples.ts), listing only what the builder does
+ * today.
  *
  * **A deck, not a brochure.** Big type, short lines, the product's own screens: the course's path
  * (`PathPhone`), a day in the club (`club/ClubDay`), the session tickets without their buttons
@@ -32,6 +38,7 @@ import Section from '@/components/landing/Section.astro';
 import SessionTickets from '@/components/landing/SessionTickets.astro';
 import Stat from '@/components/landing/Stat.astro';
 import ClubDay from '@/components/landing/club/ClubDay.astro';
+import BrandExample from '@/components/landing/creators/BrandExample.astro';
 import LoopTile from '@/components/landing/media/LoopTile.astro';
 import { DEMO_COURSE_ID, firstWorkoutFacts } from '@/components/landing/demo';
 import { COURSE_BY_ID } from '@/content/registry';
@@ -41,6 +48,7 @@ import { l, t } from '@/i18n/index';
 import { HOLD_MINUTES, MOVE_CUTOFF_HOURS } from '@/lib/coach/slots';
 import { appHref, localeStaticPaths, withBase } from '@/lib/util/paths';
 import { BOOKING } from '@content/site/booking';
+import { CREATOR_EXAMPLES } from '@content/site/creator-examples';
 import { CREATOR_CONTACT } from '@content/site/links';
 import { NASTIA } from '@content/site/nastia';
 import { PLAN_BY_ID, planMonthlyPrice } from '@content/site/plans';
@@ -118,9 +126,14 @@ const tools = [1, 2, 3, 4, 5, 6, 7].map((n) => ({
   title: k(`creatorsTool${n}Title`),
   line: k(`creatorsTool${n}Line`),
 }));
-const custom = [1, 2, 3, 4, 5, 6, 7].map((n) => k(`creatorsCustom${n}`));
+const gets = [1, 2, 3, 4].map((n) => ({
+  title: k(`creatorsGet${n}Title`),
+  line: k(`creatorsGet${n}Line`),
+  extra: n === 4,
+}));
+const white = [1, 2, 3, 4, 5].map((n) => k(`creatorsWhite${n}`));
 const steps = [1, 2, 3, 4, 5].map((n) => k(`creatorsStep${n}`));
-const faq = [1, 2, 3, 4, 5, 6, 7].map((n) => ({
+const faq = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => ({
   q: k(`creatorsFaq${n}Q`),
   a: k(`creatorsFaq${n}A`),
 }));
@@ -200,11 +213,55 @@ const studioLoops = (facts?.moves ?? []).slice(0, 3);
     <div class="mt-12 grid grid-cols-3 gap-4 border-t border-border pt-8 md:mt-16">
       <Stat value="80%" label={k('creatorsStatCourse')} tone="accent" />
       <Stat value="90%" label={k('creatorsStatSessions')} tone="accent" />
-      <Stat value="3" label={k('creatorsStatWays')} />
+      <Stat value="0" label={k('creatorsStatWays')} />
     </div>
   </div>
 
-  <Section id="ways" n={1} eyebrow={k('creatorsWaysEyebrow')} title={k('creatorsWaysTitle')}>
+  <Section id="get" n={1} eyebrow={k('creatorsGetEyebrow')} title={k('creatorsGetTitle')}>
+    <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      {
+        gets.map((g, i) => (
+          <li
+            class:list={[
+              'glass-card flex min-h-[10rem] flex-col justify-between gap-4 rounded-tile border p-5',
+              g.extra ? 'border-dashed border-border' : 'border-border',
+            ]}
+          >
+            <span class="numeral text-sm text-muted-2" aria-hidden="true">
+              {String(i + 1).padStart(2, '0')}
+            </span>
+            <span>
+              <span class="block font-display text-lg leading-tight text-balance">{g.title}</span>
+              <span class="mt-1.5 block text-[14px] leading-snug text-muted">{g.line}</span>
+              {g.extra && (
+                <span class="mt-3 flex">
+                  <Pill tone="warm">{k('creatorsGet4Tag')}</Pill>
+                </span>
+              )}
+            </span>
+          </li>
+        ))
+      }
+    </ul>
+    <p
+      class="mt-8 max-w-3xl font-display text-[clamp(1.375rem,5vw,2.25rem)] leading-tight text-balance"
+    >
+      {k('creatorsWhiteLabel')}
+    </p>
+    <ul class="mt-5 flex flex-wrap gap-2">
+      {
+        white.map((w, i) => (
+          <li class="flex">
+            <Pill size="md" tone={i === 0 ? 'sky' : 'neutral'}>
+              {w}
+            </Pill>
+          </li>
+        ))
+      }
+    </ul>
+  </Section>
+
+  <Section id="ways" n={2} eyebrow={k('creatorsWaysEyebrow')} title={k('creatorsWaysTitle')}>
     <ol class="flex flex-col gap-16 md:gap-24">
       {
         products.map((p, i) => (
@@ -246,7 +303,7 @@ const studioLoops = (facts?.moves ?? []).slice(0, 3);
     </ol>
   </Section>
 
-  <Section id="money" n={2} eyebrow={k('creatorsMoneyEyebrow')} title={k('creatorsMoneyTitle')}>
+  <Section id="money" n={3} eyebrow={k('creatorsMoneyEyebrow')} title={k('creatorsMoneyTitle')}>
     <div class="grid gap-3 sm:grid-cols-2">
       {
         [
@@ -307,7 +364,7 @@ const studioLoops = (facts?.moves ?? []).slice(0, 3);
     </ul>
   </Section>
 
-  <Section id="tools" n={3} eyebrow={k('creatorsToolsEyebrow')} title={k('creatorsToolsTitle')}>
+  <Section id="tools" n={4} eyebrow={k('creatorsToolsEyebrow')} title={k('creatorsToolsTitle')}>
     <div
       class="glass-card grid items-center gap-6 rounded-card border border-border p-5 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-10 md:p-8"
     >
@@ -352,29 +409,17 @@ const studioLoops = (facts?.moves ?? []).slice(0, 3);
 
   <Section
     id="custom"
-    n={4}
+    n={5}
     eyebrow={k('creatorsCustomEyebrow')}
     title={k('creatorsCustomTitle')}
     intro={k('creatorsCustomIntro')}
   >
-    <ul class="flex flex-wrap gap-2.5">
-      {
-        custom.map((c, i) => (
-          <li class="flex">
-            <Pill
-              size="md"
-              tone={i === 0 ? 'sky' : 'neutral'}
-              tilt={i === 0 ? 'left' : i === custom.length - 1 ? 'right' : undefined}
-            >
-              {c}
-            </Pill>
-          </li>
-        ))
-      }
-    </ul>
+    <div class="grid gap-4 lg:grid-cols-2">
+      {CREATOR_EXAMPLES.map((example) => <BrandExample example={example} locale={locale} />)}
+    </div>
   </Section>
 
-  <Section id="start" n={5} eyebrow={k('creatorsStepsEyebrow')} title={k('creatorsStepsTitle')}>
+  <Section id="start" n={6} eyebrow={k('creatorsStepsEyebrow')} title={k('creatorsStepsTitle')}>
     <ol class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
       {
         steps.map((s, i) => (
