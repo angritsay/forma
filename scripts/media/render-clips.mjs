@@ -15,24 +15,31 @@
  * For each clip it claims (`media_render_claim`, a lease, `for update skip locked`):
  *
  *  1. downloads the uploaded piece from the private `raw` bucket;
- *  2. encodes it in one ffmpeg pass: an exact trim (`-ss raw_offset_s` before the input, which
+ *  2. with `auto_enhance` (0061), samples eight small frames of the clip and computes the automatic
+ *     pass from them (`computeAutoParams`, src/lib/media/autoEnhance.ts — the function the admin's
+ *     preview runs on the same frames);
+ *  3. encodes it in one ffmpeg pass: an exact trim (`-ss raw_offset_s` before the input, which
  *     decodes from the keyframe and drops frames up to the exact time, then `-t end_s − start_s`),
- *     the crop, the grade as a 3D LUT (`lut3d`, the `.cube` written by `gradeToLut` — the function
- *     the admin's preview samples), `scale='min(1080,iw)':-2`, and the x264 settings of
- *     prepare-videos.mjs (slow, crf 28, yuv420p, no audio, faststart);
- *  3. cuts the still at 45% (as prepare-videos.mjs) and the 4-second loop (as the site-loops task);
- *  4. uploads videos/shared/<id>.ru.mp4 (and .en.mp4 when the exercise has no English clip — the
+ *     the crop, with the auto pass a light denoise (`hqdn3d`), the auto pass and the grade as one 3D
+ *     LUT (`lut3d`, the `.cube` written by `studioLut` — the table the admin's preview samples),
+ *     `scale='min(1080,iw)':-2`, with the auto pass a light sharpen (`unsharp`), and the x264
+ *     settings of prepare-videos.mjs (slow, crf 28, yuv420p, no audio, faststart). A `still` clip
+ *     (play_mode, 0061) is instead its one chosen frame (`still_at_s`) held for three seconds;
+ *  4. cuts the still at 45% (as prepare-videos.mjs) and the 4-second loop (as the site-loops task);
+ *  5. uploads videos/shared/<id>.ru.mp4 (and .en.mp4 when the exercise has no English clip — the
  *     clips are silent, so it is the same file), images/exercises/<id>.jpg, images/loops/<id>.mp4,
  *     all with upsert;
- *  5. `media_render_done` points the exercise at the clip; on an error `media_render_failed` with
- *     a short reason, which requeues it until the third attempt.
+ *  6. `media_render_done` points the exercise at the clip, sets its video_mode from the play mode
+ *     (once → fit) and keeps the computed auto values; on an error `media_render_failed` with a
+ *     short reason, which requeues it until the third attempt.
  *
  * ffmpeg: $FFMPEG if set, else ffmpeg-static when installed (a laptop), else `ffmpeg` on PATH (CI,
  * which installs it with apt and skips `npm ci`: this script needs nothing from node_modules).
  *
  * `--local` takes a params file shaped like a claimed row — `{ raw_offset_s, start_s, end_s, crop,
- * grade, grade_version }` — writes clip.mp4, still.jpg, loop.mp4 and grade.cube to `--out` (a new
- * temp dir by default) and prints their paths as JSON. scripts/media/render-clips.test.mjs runs
+ * grade, grade_version, play_mode?, still_at_s?, auto_enhance? }` (the auto pass only when
+ * `auto_enhance` is true) — writes clip.mp4, still.jpg, loop.mp4 and grade.cube to `--out` (a new
+ * temp dir by default) and prints their paths and the auto values as JSON. scripts/media/render-clips.test.mjs runs
  * it on a synthetic video and checks the graded frames against the JS math.
  */
 import { execFile } from 'node:child_process';
@@ -89,6 +96,17 @@ const COLOUR_TAGS = [
   'tv',
 ];
 
+/** A still clip (play_mode `still`): its one frame, held this long at this rate. */
+export const STILL_CLIP_SECONDS = 3;
+export const STILL_CLIP_FPS = 30;
+/**
+ * The auto pass's filters outside the LUT, worker only (a preview cannot show them at its size and
+ * they are small on purpose): a light spatial/temporal denoise before the colour, and a light
+ * luma sharpen after the scale, at the final resolution.
+ */
+export const AUTO_DENOISE = 'hqdn3d=1.5:1.5:4:4';
+export const AUTO_SHARPEN = 'unsharp=5:5:0.5:5:5:0.0';
+
 /** Clips per run and the time after which a run stops claiming (the workflow stops at 25 min). */
 const MAX_CLIPS_PER_RUN = 20;
 const RUN_BUDGET_MS = 18 * 60 * 1000;
@@ -122,16 +140,93 @@ export const secs = (n) => Math.max(0, Number(n)).toFixed(3);
 export const clipSeconds = (job) => Number(job.end_s) - Number(job.start_s);
 
 /**
- * The video filter chain: crop, then the grade, then size and colour for the encoder.
- * `cropFilter` is ffmpegCrop(crop) or null; `cubePath` null for an identity grade.
+ * The video filter chain: crop, (denoise), then the look, then size, (sharpen) and colour for the
+ * encoder. `cropFilter` is ffmpegCrop(crop) or null; `cubePath` null for an identity look;
+ * `enhance` adds the auto pass's denoise and sharpen.
  */
-export function clipFilters({ cropFilter, cubePath }) {
+export function clipFilters({ cropFilter, cubePath, enhance = false }) {
   const chain = [];
   if (cropFilter) chain.push(cropFilter);
+  if (enhance) chain.push(AUTO_DENOISE);
   if (cubePath) chain.push(`lut3d=file=${filterPath(cubePath)}:interp=trilinear`);
   chain.push(`scale=w='min(${CLIP_WIDTH},iw)':h=-2:out_color_matrix=bt709:out_range=tv`);
+  if (enhance) chain.push(AUTO_SHARPEN);
   chain.push('format=yuv420p');
   return chain.join(',');
+}
+
+/**
+ * The auto pass's samples: `frames` frames spread evenly over the clip, 64 px wide, as packed RGB
+ * on stdout. The whole frame, before the crop — as the preview samples it (autoEnhance.ts).
+ */
+export function sampleArgs({ input, offset, seconds, frames, width }) {
+  const rate = Math.max(frames / Math.max(seconds, 0.1), 0.01);
+  return [
+    '-nostdin',
+    '-v',
+    'error',
+    '-ss',
+    secs(offset),
+    '-t',
+    secs(seconds),
+    '-i',
+    input,
+    '-map',
+    '0:v:0',
+    '-vf',
+    `fps=${rate.toFixed(6)},scale=${width}:-2`,
+    '-frames:v',
+    String(frames),
+    '-f',
+    'rawvideo',
+    '-pix_fmt',
+    'rgb24',
+    '-',
+  ];
+}
+
+/**
+ * A still clip: the frame at `offset + at` through the same filters, held for
+ * {@link STILL_CLIP_SECONDS} — `trim` keeps the first frame, `loop` repeats it, `setpts` spaces the
+ * copies at {@link STILL_CLIP_FPS}. One pass, so the colour pipeline is the clip's own.
+ */
+export function stillClipArgs({ input, output, offset, at, filters }) {
+  const frames = STILL_CLIP_SECONDS * STILL_CLIP_FPS;
+  return [
+    '-nostdin',
+    '-v',
+    'error',
+    '-y',
+    '-ss',
+    secs(offset + at),
+    '-i',
+    input,
+    '-map',
+    '0:v:0',
+    '-vf',
+    `${filters},trim=end_frame=1,loop=loop=${frames - 1}:size=1:start=0,` +
+      `setpts=N/${STILL_CLIP_FPS}/TB`,
+    '-r',
+    String(STILL_CLIP_FPS),
+    '-frames:v',
+    String(frames),
+    ...X264,
+    ...COLOUR_TAGS,
+    '-an',
+    '-movflags',
+    '+faststart',
+    output,
+  ];
+}
+
+/** Where a still clip's frame is, seconds into the clip: the chosen one, or the still's 45%. */
+export function stillAt(job, seconds) {
+  const at = Number(job.still_at_s);
+  if (job.still_at_s === null || job.still_at_s === undefined || !Number.isFinite(at)) {
+    return seconds * STILL_AT;
+  }
+  // A frame a hair before the end, never past it: the last frame must still decode.
+  return Math.min(Math.max(0, at), Math.max(0, seconds - 0.05));
 }
 
 export function clipArgs({ input, output, offset, seconds, filters }) {
@@ -279,22 +374,28 @@ export function findFfmpeg() {
   return 'ffmpeg';
 }
 
+/** Run ffmpeg; answers its stdout as bytes (the samples), which most calls ignore. */
 function run(bin, args, deadline) {
   const timeout = deadline ? Math.max(1000, deadline - Date.now()) : 0;
   return new Promise((ok, fail) => {
-    execFile(bin, args, { maxBuffer: 64 * 1024 * 1024, timeout }, (err, _stdout, stderr) => {
-      if (err && err.killed) {
-        fail(new JobError('ffmpeg_timeout'));
-      } else if (err) {
-        const e = new Error(
-          `ffmpeg: ${String(stderr || err.message)
-            .trim()
-            .split('\n')
-            .pop()}`,
-        );
-        fail(e);
-      } else ok();
-    });
+    execFile(
+      bin,
+      args,
+      { maxBuffer: 64 * 1024 * 1024, timeout, encoding: 'buffer' },
+      (err, stdout, stderr) => {
+        if (err && err.killed) {
+          fail(new JobError('ffmpeg_timeout'));
+        } else if (err) {
+          const e = new Error(
+            `ffmpeg: ${String(stderr || err.message)
+              .trim()
+              .split('\n')
+              .pop()}`,
+          );
+          fail(e);
+        } else ok(stdout);
+      },
+    );
   });
 }
 
@@ -307,41 +408,81 @@ export async function loadMediaModules() {
   register('../seo/ts-loader.mjs', import.meta.url);
   const grade = await import('@/lib/media/grade');
   const crop = await import('@/lib/media/crop');
-  return { grade, crop };
+  const auto = await import('@/lib/media/autoEnhance');
+  return { grade, crop, auto };
 }
 
 /**
- * Render one piece into `dir`: clip.mp4, still.jpg, loop.mp4 (and grade.cube when graded).
+ * Render one piece into `dir`: clip.mp4, still.jpg, loop.mp4 (and grade.cube when there is a look).
  * `job` is a claimed row; `mods` is what {@link loadMediaModules} answers (or the same functions
- * imported another way, as the test does).
+ * imported another way, as the test does). The auto pass runs only when `job.auto_enhance` is
+ * true — the claim always says, and a `--local` params file opts in. Answers the files and the
+ * auto values (null without the pass), which `media_render_done` stores.
  */
 export async function renderPiece({ ffmpeg, input, job, dir, mods, deadline }) {
-  const { grade: G, crop: C } = mods;
+  const { grade: G, crop: C, auto: A } = mods;
   const version = Number(job.grade_version ?? 1);
   if (version > G.GRADE_VERSION) throw new JobError('grade_version', true);
   const seconds = clipSeconds(job);
   if (!(seconds > 0)) throw new JobError('invalid_span', true);
+  const offset = Number(job.raw_offset_s ?? 0);
+  const enhance = job.auto_enhance === true;
+
+  let autoParams = null;
+  if (enhance) {
+    const raw = await run(
+      ffmpeg,
+      sampleArgs({
+        input,
+        offset,
+        seconds,
+        frames: A.AUTO_SAMPLE_FRAMES,
+        width: A.AUTO_SAMPLE_WIDTH,
+      }),
+      deadline,
+    );
+    autoParams = A.computeAutoParams([{ data: raw, channels: 3 }]);
+  }
 
   const params = job.grade ? G.clampGrade(job.grade) : null;
   let cubePath = null;
-  if (params && !G.isIdentityGrade(params)) {
+  if (!A.isIdentityLook(params, autoParams)) {
     cubePath = join(dir, 'grade.cube');
-    writeFileSync(cubePath, G.lutToCube(G.gradeToLut(params)));
+    writeFileSync(cubePath, G.lutToCube(A.studioLut(params, autoParams)));
   }
   const crop = C.clampCrop(job.crop);
-  const filters = clipFilters({ cropFilter: crop ? C.ffmpegCrop(crop) : null, cubePath });
+  const filters = clipFilters({
+    cropFilter: crop ? C.ffmpegCrop(crop) : null,
+    cubePath,
+    enhance,
+  });
 
   const clip = join(dir, 'clip.mp4');
   const still = join(dir, 'still.jpg');
   const loop = join(dir, 'loop.mp4');
-  await run(
-    ffmpeg,
-    clipArgs({ input, output: clip, offset: Number(job.raw_offset_s ?? 0), seconds, filters }),
-    deadline,
-  );
-  await run(ffmpeg, stillArgs({ input: clip, output: still, seconds }), deadline);
-  await run(ffmpeg, loopArgs({ input: clip, output: loop, seconds }), deadline);
-  return { clip, still, loop, cube: cubePath };
+  if (job.play_mode === 'still') {
+    await run(
+      ffmpeg,
+      stillClipArgs({ input, output: clip, offset, at: stillAt(job, seconds), filters }),
+      deadline,
+    );
+    await run(
+      ffmpeg,
+      stillArgs({ input: clip, output: still, seconds: STILL_CLIP_SECONDS }),
+      deadline,
+    );
+    await run(
+      ffmpeg,
+      loopArgs({ input: clip, output: loop, seconds: STILL_CLIP_SECONDS }),
+      deadline,
+    );
+  } else {
+    // `once` renders like a loop: the app holds the last frame (video_mode `fit`).
+    await run(ffmpeg, clipArgs({ input, output: clip, offset, seconds, filters }), deadline);
+    await run(ffmpeg, stillArgs({ input: clip, output: still, seconds }), deadline);
+    await run(ffmpeg, loopArgs({ input: clip, output: loop, seconds }), deadline);
+  }
+  return { clip, still, loop, cube: cubePath, autoParams };
 }
 
 // --- Supabase ----------------------------------------------------------------------------------
@@ -453,6 +594,8 @@ async function worker({ peek }) {
         p_id: job.id,
         p_attempt: job.attempt,
         p_with_en: withEn,
+        // Only when there are any: a database before 0061 knows no such argument.
+        ...(out.autoParams ? { p_auto_params: out.autoParams } : {}),
       });
       if (ok === true) counts.rendered++;
       else counts.lost++;
