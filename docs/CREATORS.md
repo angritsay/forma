@@ -30,8 +30,10 @@ Decided (stated publicly on the page):
 | Club (year or 30 days) | 80%     | 20%   |
 | One-to-one sessions    | 90%     | 10%   |
 
-- Shares are counted on the amount **after the payment processor's fee**.
-- Forma's share covers: the app and the site, taking payments, the bot and its reminders, member
+- Payments are taken by **Prodamus** (roubles) and **lava.top** (cards from any country, priced in
+  dollars), not by Forma. The processor keeps its fee first; shares are counted on what is left.
+- For a Russian audience we also connect international card payments through lava.top.
+- Forma's share covers: the app and the site, setting up Prodamus and lava.top, the bot and its reminders, member
   support, video hosting, the tools, customisation for the creator and production help (cutting,
   labelling and grading clips in Studio).
 - Customisation: course structure, the creator's own exercises and clips, screen layout, timings,
@@ -59,8 +61,9 @@ Nastia sends it personally, with both links. Keep it short; edit freely.
 >
 > Пишу, потому что мне нравится, как ты тренируешь, и хочу упаковать твой метод в приложение: твой
 > курс, твой клуб, твои занятия один на один. Всё собираем и настраиваем под тебя, помогаем с
-> монтажом, берём на себя оплату, бота и поддержку. Тебе — 80% с курса и клуба и 90% с занятий,
-> после комиссии платёжки.
+> монтажом, подключаем приём оплаты через Prodamus и lava.top (в том числе международными
+> картами), берём на себя бота и поддержку. Тебе — 80% с курса и клуба и 90% с занятий, после
+> комиссии Prodamus / lava.top.
 >
 > Первая тренировка — бесплатно: forma-app.co/app/
 > Как это устроено для авторов: forma-app.co/creators/
@@ -74,8 +77,9 @@ Nastia sends it personally, with both links. Keep it short; edit freely.
 >
 > I'm writing because I like the way you train, and I'd love to put your method in an app: your
 > course, your club, your one-to-one sessions. We build and tune it all around you, help with the
-> editing, and handle payments, the bot and support. You keep 80% of course and club sales and 90%
-> of sessions, after payment fees.
+> editing, set up payments through Prodamus and lava.top (cards from any country), and run the bot
+> and support. You keep 80% of course and club sales and 90% of sessions, after the Prodamus /
+> lava.top fee.
 >
 > Workout 1 is free: forma-app.co/app/
 > How it works for creators: forma-app.co/en/creators/
