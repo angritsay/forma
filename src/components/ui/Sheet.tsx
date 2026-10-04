@@ -14,6 +14,12 @@ export interface SheetProps {
   footer?: ReactNode;
   /** Accessible name when there is no visible title. */
   label?: string;
+  /**
+   * Controls for the header row, in place of the title — on the same line as ✕ and centred with
+   * it. The row stays one line: the bar gets what ✕ leaves and must fit it (scroll inside itself
+   * if it can be wider). Name the dialog with `label` when using it.
+   */
+  bar?: ReactNode;
   className?: string;
 }
 
@@ -39,7 +45,16 @@ export interface SheetProps {
  * `translate-y-full` is a phone-only transform for the same reason. Leaving it on at desktop width
  * would push the centred dialog a full panel-height below the fold on its way in.
  */
-export function Sheet({ open, onClose, title, children, footer, label, className }: SheetProps) {
+export function Sheet({
+  open,
+  onClose,
+  title,
+  children,
+  footer,
+  label,
+  bar,
+  className,
+}: SheetProps) {
   const labels = useKitLabels();
   const ref = useRef<HTMLDivElement>(null);
   const titleId = useId();
@@ -68,8 +83,8 @@ export function Sheet({ open, onClose, title, children, footer, label, className
         ref={ref}
         role="dialog"
         aria-modal="true"
-        aria-labelledby={title ? titleId : undefined}
-        aria-label={title ? undefined : label}
+        aria-labelledby={title && !bar ? titleId : undefined}
+        aria-label={title && !bar ? undefined : label}
         tabIndex={-1}
         className={clsx(
           'glass relative flex max-h-[92dvh] w-full max-w-[480px] flex-col rounded-t-card border-t border-border-strong',
@@ -89,7 +104,11 @@ export function Sheet({ open, onClose, title, children, footer, label, className
           aria-hidden="true"
         />
         <div className="flex items-center justify-between gap-3 px-6 pt-4 pb-3">
-          {title ? (
+          {bar ? (
+            /* `min-w-0` lets the bar shrink below its content, so ✕ (which does not shrink) always
+               keeps its place at the end of the row. */
+            <div className="min-w-0 flex-1">{bar}</div>
+          ) : title ? (
             /* 19px, up from `text-lg`'s 18. `.font-display` is sentence case now and sets about a
                quarter narrower, so the title gains a point and the header row does not move. */
             <h2 id={titleId} className="font-display text-[19px]">
