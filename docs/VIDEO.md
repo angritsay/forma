@@ -338,7 +338,10 @@ the code is `src/app/features/admin/studio/`. «Цвет и кадр» links to 
      ending 0.5 s after the end mark. `raw_offset_s` is the start mark minus that keyframe. A
      keyframe more than 60 s back is refused (a screen recording), and a piece that cannot be
      copied is never re-encoded on the phone. The audio is dropped.
-   - **Size check** against the bucket's 500 MB before anything is sent.
+   - **Size check** against the bucket's 500 MB before anything is sent. The cut is held in
+     memory, so a piece whose share of the file is plainly over the limit (more than 1.25× by
+     the proportional estimate) is refused before it is cut: a phone asked to hold a 1.5 GB piece
+     is closed by the system instead of answering «too large».
    - **TUS upload** (`src/lib/api/rawUpload.ts`) to `<project>/storage/v1/upload/resumable`, 6 MB
      chunks, the user's own access token (re-read before every request), upsert. The upload URL is
      kept in localStorage under a fingerprint of the object, its size and its cut points, so a
@@ -348,7 +351,13 @@ the code is `src/app/features/admin/studio/`. «Цвет и кадр» links to 
    - **Register** with `admin_media_add_clip` (safe to repeat with the same id).
 
    The screen stays awake while it uploads (Wake Lock, where the browser has it). Without signal
-   or access the remaining pieces stop with that reason instead of failing one by one.
+   or access the remaining pieces stop with that reason instead of failing one by one; a run
+   stopped by lost signal starts again by itself when the browser reports it is back online.
+   A label or frame changed while its piece uploads is the one the clip is registered with.
+
+   **iPhone:** picking from Photos may hand the page a compressed copy. The screen says so and
+   shows the picked file's resolution and size; saving the video to Files and picking it there
+   gives the original.
 
 The marks are kept per file in localStorage (`cutDraft.ts`, keyed by the file's name, size and
 modification time, for 7 days): picking the same video again brings back the same source id,

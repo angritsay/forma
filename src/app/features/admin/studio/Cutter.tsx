@@ -145,6 +145,14 @@ export function Cutter() {
   const video = useRef<HTMLVideoElement>(null);
   const reader = useRef<SourceReader | null>(null);
   const abort = useRef<AbortController | null>(null);
+  // Set synchronously, unlike `uploading`: a second tap in the same frame must not start a run.
+  const running = useRef(false);
+  // Which pick is current: a slow open of an earlier file must not take over a later one.
+  const pickSeq = useRef(0);
+  // The last run stopped for want of signal: it starts again by itself when the signal is back.
+  const resumeOnline = useRef(false);
+  // The last stored draft (without its time), so progress ticks do not rewrite localStorage.
+  const lastDraft = useRef('');
 
   const [file, setFile] = useState<File | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
@@ -198,9 +206,11 @@ export function Cutter() {
   const pick = async (e: ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     e.target.value = '';
-    if (!f) return;
+    if (!f || running.current) return;
+    const seq = ++pickSeq.current;
     reader.current?.dispose();
     reader.current = null;
+    resumeOnline.current = false;
     setFile(f);
     setInfo(null);
     setOpenError(null);
@@ -226,22 +236,27 @@ export function Cutter() {
     setOpening(true);
     try {
       const r = await openSource(f);
+      if (seq !== pickSeq.current) {
+        r.dispose();
+        return;
+      }
       reader.current = r;
       setInfo(r.info);
     } catch (err) {
-      setOpenError(classifyUploadError(err, navigator.onLine));
+      if (seq === pickSeq.current) setOpenError(classifyUploadError(err, navigator.onLine));
     } finally {
-      setOpening(false);
+      if (seq === pickSeq.current) setOpening(false);
     }
   };
 
   // Keep the draft as she works.
   useEffect(() => {
     if (!file) return;
-    writeStore(
-      draftKey(identityOf(file)),
-      serializeDraft({ sourceId, title, segments, savedAt: Date.now() }),
-    );
+    const key = draftKey(identityOf(file));
+    const same = `${key}\n${serializeDraft({ sourceId, title, segments, savedAt: 0 })}`;
+    if (same === lastDraft.current) return;
+    lastDraft.current = same;
+    writeStore(key, serializeDraft({ sourceId, title, segments, savedAt: Date.now() }));
   }, [file, sourceId, title, segments]);
 
   // --- the player ---------------------------------------------------------------------------
@@ -407,9 +422,11 @@ export function Cutter() {
       toast.show({
         kind: 'error',
         title:
-          kind === 'busy' || kind === 'offline'
-            ? t(UPLOAD_ERROR_KEY[kind])
-            : adminErrorTitle(tr, e, 'app.studioSaveError'),
+          kind === 'busy'
+            ? t(UPLOAD_ERROR_KEY.busy)
+            : kind === 'offline'
+              ? t('common.errorOffline')
+              : adminErrorTitle(tr, e, 'app.studioSaveError'),
       });
     }
   };
@@ -462,11 +479,19 @@ export function Cutter() {
 
   // --- upload ---------------------------------------------------------------------------------
 
-  const upload = async (only?: string) => {
+  /** `only`: one piece (its retry); `afterOffline`: the pieces the lost signal stopped, and new ones. */
+  const upload = async (only?: string, afterOffline = false) => {
     const r = reader.current;
-    if (!r || !file || uploading) return;
-    const queue = only ? toUpload.filter((s) => s.id === only) : toUpload;
+    if (!r || !file || running.current) return;
+    const pending = pendingUploads(marksRef.current.segments);
+    const queue = only
+      ? pending.filter((s) => s.id === only)
+      : afterOffline
+        ? pending.filter((s) => s.upload !== 'error' || s.error === 'offline')
+        : pending;
     if (queue.length === 0) return;
+    running.current = true;
+    resumeOnline.current = false;
     const ctrl = new AbortController();
     abort.current = ctrl;
     setUploading(true);
@@ -485,6 +510,8 @@ export function Cutter() {
     } catch (e) {
       const kind = classifyUploadError(e, navigator.onLine);
       for (const s of queue) patchSegment(s.id, { upload: 'error', error: kind, progress: 0 });
+      resumeOnline.current = kind === 'offline';
+      running.current = false;
       setUploading(false);
       abort.current = null;
       return;
@@ -500,6 +527,8 @@ export function Cutter() {
         continue;
       }
       patchSegment(seg.id, { upload: 'cutting', progress: 0, error: null });
+      // One re-render per whole percent, not one per network progress event.
+      let shown = '';
       try {
         await runSegment(
           seg,
@@ -510,9 +539,15 @@ export function Cutter() {
             cut: (plan, onP, signal) => r.cut(plan, onP, signal),
             upload: (input) => uploadRawPiece(input),
             register: (input) => addMediaClip(input),
+            sourceBytes: file.size,
+            latest: (id) => marksRef.current.segments.find((x) => x.id === id) ?? null,
           },
-          (state: SegmentUploadState, progress: number) =>
-            patchSegment(seg.id, { upload: state, progress }),
+          (state: SegmentUploadState, progress: number) => {
+            const step = `${state}:${Math.floor(progress * 100)}`;
+            if (step === shown) return;
+            shown = step;
+            patchSegment(seg.id, { upload: state, progress });
+          },
           ctrl.signal,
         );
       } catch (e) {
@@ -529,8 +564,10 @@ export function Cutter() {
     }
 
     abort.current = null;
+    running.current = false;
     setUploading(false);
     if (ctrl.signal.aborted) return;
+    resumeOnline.current = stoppedBy === 'offline';
     toast.show(
       failed === 0
         ? { kind: 'success', title: t('app.studioUploadAllDone') }
@@ -539,6 +576,20 @@ export function Cutter() {
   };
 
   const stop = () => abort.current?.abort();
+
+  // Back online after a run that stopped for want of signal: carry on without a tap. The TUS
+  // uploads resume from the last chunk the server has.
+  const uploadRef = useRef(upload);
+  uploadRef.current = upload;
+  useEffect(() => {
+    const onOnline = () => {
+      if (!resumeOnline.current || running.current) return;
+      resumeOnline.current = false;
+      void uploadRef.current(undefined, true);
+    };
+    window.addEventListener('online', onOnline);
+    return () => window.removeEventListener('online', onOnline);
+  }, []);
 
   // --- render ---------------------------------------------------------------------------------
 
@@ -553,6 +604,9 @@ export function Cutter() {
             <Button onClick={() => fileInput.current?.click()}>{t('app.studioPickButton')}</Button>
           }
         />
+        <p className="mx-auto max-w-md pb-8 text-center text-[13px] text-muted-2">
+          {t('app.studioPickQualityHint')}
+        </p>
         <FileInput ref={fileInput} onPick={pick} />
       </>
     );
@@ -594,6 +648,17 @@ export function Cutter() {
           </Button>
         </div>
 
+        {info ? (
+          <p className="tabular text-[13px] text-muted-2">
+            {t('app.studioSourceInfo', {
+              w: info.width,
+              h: info.height,
+              fps: Math.round(info.fps * 100) / 100,
+              size: formatBytes(file.size),
+            })}
+          </p>
+        ) : null}
+
         <div className="relative overflow-hidden bg-black">
           {videoUrl ? (
             <video
@@ -623,7 +688,9 @@ export function Cutter() {
 
         {openError ? (
           <p role="alert" className="text-[14px] text-danger">
-            {t(UPLOAD_ERROR_KEY[openError], { limit: formatBytes(RAW_FILE_SIZE_LIMIT) })}
+            {openError === 'offline'
+              ? t('common.errorOffline')
+              : t(UPLOAD_ERROR_KEY[openError], { limit: formatBytes(RAW_FILE_SIZE_LIMIT) })}
           </p>
         ) : null}
         {playbackError ? (

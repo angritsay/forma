@@ -120,7 +120,7 @@ export function StudioOverview() {
         <LoadingBlock />
       ) : status !== 'ready' ? (
         <EmptyState
-          title={t(status === 'offline' ? 'app.studioErrOffline' : 'app.studioLoadError')}
+          title={t(status === 'offline' ? 'common.errorOffline' : 'app.studioLoadError')}
           action={
             <Button variant="secondary" onClick={refresh}>
               {t('common.retry')}

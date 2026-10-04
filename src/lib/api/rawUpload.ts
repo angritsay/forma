@@ -16,7 +16,7 @@
  *
  * tus-js-client is loaded on first use: only the admin's studio chunk pays for it.
  */
-import { supabase, projectUrl } from './client';
+import { publicApiKey, projectUrl, supabase } from './client';
 import { AppError } from './errors';
 import { RAW_BUCKET, RAW_FILE_SIZE_LIMIT } from './mediaStudio';
 import { isDemo } from './mode';
@@ -89,7 +89,8 @@ export async function uploadRawPiece(input: RawUploadInput): Promise<void> {
       storeFingerprintForResuming: true,
       removeFingerprintOnSuccess: true,
       fingerprint: () => Promise.resolve(fingerprint),
-      headers: { 'x-upsert': 'true' },
+      // `apikey` as supabase-js sends it: the project's gateway may ask for it on every route.
+      headers: { 'x-upsert': 'true', apikey: publicApiKey() },
       metadata: {
         bucketName: RAW_BUCKET,
         objectName: input.path,
@@ -108,18 +109,21 @@ export async function uploadRawPiece(input: RawUploadInput): Promise<void> {
       onProgress: (sent, total) => {
         if (total > 0) input.onProgress?.(Math.min(1, sent / total));
       },
-      onError: (e) => reject(e),
-      onSuccess: () => resolve(),
+      onError: (e) => {
+        input.signal?.removeEventListener('abort', onAbort);
+        reject(e);
+      },
+      onSuccess: () => {
+        input.signal?.removeEventListener('abort', onAbort);
+        resolve();
+      },
     });
 
-    input.signal?.addEventListener(
-      'abort',
-      () => {
-        // Not terminated: the server keeps the chunks so the next attempt resumes.
-        void upload.abort(false).finally(() => reject(new UploadAbortedError()));
-      },
-      { once: true },
-    );
+    // Not terminated: the server keeps the chunks so the next attempt resumes.
+    function onAbort() {
+      void upload.abort(false).finally(() => reject(new UploadAbortedError()));
+    }
+    input.signal?.addEventListener('abort', onAbort, { once: true });
 
     upload
       .findPreviousUploads()

@@ -3,7 +3,7 @@
  * ← → step one frame (one second with Shift).
  *
  * A key typed into a field (the source's title, the exercise search) is the field's, never a
- * command; neither is a key with Ctrl, Cmd or Alt, which belong to the browser. Pure, so the table
+ * command, and space on a focused button presses the button; neither is a key with Ctrl, Cmd or Alt, which belong to the browser. Pure, so the table
  * is tested without a DOM.
  */
 
@@ -28,6 +28,8 @@ export interface KeyInput {
 }
 
 const TYPING_TAGS = new Set(['INPUT', 'TEXTAREA', 'SELECT']);
+/** Space presses these: taken as «play», a keyboard user could not press a focused button. */
+const PRESSABLE_TAGS = new Set(['BUTTON', 'A', 'SUMMARY']);
 
 /** The action a key press asks for, or null when it is not the cutter's. */
 export function cutterActionForKey(e: KeyInput): CutterAction | null {
@@ -47,6 +49,7 @@ export function cutterActionForKey(e: KeyInput): CutterAction | null {
       return 'mark_out';
     case ' ':
     case 'Spacebar':
+      if (e.targetTag && PRESSABLE_TAGS.has(e.targetTag.toUpperCase())) return null;
       return 'toggle_play';
     case 'ArrowLeft':
       return e.shiftKey ? 'second_back' : 'frame_back';

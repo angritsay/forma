@@ -2209,6 +2209,9 @@ export const app = {
   studioCutTitle: 'Cutting',
   studioPickTitle: 'Pick the workout video',
   studioPickBody: 'The video stays on your phone. Only the marked pieces are uploaded.',
+  studioSourceInfo: '{w}×{h} · {fps} fps · {size}',
+  studioPickQualityHint:
+    'On an iPhone, picking from Photos may compress the video. For the original, save it to Files and pick it from there — the size and resolution show once it is open.',
   studioPickButton: 'Choose a video',
   studioPickAnother: 'Another video',
   studioOpening: 'Opening the video…',
@@ -2258,7 +2261,7 @@ export const app = {
   studioStateDone: 'Uploaded',
   studioStateError: 'Not uploaded',
   studioErrOffline:
-    'No connection. The upload picks up where it stopped — tap “Retry” once you are back online.',
+    'No connection. Once you are back online the upload picks up where it stopped by itself — or tap “Retry”.',
   studioErrTooLarge:
     'The piece is bigger than storage takes: up to {limit}, and the project limit in Supabase may be lower. Make the piece shorter or raise the limit.',
   studioErrUnsupported: 'This file can’t be read. An MP4 or MOV from a phone or camera will do.',
@@ -2291,6 +2294,6 @@ export const app = {
   studioCropPaste: 'Paste frame',
   studioCropCopied: 'Frame copied',
   studioCropPasted: 'Frame pasted',
-  studioCropCorner: 'Frame corner',
+  studioCropKeys: 'Keyboard: arrows move the frame, further with Shift; + and − resize it.',
   studioCropArea: 'Crop frame',
 } as const;

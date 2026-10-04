@@ -2357,6 +2357,9 @@ export const app = {
   studioCutTitle: 'Нарезка',
   studioPickTitle: 'Выбери видео тренировки',
   studioPickBody: 'Видео останется на телефоне. В облако уйдут только отмеченные куски.',
+  studioSourceInfo: '{w}×{h} · {fps} к/с · {size}',
+  studioPickQualityHint:
+    'На iPhone выбор из «Фото» может сжать видео. Чтобы загрузить оригинал, сохрани его в «Файлы» и выбери оттуда — размер и разрешение видно после выбора.',
   studioPickButton: 'Выбрать видео',
   studioPickAnother: 'Другое видео',
   studioOpening: 'Открываю видео…',
@@ -2406,7 +2409,7 @@ export const app = {
   studioStateDone: 'Загружен',
   studioStateError: 'Не загрузился',
   studioErrOffline:
-    'Нет связи. Загрузка продолжится с того же места — нажми «Повторить», когда появится сеть.',
+    'Нет связи. Когда сеть вернётся, загрузка сама продолжится с того же места — или нажми «Повторить».',
   studioErrTooLarge:
     'Кусок больше, чем принимает хранилище: до {limit}, а лимит проекта в Supabase может быть ниже. Сделай кусок короче или подними лимит.',
   studioErrUnsupported: 'Этот файл не читается. Подойдёт видео MP4 или MOV с телефона или камеры.',
@@ -2439,6 +2442,6 @@ export const app = {
   studioCropPaste: 'Вставить кадр',
   studioCropCopied: 'Кадр скопирован',
   studioCropPasted: 'Кадр вставлен',
-  studioCropCorner: 'Угол рамки',
+  studioCropKeys: 'С клавиатуры: стрелки двигают рамку, с Shift — дальше, + и − меняют размер.',
   studioCropArea: 'Рамка кадра',
 } as const;

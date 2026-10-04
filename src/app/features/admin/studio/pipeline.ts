@@ -24,6 +24,34 @@ export interface PipelineDeps {
   register(input: AddMediaClipInput): Promise<MediaClip>;
   /** The per-file ceiling to check before uploading. */
   sizeLimit?: number;
+  /**
+   * The whole video's size, bytes. With it, a piece whose share of the file is plainly over the
+   * ceiling is refused before it is cut: the cut is held in memory, and a phone asked to hold a
+   * 1.5 GB piece is closed by the system instead of answering «too large».
+   */
+  sourceBytes?: number;
+  /**
+   * The piece's label and frame as they are now. She may relabel or reframe a piece while it
+   * uploads; the clip is registered with what the screen shows at that moment, not with what it
+   * showed when the piece started.
+   */
+  latest?(id: string): Pick<Segment, 'exerciseId' | 'crop'> | null;
+}
+
+/**
+ * How far over the ceiling the proportional estimate must be before the piece is refused uncut.
+ * A phone's bitrate swings with the scene, so a piece near the line is cut and measured instead.
+ */
+export const ESTIMATE_MARGIN = 1.25;
+
+/** The bytes a span is expected to take: its share of the whole file. Null when unknown. */
+export function estimatePieceBytes(
+  sourceBytes: number | undefined,
+  durationS: number | null,
+  spanS: number,
+): number | null {
+  if (!sourceBytes || !durationS || !(durationS > 0) || !(spanS > 0)) return null;
+  return (sourceBytes * Math.min(spanS, durationS)) / durationS;
 }
 
 export type PipelineProgress = (state: SegmentUploadState, progress: number) => void;
@@ -49,9 +77,18 @@ export async function runSegment(
   });
   if ('problem' in planned) throw new StudioError('keyframe', planned.problem);
   const { plan } = planned;
+  const limit = deps.sizeLimit ?? RAW_FILE_SIZE_LIMIT;
+  const estimate = estimatePieceBytes(
+    deps.sourceBytes,
+    deps.durationS,
+    plan.cutEndS - plan.cutStartS,
+  );
+  if (estimate !== null && estimate > limit * ESTIMATE_MARGIN) {
+    throw new StudioError('too_large', 'estimate');
+  }
 
   const blob = await deps.cut(plan, (f) => onProgress('cutting', f), signal);
-  if (blob.size > (deps.sizeLimit ?? RAW_FILE_SIZE_LIMIT)) throw new StudioError('too_large');
+  if (blob.size > limit) throw new StudioError('too_large');
 
   const path = rawClipPath(sourceId, seg.id, PIECE_EXT);
   onProgress('uploading', 0);
@@ -64,6 +101,7 @@ export async function runSegment(
   });
 
   onProgress('registering', 1);
+  const now = deps.latest?.(seg.id) ?? seg;
   const clip = await deps.register({
     id: seg.id,
     sourceId,
@@ -71,8 +109,8 @@ export async function runSegment(
     rawOffsetS: plan.rawOffsetS,
     startS: seg.startS,
     endS: seg.endS,
-    exerciseId: seg.exerciseId,
-    crop: seg.crop,
+    exerciseId: now.exerciseId,
+    crop: now.crop,
   });
   onProgress('done', 1);
   return clip;

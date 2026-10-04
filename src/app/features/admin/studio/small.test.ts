@@ -78,6 +78,13 @@ describe('cutter keys', () => {
     expect(cutterActionForKey({ key: 'ArrowLeft', altKey: true })).toBeNull();
     expect(cutterActionForKey({ key: 'x' })).toBeNull();
   });
+
+  it('lets space press a focused button, while the marks keys still work there', () => {
+    expect(cutterActionForKey({ key: ' ', targetTag: 'BUTTON' })).toBeNull();
+    expect(cutterActionForKey({ key: ' ', targetTag: 'a' })).toBeNull();
+    expect(cutterActionForKey({ key: 'i', targetTag: 'BUTTON' })).toBe('mark_in');
+    expect(cutterActionForKey({ key: ' ', targetTag: 'DIV' })).toBe('toggle_play');
+  });
 });
 
 describe('upload errors', () => {

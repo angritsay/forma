@@ -9,7 +9,13 @@
  * «Копировать кадр» puts the frame on the studio clipboard (shared with the grader), «Вставить
  * кадр» takes it from there — one framing for a whole shoot is one copy and a paste per piece.
  */
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
+} from 'react';
 import { Button } from '@/components/ui/Button';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { Sheet } from '@/components/ui/Sheet';
@@ -147,6 +153,28 @@ function CropEditor({
     gesture.current = rest ? { kind: 'move', x: rest.x, y: rest.y, box } : null;
   };
 
+  /** The keyboard's way to frame: arrows move (Shift — further), + and − scale. */
+  const onKey = (e: ReactKeyboardEvent<HTMLElement>) => {
+    const step = e.shiftKey ? 0.05 : 0.01;
+    const next =
+      e.key === 'ArrowLeft'
+        ? moveBox(box, -step, 0)
+        : e.key === 'ArrowRight'
+          ? moveBox(box, step, 0)
+          : e.key === 'ArrowUp'
+            ? moveBox(box, 0, -step)
+            : e.key === 'ArrowDown'
+              ? moveBox(box, 0, step)
+              : e.key === '+' || e.key === '='
+                ? scaleBox(box, 1.05)
+                : e.key === '-' || e.key === '_'
+                  ? scaleBox(box, 1 / 1.05)
+                  : null;
+    if (!next) return;
+    e.preventDefault();
+    setBox(next);
+  };
+
   const choosePreset = (p: AspectPreset) => {
     setPreset(p);
     const r = presetRatio(p);
@@ -173,7 +201,12 @@ function CropEditor({
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-[14px] text-muted">{t('app.studioCropHint')}</p>
+      <p className="text-[14px] text-muted">
+        {t('app.studioCropHint')}{' '}
+        <span id="crop-keys" className="hidden lg:inline">
+          {t('app.studioCropKeys')}
+        </span>
+      </p>
       <div
         ref={area}
         className="relative mx-auto w-full touch-none overflow-hidden bg-black select-none"
@@ -217,8 +250,11 @@ function CropEditor({
         />
         <div
           role="group"
+          tabIndex={0}
           aria-label={t('app.studioCropArea')}
-          className="absolute touch-none border-2 border-white"
+          aria-describedby="crop-keys"
+          onKeyDown={onKey}
+          className="absolute touch-none border-2 border-white outline-offset-2 focus-visible:outline-2 focus-visible:outline-accent"
           style={{ left: pct(box.x), top: pct(box.y), width: pct(box.w), height: pct(box.h) }}
           onPointerDown={(e) => onDown(e, null)}
           onPointerMove={onMove}
@@ -233,7 +269,7 @@ function CropEditor({
           {CORNERS.map((c) => (
             <span
               key={c}
-              aria-label={t('app.studioCropCorner')}
+              aria-hidden="true"
               className={`absolute flex h-11 w-11 touch-none items-center justify-center ${CORNER_POS[c]}`}
               onPointerDown={(e) => onDown(e, c)}
               onPointerMove={onMove}

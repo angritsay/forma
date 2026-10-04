@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { AddMediaClipInput, MediaClip } from '@/lib/api/mediaStudio';
 import { fitsRawLimit, rawFingerprint, tusEndpoint } from '@/lib/api/rawUpload';
-import { runSegment, type PipelineDeps } from './pipeline';
+import { estimatePieceBytes, runSegment, type PipelineDeps } from './pipeline';
 import { StudioError } from './uploadErrors';
 
 const SRC = '11111111-2222-4333-8444-555555555555';
@@ -88,6 +88,29 @@ describe('runSegment', () => {
     expect(calls).toEqual(['keyframe', 'cut']);
   });
 
+  it('refuses a piece plainly over the limit before cutting it into memory', async () => {
+    // 20.5 s of a 100 s, 10 000-byte file ≈ 2 050 bytes against a 1 000-byte ceiling.
+    const { d, calls } = deps({ sizeLimit: 1000, sourceBytes: 10_000 });
+    await expect(runSegment(SEG, SRC, d, () => undefined)).rejects.toMatchObject({
+      kind: 'too_large',
+    });
+    expect(calls).toEqual(['keyframe']);
+  });
+
+  it('cuts and measures a piece whose estimate is only near the limit', async () => {
+    // ≈ 1 025 bytes estimated against 1 000: inside the margin, so it is cut; the real piece fits.
+    const { d, calls } = deps({ sizeLimit: 1000, sourceBytes: 5_000 });
+    await runSegment(SEG, SRC, d, () => undefined);
+    expect(calls).toEqual(['keyframe', 'cut', 'upload', 'register']);
+  });
+
+  it('registers the label and frame the piece has when its upload ends', async () => {
+    const crop = { x: 0, y: 0, w: 0.5, h: 0.5 };
+    const { d, registered } = deps({ latest: () => ({ exerciseId: 'vypad', crop }) });
+    await runSegment(SEG, SRC, d, () => undefined);
+    expect(registered[0]).toMatchObject({ exerciseId: 'vypad', crop });
+  });
+
   it('refuses a file with no keyframe near the start', async () => {
     const { d, calls } = deps({ keyframeAt: async () => null });
     await expect(runSegment(SEG, SRC, d, () => undefined)).rejects.toBeInstanceOf(StudioError);
@@ -102,6 +125,19 @@ describe('runSegment', () => {
     });
     await expect(runSegment(SEG, SRC, d, () => undefined)).rejects.toThrow('dropped');
     expect(calls).not.toContain('register');
+  });
+});
+
+describe('estimatePieceBytes', () => {
+  it("is the span's share of the file", () => {
+    expect(estimatePieceBytes(1000, 100, 10)).toBe(100);
+    expect(estimatePieceBytes(1000, 100, 500)).toBe(1000);
+  });
+
+  it('is unknown without a size or a duration', () => {
+    expect(estimatePieceBytes(undefined, 100, 10)).toBeNull();
+    expect(estimatePieceBytes(1000, null, 10)).toBeNull();
+    expect(estimatePieceBytes(1000, 0, 10)).toBeNull();
   });
 });
 
