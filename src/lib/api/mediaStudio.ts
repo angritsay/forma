@@ -1,6 +1,6 @@
 /**
- * «Студия» (0060): a filmed workout cut into exercise clips, labelled, framed, graded and sent to
- * the render worker. Every call is re-checked by `is_admin()` on the server.
+ * «Студия» (0060, 0061): a filmed workout cut into exercise clips, named, graded, framed and sent
+ * to the render worker. Every call is re-checked by `is_admin()` on the server.
  *
  * The device never encodes. It cuts the long video into pieces by stream copy, uploads each piece
  * to the private `raw` bucket at {@link rawClipPath}, and registers it with {@link addMediaClip};
@@ -9,14 +9,17 @@
  * The mappers are exported and pure so the shapes are tested without a database; the RPCs return
  * snake_case jsonb, and numbers from Postgres (`numeric`) can arrive as strings.
  */
+import { parseAutoParams, type AutoParams } from '@/lib/media/autoEnhance';
 import { clampCrop, type Crop } from '@/lib/media/crop';
 import { clampGrade, GRADE_VERSION, isIdentityGrade, type GradeParams } from '@/lib/media/grade';
+import type { VideoMode } from '@/content/schema';
 import { supabase } from './client';
 import { demo } from './demo/load';
 import { AppError } from './errors';
 import { guard, unwrap } from './internal';
 import { isDemo } from './mode';
 
+export type { AutoParams } from '@/lib/media/autoEnhance';
 export type { Crop } from '@/lib/media/crop';
 export type { GradeParams } from '@/lib/media/grade';
 
@@ -56,6 +59,25 @@ export function rawClipPath(sourceId: string, clipId: string, ext = 'mp4'): stri
 export const MEDIA_CLIP_STATUSES = ['draft', 'queued', 'rendering', 'done', 'failed'] as const;
 export type MediaClipStatus = (typeof MEDIA_CLIP_STATUSES)[number];
 
+/**
+ * How a clip runs in the player (0061): looped, played once and held on its last frame, or one
+ * chosen frame. The worker renders a still as a short clip of that frame.
+ */
+export const PLAY_MODES = ['loop', 'once', 'still'] as const;
+export type PlayMode = (typeof PLAY_MODES)[number];
+
+/**
+ * The exercise's `video_mode` (0048) a play mode renders to: «once» holds the last frame, which is
+ * what `fit` does; a still clip is the same frame throughout, so it simply loops. The SQL twin is
+ * `media_video_mode()` in 0061, which `media_render_done` applies.
+ */
+export function videoModeForPlayMode(mode: PlayMode): VideoMode {
+  return mode === 'once' ? 'fit' : 'loop';
+}
+
+/** The exercise units a clip's preview tells apart: a timer for seconds, a count otherwise. */
+export type ExerciseUnit = 'reps' | 'seconds' | 'meters' | 'calories';
+
 export interface MediaSource {
   id: string;
   title: string;
@@ -75,6 +97,8 @@ export interface MediaClip {
   exerciseId: string | null;
   /** The exercise's Russian name, for the label. */
   exerciseName: string | null;
+  /** The exercise's unit: the preview shows a timer for `seconds`, a rep count otherwise. */
+  exerciseUnit: ExerciseUnit | null;
   /** The exercise already has a clip: queueing this one replaces it. */
   exerciseHasVideo: boolean;
   rawPath: string;
@@ -88,6 +112,13 @@ export interface MediaClip {
   /** Null — no grade. Always clamped, so safe to feed to `gradeToLut`. */
   grade: GradeParams | null;
   gradeVersion: number;
+  playMode: PlayMode;
+  /** The frame a still clip shows, seconds from the clip's start; null — the worker's default. */
+  stillAtS: number | null;
+  /** The automatic pass runs before the grade (on by default). */
+  autoEnhance: boolean;
+  /** What the pass computed at the last render; null before one. */
+  autoParams: AutoParams | null;
   status: MediaClipStatus;
   /** The worker's short error, kept while the clip is retried. */
   error: string | null;
@@ -122,12 +153,16 @@ export interface MediaClipPatch {
   exerciseId?: string | null;
   crop?: Crop | null;
   grade?: GradeParams | null;
+  playMode?: PlayMode;
+  stillAtS?: number | null;
+  autoEnhance?: boolean;
 }
 
-/** What a paste carries. A half left out is not pasted; a half set to null clears it. */
+/** What a paste carries. A part left out is not pasted; a grade or crop set to null clears it. */
 export interface MediaPaste {
   grade?: GradeParams | null;
   crop?: Crop | null;
+  autoEnhance?: boolean;
 }
 
 // --- mappers -------------------------------------------------------------------
@@ -161,6 +196,7 @@ export interface DbMediaClip {
   source_id: string;
   exercise_id: string | null;
   exercise_name: string | null;
+  exercise_unit?: string | null;
   exercise_has_video: boolean | null;
   raw_path: string;
   raw_offset_s: Num;
@@ -169,6 +205,10 @@ export interface DbMediaClip {
   crop: unknown;
   grade: unknown;
   grade_version: Num;
+  play_mode?: string | null;
+  still_at_s?: Num;
+  auto_enhance?: boolean | null;
+  auto_params?: unknown;
   status: string;
   error: string | null;
   attempts: Num;
@@ -194,6 +234,14 @@ export function mediaSourceFromDb(r: DbMediaSource): MediaSource {
 const asStatus = (v: unknown): MediaClipStatus =>
   MEDIA_CLIP_STATUSES.includes(v as MediaClipStatus) ? (v as MediaClipStatus) : 'draft';
 
+/** A play mode from anything; what is not one loops, as the column's default does. */
+export const asPlayMode = (v: unknown): PlayMode =>
+  PLAY_MODES.includes(v as PlayMode) ? (v as PlayMode) : 'loop';
+
+const UNITS: readonly ExerciseUnit[] = ['reps', 'seconds', 'meters', 'calories'];
+const asUnit = (v: unknown): ExerciseUnit | null =>
+  UNITS.includes(v as ExerciseUnit) ? (v as ExerciseUnit) : null;
+
 export function mediaClipFromDb(r: DbMediaClip): MediaClip {
   const grade = r.grade === null || r.grade === undefined ? null : clampGrade(r.grade);
   return {
@@ -201,6 +249,7 @@ export function mediaClipFromDb(r: DbMediaClip): MediaClip {
     sourceId: r.source_id,
     exerciseId: text(r.exercise_id),
     exerciseName: text(r.exercise_name),
+    exerciseUnit: asUnit(r.exercise_unit),
     exerciseHasVideo: r.exercise_has_video === true,
     rawPath: r.raw_path,
     rawOffsetS: num(r.raw_offset_s) ?? 0,
@@ -209,6 +258,11 @@ export function mediaClipFromDb(r: DbMediaClip): MediaClip {
     crop: clampCrop(r.crop),
     grade,
     gradeVersion: int(r.grade_version) || GRADE_VERSION,
+    playMode: asPlayMode(r.play_mode),
+    stillAtS: num(r.still_at_s),
+    // Absent (a server before 0061) reads as the default, on.
+    autoEnhance: r.auto_enhance !== false,
+    autoParams: parseAutoParams(r.auto_params),
     status: asStatus(r.status),
     error: text(r.error),
     attempts: int(r.attempts),
@@ -239,7 +293,16 @@ export function clipPatchToDb(patch: MediaClipPatch): Record<string, unknown> {
     out.grade = gradeToDb(patch.grade);
     out.grade_version = GRADE_VERSION;
   }
+  if (patch.playMode !== undefined) out.play_mode = asPlayMode(patch.playMode);
+  if ('stillAtS' in patch) out.still_at_s = stillToDb(patch.stillAtS);
+  if (patch.autoEnhance !== undefined) out.auto_enhance = patch.autoEnhance;
   return out;
+}
+
+/** A still frame as stored: milliseconds, never negative; null for the worker's default. */
+export function stillToDb(at: number | null | undefined): number | null {
+  if (at === null || at === undefined || !Number.isFinite(at)) return null;
+  return Math.max(0, Math.round(at * 1000) / 1000);
 }
 
 function validSpan(i: AddMediaClipInput): boolean {
@@ -330,7 +393,7 @@ export async function addMediaClip(input: AddMediaClipInput): Promise<MediaClip>
 }
 
 /**
- * Save a label, crop or grade (RPC `admin_media_save_clip`). Refused with `clip_busy` while the
+ * Save a label, crop, grade, play mode or auto switch (RPC `admin_media_save_clip`). Refused with `clip_busy` while the
  * clip renders; a rendered clip that changes comes back as a draft.
  */
 export async function saveMediaClip(id: string, patch: MediaClipPatch): Promise<MediaClip> {
@@ -345,8 +408,9 @@ export async function saveMediaClip(id: string, patch: MediaClipPatch): Promise<
 }
 
 /**
- * Paste a copied grade and/or crop onto many clips (RPC `admin_media_paste`). Answers how many
- * changed: clips that already match, and clips being rendered, are not counted.
+ * Paste copied settings — a grade, a crop, the auto switch — onto many clips (RPC
+ * `admin_media_paste`). Answers how many changed: clips that already match, and clips being
+ * rendered, are not counted.
  */
 export async function pasteMediaSettings(
   ids: readonly string[],
@@ -354,8 +418,9 @@ export async function pasteMediaSettings(
 ): Promise<number> {
   const withGrade = 'grade' in paste;
   const withCrop = 'crop' in paste;
+  const withAuto = typeof paste.autoEnhance === 'boolean';
   const list = uniqueIds(ids);
-  if (list.length === 0 || (!withGrade && !withCrop)) return 0;
+  if (list.length === 0 || (!withGrade && !withCrop && !withAuto)) return 0;
   if (isDemo()) return (await demo()).pasteMediaSettings(list, paste);
   return guard(async () =>
     unwrap<number>(
@@ -366,6 +431,7 @@ export async function pasteMediaSettings(
         p_with_grade: withGrade,
         p_with_crop: withCrop,
         p_grade_version: GRADE_VERSION,
+        p_auto_enhance: withAuto ? paste.autoEnhance : null,
       }),
     ),
   );

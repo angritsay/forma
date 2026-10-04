@@ -1,7 +1,8 @@
 -- =============================================================================
 -- «Студия» (0060): the raw bucket, the clip tables, the admin RPCs and the render queue.
 --
--- Run after the other suites on the same database, with 0060_media_studio.sql applied.
+-- Run after the other suites on the same database, with 0060_media_studio.sql and
+-- 0061_studio_flow.sql applied (the last section covers 0061: play mode, still frame, auto pass).
 --
 -- What this can get wrong:
 --   * somebody who is not an admin reads or writes footage, clips or sources — through storage,
@@ -460,11 +461,125 @@ do $$ begin
   assert public.media_en_writable('ms_press') = false, 'a recording the studio did not write is kept';
 end $$;
 
+-- --- 0061: play mode, still frame, the auto pass --------------------------------------------------
+select pg_temp.as_super();
+insert into public.exercises (id, name_ru, unit) values ('ms_plank', 'Планка (студия)', 'seconds')
+on conflict (id) do update set video_ru = null, video_en = null, video_mode = 'loop', unit = 'seconds';
+
+select pg_temp.as_user('00000000-0000-0000-0000-0000000060a1', 'ms-admin@example.com');
+do $$
+declare
+  v jsonb;
+begin
+  v := public.admin_media_add_clip('00000000-0000-0000-0000-0000000060c3',
+         '00000000-0000-0000-0000-000000006005',
+         '00000000-0000-0000-0000-000000006005/00000000-0000-0000-0000-0000000060c3.mp4',
+         0, 100, 110, 'ms_plank');
+  assert v ->> 'play_mode' = 'loop' and (v ->> 'auto_enhance')::boolean
+         and v -> 'still_at_s' = 'null'::jsonb and v -> 'auto_params' = 'null'::jsonb,
+    'a new clip loops, with the auto pass on and no still frame';
+  assert v ->> 'exercise_unit' = 'seconds', 'the clip carries its exercise''s unit for the preview';
+
+  v := public.admin_media_save_clip('00000000-0000-0000-0000-0000000060c3',
+         '{"play_mode":"still","still_at_s":2.5}');
+  assert v ->> 'play_mode' = 'still' and (v ->> 'still_at_s')::numeric = 2.5, 'a still frame is saved';
+  begin
+    perform public.admin_media_save_clip('00000000-0000-0000-0000-0000000060c3', '{"still_at_s":10.5}');
+    raise exception 'a still frame past the clip''s end was accepted';
+  exception when others then assert sqlerrm = 'invalid_still', sqlerrm; end;
+  begin
+    perform public.admin_media_save_clip('00000000-0000-0000-0000-0000000060c3', '{"still_at_s":"1"}');
+    raise exception 'a string still frame was accepted';
+  exception when others then assert sqlerrm = 'invalid_still', sqlerrm; end;
+  begin
+    perform public.admin_media_save_clip('00000000-0000-0000-0000-0000000060c3', '{"play_mode":"bounce"}');
+    raise exception 'an unknown play mode was accepted';
+  exception when others then assert sqlerrm = 'invalid_play_mode', sqlerrm; end;
+  begin
+    perform public.admin_media_save_clip('00000000-0000-0000-0000-0000000060c3', '{"auto_enhance":"yes"}');
+    raise exception 'a non-boolean auto switch was accepted';
+  exception when others then assert sqlerrm = 'invalid_patch', sqlerrm; end;
+
+  -- A resumed upload with a shorter span forgets a frame that is no longer inside it.
+  v := public.admin_media_add_clip('00000000-0000-0000-0000-0000000060c3',
+         '00000000-0000-0000-0000-000000006005',
+         '00000000-0000-0000-0000-000000006005/00000000-0000-0000-0000-0000000060c3.mp4',
+         0, 100, 102);
+  assert v -> 'still_at_s' = 'null'::jsonb and v ->> 'play_mode' = 'still',
+    'the frame outside the new span is forgotten, the mode kept';
+  v := public.admin_media_add_clip('00000000-0000-0000-0000-0000000060c3',
+         '00000000-0000-0000-0000-000000006005',
+         '00000000-0000-0000-0000-000000006005/00000000-0000-0000-0000-0000000060c3.mp4',
+         0, 100, 110);
+  v := public.admin_media_save_clip('00000000-0000-0000-0000-0000000060c3',
+         '{"play_mode":"once","still_at_s":null}');
+  assert v ->> 'play_mode' = 'once' and v -> 'still_at_s' = 'null'::jsonb, 'once, no frame';
+
+  -- Paste the auto switch alone; a clip that already has it does not count.
+  assert public.admin_media_paste(array['00000000-0000-0000-0000-0000000060c3']::uuid[], null, null,
+                                  false, false, 1, false) = 1, 'auto switched off by a paste';
+  assert public.admin_media_paste(array['00000000-0000-0000-0000-0000000060c3']::uuid[], null, null,
+                                  false, false, 1, false) = 0, 'the same paste again changes nothing';
+  assert (select not auto_enhance and grade is null from public.media_clips
+           where id = '00000000-0000-0000-0000-0000000060c3'), 'only the switch was pasted';
+  assert public.admin_media_paste(array['00000000-0000-0000-0000-0000000060c3']::uuid[],
+                                  '{"exposure":0.25}', null, true, false, 1, true) = 1,
+    'grade and switch pasted together';
+  assert (select auto_enhance and grade = '{"exposure":0.25}' from public.media_clips
+           where id = '00000000-0000-0000-0000-0000000060c3'), 'both halves landed';
+  assert public.admin_media_queue(array['00000000-0000-0000-0000-0000000060c3']::uuid[]) = 1, 'queued';
+end $$;
+
+select pg_temp.as_service();
+do $$
+declare
+  r record;
+begin
+  select * into r from public.media_render_claim(5) c
+   where c.id = '00000000-0000-0000-0000-0000000060c3';
+  assert r.play_mode = 'once' and r.still_at_s is null and r.auto_enhance,
+    'the worker is told the play mode, the frame and the auto switch';
+  assert public.media_render_done(r.id, r.attempt, false,
+           '{"v":1,"lo":[0.02,0.02,0.02],"hi":[0.95,0.95,0.95]}') = true, 'done with the auto values';
+  assert (select auto_params ->> 'v' = '1' from public.media_clips where id = r.id),
+    'the computed auto values are kept on the clip';
+  assert (select video_mode = 'fit' from public.exercises where id = 'ms_plank'),
+    'once → the exercise holds its last frame (fit)';
+end $$;
+
+-- Back to a still: a changed done clip is a draft; rendered again, the exercise loops.
+select pg_temp.as_user('00000000-0000-0000-0000-0000000060a1', 'ms-admin@example.com');
+do $$
+declare
+  v jsonb;
+begin
+  v := public.admin_media_save_clip('00000000-0000-0000-0000-0000000060c3', '{"play_mode":"still"}');
+  assert v ->> 'status' = 'draft', 'a new play mode makes a done clip a draft';
+  perform public.admin_media_queue(array['00000000-0000-0000-0000-0000000060c3']::uuid[]);
+end $$;
+
+select pg_temp.as_service();
+do $$
+declare
+  r record;
+begin
+  select * into r from public.media_render_claim(5) c
+   where c.id = '00000000-0000-0000-0000-0000000060c3';
+  assert r.play_mode = 'still', 'claimed as a still';
+  -- Anything but a small object is not kept as the auto values.
+  assert public.media_render_done(r.id, r.attempt, false, '[1,2,3]') = true, 'done';
+  assert (select auto_params is null from public.media_clips where id = r.id),
+    'auto values that are not an object are dropped';
+  assert (select video_mode = 'loop' from public.exercises where id = 'ms_plank'), 'still → loop';
+  assert public.media_video_mode('loop') = 'loop' and public.media_video_mode('once') = 'fit'
+         and public.media_video_mode('still') = 'loop', 'the play mode mapping';
+end $$;
+
 -- --- clean up -------------------------------------------------------------------------------------
 select pg_temp.as_super();
 delete from public.media_sources where id = '00000000-0000-0000-0000-000000006005';
 delete from storage.objects where bucket_id = 'raw' and name like 'ms-src/%';
-delete from public.exercises where id in ('ms_squat', 'ms_press');
+delete from public.exercises where id in ('ms_squat', 'ms_press', 'ms_plank');
 delete from public.admins where email = 'ms-admin@example.com';
 
 \echo 99_media_studio: ALL TESTS PASSED
