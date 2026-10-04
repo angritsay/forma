@@ -31,9 +31,14 @@ interface Props {
   locale: Locale;
   /** Heading level of each ticket's name. */
   headingLevel?: 'h3' | 'h4';
+  /**
+   * The «Записаться» button on each ticket. Off where the tickets are a picture of the product
+   * rather than an offer — the creators pitch (`/creators/`), whose reader is not booking.
+   */
+  actions?: boolean;
   class?: string;
 }
-const { locale, headingLevel: Heading = 'h3', class: extra = '' } = Astro.props;
+const { locale, headingLevel: Heading = 'h3', actions = true, class: extra = '' } = Astro.props;
 
 const tickets = BOOKING.options.map((o) => ({
   id: o.id,
@@ -55,9 +60,11 @@ const tickets = BOOKING.options.map((o) => ({
             <p class="text-[13px] text-on-field">{ticket.minutes}</p>
           </div>
           <p class="numeral text-5xl leading-none">{ticket.price}</p>
-          <Button href={ticket.href} variant="plain" class="w-full" data-app-link>
-            {ticket.cta}
-          </Button>
+          {actions && (
+            <Button href={ticket.href} variant="plain" class="w-full" data-app-link>
+              {ticket.cta}
+            </Button>
+          )}
         </li>
       ))}
     </ul>

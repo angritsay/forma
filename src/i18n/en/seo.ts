@@ -15,6 +15,9 @@ export const seo = {
   togetherTitle: 'Train together from Monday',
   togetherDescription:
     'Bring a friend along: workout 1 of Forma is free for each of you, and in the Small Steps Club you can play as a pair — one board for the two of you.',
+  creatorsTitle: 'Become a Forma creator: course, club, sessions',
+  creatorsDescription:
+    'Your method in the Forma app: a course, a club and 1:1 sessions. You keep 80% of course and club, 90% of sessions, after fees. Tools and editing are on us.',
   aboutPage: 'About the coach',
   contactPage: 'Contact',
   privacyPage: 'Privacy policy',
