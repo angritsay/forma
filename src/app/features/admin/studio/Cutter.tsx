@@ -145,9 +145,13 @@ export interface CutterProps {
    * the draft's source; a file without one starts on this source instead of a new one.
    */
   sourceId?: string;
+  /** That source's title, kept instead of the new file's name when there is no draft. */
+  sourceTitle?: string;
+  /** A run of uploads finished (some pieces may have failed): the caller re-reads the clips. */
+  onUploaded?: () => void;
 }
 
-export function Cutter({ sourceId: forSource }: CutterProps = {}) {
+export function Cutter({ sourceId: forSource, sourceTitle, onUploaded }: CutterProps = {}) {
   const tr = useT();
   const { t } = tr;
   const toast = useToast();
@@ -239,7 +243,7 @@ export function Cutter({ sourceId: forSource }: CutterProps = {}) {
         toast.show({ kind: 'info', title: t('app.studioDraftRestored') });
     } else {
       setSourceId(forSource ?? newId());
-      setTitle(titleFromFileName(f.name));
+      setTitle(sourceTitle || titleFromFileName(f.name));
       setMarks(EMPTY_MARKS);
     }
     // More of a video already cut here: its uploaded clips are cut ranges too, draft or no draft.
@@ -544,6 +548,7 @@ export function Cutter({ sourceId: forSource }: CutterProps = {}) {
     abort.current = null;
     running.current = false;
     setUploading(false);
+    onUploaded?.();
     if (ctrl.signal.aborted) return;
     resumeOnline.current = stoppedBy === 'offline';
     toast.show(

@@ -8,7 +8,7 @@
  * switch (`clipboard.ts`); framing is per clip, on «Превью».
  */
 import { clsx } from 'clsx';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
@@ -62,10 +62,13 @@ export function ColorStep({
   const targets = useMemo(() => pasteIds(clips, selected), [clips, selected]);
   const allSelected = clips.length > 0 && clips.every((c) => selected.has(c.id));
 
-  const markDirty = (d: boolean) => {
-    setDirty(d);
-    onDirtyChange(d);
-  };
+  const markDirty = useCallback(
+    (d: boolean) => {
+      setDirty(d);
+      onDirtyChange(d);
+    },
+    [onDirtyChange],
+  );
 
   const open = (id: string) => {
     if (id === active?.id) return;

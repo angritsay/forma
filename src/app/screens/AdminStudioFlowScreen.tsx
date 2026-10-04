@@ -49,7 +49,10 @@ export default function AdminStudioFlowScreen() {
   if (admin === false) return <Navigate to="/" replace />;
   if (!sourceId) return <Navigate to={STUDIO_PATH} replace />;
   if (!isStudioStep(step)) return <Navigate to={studioStepPath(sourceId, 'name')} replace />;
-  return <Flow key={sourceId} sourceId={sourceId} step={step} />;
+  // Leaving the cutter remounts: the steps after it start from the clips as uploaded.
+  return (
+    <Flow key={`${sourceId}:${step === 'cut' ? 'cut' : 'steps'}`} sourceId={sourceId} step={step} />
+  );
 }
 
 function Flow({ sourceId, step }: { sourceId: string; step: StudioStep }) {
@@ -131,7 +134,7 @@ function Flow({ sourceId, step }: { sourceId: string; step: StudioStep }) {
     <Screen header={header}>
       <StudioSteps current={step} clips={clips} onGo={goStep} />
       {step === 'cut' ? (
-        <Cutter sourceId={sourceId} />
+        <Cutter sourceId={sourceId} sourceTitle={title} onUploaded={() => load(true)} />
       ) : status === 'loading' ? (
         <LoadingBlock />
       ) : status !== 'ready' ? (

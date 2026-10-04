@@ -191,7 +191,10 @@ function ClipPreview({
   const [saving, setSaving] = useState(false);
   const busy = isBusy(clip);
 
-  const crop: Crop | null = video.w > 0 ? cropFromFraming(framing, video.w, video.h) : clip.crop;
+  const crop: Crop | null = useMemo(
+    () => (video.w > 0 ? cropFromFraming(framing, video.w, video.h) : clip.crop),
+    [clip.crop, framing, video],
+  );
   const dirty = video.w > 0 && !same(cropToDb(crop), cropToDb(clip.crop));
   const playback = previewPlayback(clip.playMode);
   const stillAt = clip.stillAtS ?? stillDefault(clipDuration(clip));
