@@ -267,6 +267,15 @@ export function AppRoutes() {
                   path="/admin/studio/cut"
                   element={<LazyScreen name="AdminStudioCutScreen" />}
                 />
+                {/* «Студия» → colour and frame: the clip grid, and one clip in the editor (0060). */}
+                <Route
+                  path="/admin/studio/grade"
+                  element={<LazyScreen name="AdminStudioGradeScreen" />}
+                />
+                <Route
+                  path="/admin/studio/grade/:clipId"
+                  element={<LazyScreen name="AdminStudioGradeScreen" />}
+                />
                 <Route path="/admin/courses" element={<LazyScreen name="AdminCoursesScreen" />} />
                 <Route
                   path="/admin/courses/:id"

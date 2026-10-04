@@ -37,6 +37,8 @@ export const SCREEN_NAMES = [
   // «Студия»: a filmed workout cut into exercise clips on the device and uploaded (0060).
   'AdminStudioScreen',
   'AdminStudioCutScreen',
+  // «Студия»: grade and frame the clips cut from a shoot, then queue them for rendering (0060).
+  'AdminStudioGradeScreen',
   'AdminCoursesScreen',
   'AdminCourseScreen',
   'AdminMarathonsScreen',
