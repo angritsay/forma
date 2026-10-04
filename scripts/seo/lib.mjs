@@ -1383,9 +1383,10 @@ export function urlToDistFile(url, dist, base) {
 }
 
 /**
- * Pages that are built but unlisted: not in the sitemap, the nav or llms.txt, marked noindex and
- * disallowed in robots.txt. They are links somebody sends by hand — `/creators/` is the pitch
- * Nastia sends to fitness creators (docs/CREATORS.md). Paths are dist-relative, both locales.
+ * Pages that are built but unlisted: not in the sitemap, the nav or llms.txt, and marked noindex
+ * (not disallowed in robots.txt, so crawlers can read that noindex). They are links somebody sends
+ * by hand — `/creators/` is the pitch Nastia sends to fitness creators (docs/CREATORS.md). Paths
+ * are dist-relative, both locales.
  */
 export const UNLISTED_PAGES = ['creators/index.html', 'en/creators/index.html'];
 

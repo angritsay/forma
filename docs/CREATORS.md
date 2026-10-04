@@ -8,8 +8,10 @@ outreach message Nastia sends with it. Edit the terms here first, then the page 
 
 - `/creators/` and `/en/creators/` — `src/pages/[...lang]/creators.astro`.
 - **Unlisted.** Not in `STATIC_PAGES` (`src/lib/seo/pages.ts`), so not in `sitemap.xml` or
-  `llms.txt`; not in the nav or the footer; `noindex, nofollow` on the page; `Disallow` for both
-  paths in `robots.txt`. `scripts/seo/lib.mjs` lists the two files in `UNLISTED_PAGES`: the audit
+  `llms.txt`; not in the nav or the footer; `noindex, nofollow` on the page. Deliberately **not**
+  `Disallow`ed in `robots.txt`: a crawler that may not fetch the page never sees its noindex and can
+  still index the bare URL from a shared link, and robots.txt is public — it would advertise the
+  path. `scripts/seo/lib.mjs` lists the two files in `UNLISTED_PAGES`: the audit
   requires noindex there and fails if either ever lands in the sitemap.
 - **The reply goes to Nastia:** `CREATOR_CONTACT` in `content/site/links.ts`
   (`https://t.me/aggritsay`). «Попробовать Forma» opens the app.
@@ -51,32 +53,31 @@ Nastia sends it personally, with both links. Keep it short; edit freely.
 
 ### RU
 
-> Привет! Меня зовут Настя, я сооснователь Forma — приложения для тренировок дома с курсами,
-> клубом и занятиями с тренером. Я сертифицированный фитнес-тренер и нутрициолог, больше десяти
-> лет в дизайне, а Forma делаю вместе с тренером Сергеем Титовым.
+> Привет! Я Настя, сооснователь Forma — приложения для домашних тренировок. Сертифицированный
+> фитнес-тренер и нутрициолог, больше десяти лет в дизайне; Forma делаю вместе с тренером Сергеем
+> Титовым.
 >
-> Ищу авторов, чей метод хочется упаковать в приложение: твой курс, твой клуб, твои занятия один
-> на один. Мы собираем и настраиваем всё под тебя — от структуры курса до вёрстки и таймингов,
-> помогаем с монтажом, берём на себя оплату, бота и поддержку. Тебе — 80% с курса и клуба и 90% с
-> занятий, после комиссии платёжки.
+> Пишу, потому что мне нравится, как ты тренируешь, и хочу упаковать твой метод в приложение: твой
+> курс, твой клуб, твои занятия один на один. Всё собираем и настраиваем под тебя, помогаем с
+> монтажом, берём на себя оплату, бота и поддержку. Тебе — 80% с курса и клуба и 90% с занятий,
+> после комиссии платёжки.
 >
-> Попробуй сам(а): forma-app.co/app/
+> Первая тренировка — бесплатно: forma-app.co/app/
 > Как это устроено для авторов: forma-app.co/creators/
 >
-> Если откликается — ответь мне здесь, созвонимся.
+> Если откликается — ответь здесь, созвонимся.
 
 ### EN
 
-> Hi! I'm Nastia, co-founder of Forma — a home-workout app with courses, a club and sessions with a
-> coach. I'm a certified fitness trainer and nutritionist with over ten years in design, and I
-> build Forma together with coach Sergey Titov.
+> Hi! I'm Nastia, co-founder of Forma, a home-workout app. I'm a certified fitness trainer and
+> nutritionist with over ten years in design, and I build Forma with coach Sergey Titov.
 >
-> I'm looking for creators whose method deserves its own app: your course, your club, your
-> one-to-one sessions. We build and customise everything around you — from the course structure
-> to the layout and timings — help with the editing, and take care of payments, the bot and
-> support. You keep 80% of course and club sales and 90% of sessions, after payment fees.
+> I'm writing because I like the way you train, and I'd love to put your method in an app: your
+> course, your club, your one-to-one sessions. We build and tune it all around you, help with the
+> editing, and handle payments, the bot and support. You keep 80% of course and club sales and 90%
+> of sessions, after payment fees.
 >
-> Try it yourself: forma-app.co/app/
+> Workout 1 is free: forma-app.co/app/
 > How it works for creators: forma-app.co/en/creators/
 >
-> If this resonates, just reply here and let's have a call.
+> If this resonates, reply here and let's have a call.

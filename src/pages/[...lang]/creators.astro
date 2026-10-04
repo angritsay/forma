@@ -3,9 +3,10 @@
  * `/creators/` — the pitch Nastia sends, herself, to fitness creators she wants on Forma.
  *
  * **Unlisted.** Not in `STATIC_PAGES` (so not in the sitemap or llms.txt), not in the nav or the
- * footer, `noindex` on the page and `Disallow` in robots.txt. The SEO audit knows it by name
- * (`UNLISTED_PAGES` in scripts/seo/lib.mjs): there noindex is required rather than an error, and a
- * sitemap entry would be the error. The terms and the outreach message live in docs/CREATORS.md.
+ * footer, `noindex` on the page — and deliberately not `Disallow`ed in robots.txt, which would
+ * hide that noindex from crawlers and advertise the path (docs/CREATORS.md). The SEO audit knows it
+ * by name (`UNLISTED_PAGES` in scripts/seo/lib.mjs): there noindex is required rather than an
+ * error, and a sitemap entry would be the error. The terms and the outreach message live in docs/CREATORS.md.
  *
  * **Honest by construction.** Every figure is read from where the business keeps it: the course
  * price and name from the demo course file, the club's prices from `PLANS`, the session lengths,
@@ -37,7 +38,7 @@ import { COURSE_BY_ID } from '@/content/registry';
 import { SITE_COURSES } from '@/content/published';
 import type { Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
-import { HOLD_MINUTES } from '@/lib/coach/slots';
+import { HOLD_MINUTES, MOVE_CUTOFF_HOURS } from '@/lib/coach/slots';
 import { appHref, localeStaticPaths, withBase } from '@/lib/util/paths';
 import { BOOKING } from '@content/site/booking';
 import { CREATOR_CONTACT } from '@content/site/links';
@@ -94,7 +95,7 @@ const products = [
   {
     id: 'sessions',
     title: k('creatorsSessionsTitle'),
-    line: k('creatorsSessionsLine', { n: HOLD_MINUTES }),
+    line: k('creatorsSessionsLine', { n: HOLD_MINUTES, h: MOVE_CUTOFF_HOURS }),
     price: '',
   },
 ] as const;
