@@ -37,7 +37,9 @@ export const SCREEN_NAMES = [
   // «Студия»: a filmed workout cut into exercise clips on the device and uploaded (0060).
   'AdminStudioScreen',
   'AdminStudioCutScreen',
-  // «Студия»: grade and frame the clips cut from a shoot, then queue them for rendering (0060).
+  // «Студия» for one video: cut, names, colour, preview and the render queue (0061).
+  'AdminStudioFlowScreen',
+  // The old «Цвет и кадр» addresses of 0060, redirected into the flow.
   'AdminStudioGradeScreen',
   'AdminCoursesScreen',
   'AdminCourseScreen',

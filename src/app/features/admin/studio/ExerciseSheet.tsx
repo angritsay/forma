@@ -2,11 +2,16 @@
  * «Какое это упражнение?»: search the whole exercise base, or type a name that is not there and
  * create the exercise on the spot (`createExercise`, id made from the name — `exerciseId.ts`).
  *
+ * A new exercise is created «На повторы» or «На время» — its `unit`, which decides whether the
+ * player counts reps or runs a timer, and so what the «Превью» step shows. Every existing row says
+ * which it is.
+ *
  * Unlike the workout builder's picker this offers every exercise, filmed or not: the cutter is
  * where an unfilmed one gets its video. One that already has a video is marked, because labelling
  * a clip with it means the render will replace that video.
  */
 import { useEffect, useMemo, useState } from 'react';
+import { Button } from '@/components/ui/Button';
 import { Glyph } from '@/components/ui/Icon';
 import { Input } from '@/components/ui/Input';
 import { Sheet } from '@/components/ui/Sheet';
@@ -16,11 +21,16 @@ import { LoadingBlock } from '@/app/components/LoadingBlock';
 import { adminErrorTitle } from '@/app/features/admin/adminError';
 import { useT } from '@/app/hooks/useT';
 import { exerciseIdFromName } from './exerciseId';
+import { unitLabel } from './unitLabel';
 
 export interface PickedExercise {
   id: string;
   name: string;
+  unit: ExerciseCatalogRow['unit'];
 }
+
+/** The units a new exercise can be created with here: the two the preview tells apart. */
+type NewUnit = 'reps' | 'seconds';
 
 export interface ExerciseSheetProps {
   open: boolean;
@@ -86,18 +96,18 @@ export function ExerciseSheet({ open, onClose, onPick, canClear, onToast }: Exer
   );
   const newId = q ? exerciseIdFromName(q, new Set(rows.map((e) => e.id))) : null;
 
-  const create = async () => {
+  const create = async (unit: NewUnit) => {
     if (!newId) {
       onToast('error', t('app.studioExerciseNameShort'));
       return;
     }
     setCreating(true);
     try {
-      const row = await createExercise({ id: newId, nameRu: q });
+      const row = await createExercise({ id: newId, nameRu: q, unit });
       cache = [...(cache ?? rows), row];
       setRows(cache);
       onToast('success', t('app.studioExerciseCreated', { name: row.nameRu }));
-      onPick({ id: row.id, name: row.nameRu });
+      onPick({ id: row.id, name: row.nameRu, unit: row.unit });
     } catch (e) {
       onToast('error', adminErrorTitle(tr, e, 'app.studioExerciseCreateError'));
     } finally {
@@ -136,13 +146,8 @@ export function ExerciseSheet({ open, onClose, onPick, canClear, onToast }: Exer
         ) : (
           <ul className="flex max-h-[55dvh] flex-col overflow-y-auto">
             {q && !exact ? (
-              <li>
-                <button
-                  type="button"
-                  disabled={creating}
-                  onClick={() => void create()}
-                  className={rowClass}
-                >
+              <li className="flex flex-col gap-2 border-t border-border py-3">
+                <span className="flex min-w-0 items-center gap-3">
                   <span className="flex min-w-0 flex-1 flex-col">
                     <span className="truncate text-[15px] font-medium">
                       {t('app.studioExerciseCreate', { name: q })}
@@ -154,7 +159,28 @@ export function ExerciseSheet({ open, onClose, onPick, canClear, onToast }: Exer
                   <Glyph size={16} className="shrink-0 text-muted-2">
                     +
                   </Glyph>
-                </button>
+                </span>
+                {/* The unit is asked here, not later: the preview is a timer or a count by it. */}
+                <span className="grid grid-cols-2 gap-2">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    disabled={!newId}
+                    loading={creating}
+                    onClick={() => void create('reps')}
+                  >
+                    {t('app.studioUnitReps')}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    disabled={!newId}
+                    loading={creating}
+                    onClick={() => void create('seconds')}
+                  >
+                    {t('app.studioUnitSeconds')}
+                  </Button>
+                </span>
               </li>
             ) : null}
             {canClear && !q ? (
@@ -168,13 +194,13 @@ export function ExerciseSheet({ open, onClose, onPick, canClear, onToast }: Exer
               <li key={e.id}>
                 <button
                   type="button"
-                  onClick={() => onPick({ id: e.id, name: e.nameRu })}
+                  onClick={() => onPick({ id: e.id, name: e.nameRu, unit: e.unit })}
                   className={rowClass}
                 >
                   <span className="flex min-w-0 flex-1 flex-col">
                     <span className="truncate text-[15px] font-medium">{nameOf(e)}</span>
                     <span className="truncate font-mono text-[12px] text-muted-2">
-                      {e.id}
+                      {e.id} · {t(unitLabel(e.unit))}
                       {e.videoRu ? ` · ${t('app.studioExerciseHasVideo')}` : ''}
                     </span>
                   </span>

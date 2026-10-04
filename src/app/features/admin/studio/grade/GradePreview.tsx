@@ -1,14 +1,14 @@
 /**
  * The raw clip, graded live: a hidden `<video>` decodes, a WebGL2 canvas draws each frame through
- * the grade's LUT (`glPreview.ts`), and the crop frame sits on top while it is being edited.
+ * one LUT — the automatic pass, then the manual grade (`studioLut`, `glPreview.ts`).
  *
  * - **Frames:** `requestVideoFrameCallback` where the browser has it (every decoded frame, no
  *   more), `requestAnimationFrame` while playing where it does not (older iOS WebViews). A slider
  *   moved on a paused clip redraws the last frame without touching the video.
  * - **The clip, not the piece:** the uploaded piece starts at a keyframe before the mark. The
  *   player shows and loops only `previewWindow(...)`, the span the worker will cut (`time.ts`).
- * - **Crop:** applied in the picture (the canvas samples only the crop) except while the «Кадр»
- *   tab is open, when the whole frame is drawn and the frame overlay is shown over it.
+ * - **Crop:** applied in the picture (the canvas samples only the crop). It is set on the «Превью»
+ *   step, against the card and the player; here it is only shown.
  * - **Without WebGL2** (or a lost context, or a video that will not hand its pixels over), the
  *   plain video is shown, cropped with CSS, under an honest line: the colour is not previewed here,
  *   but it is saved and the render applies it all the same.
@@ -18,10 +18,10 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties }
 import { Button } from '@/components/ui/Button';
 import { IconButton } from '@/components/ui/IconButton';
 import { Spinner } from '@/components/ui/Spinner';
+import { studioLut, type AutoParams } from '@/lib/media/autoEnhance';
 import type { Crop } from '@/lib/media/crop';
-import { defaultGrade, gradeToLut, type GradeParams } from '@/lib/media/grade';
+import type { GradeParams } from '@/lib/media/grade';
 import { useT } from '@/app/hooks/useT';
-import { CropOverlay } from './CropOverlay';
 import { GradeRenderer } from './glPreview';
 import { backingSize, cropUniform, fitInside, shownPixels, type Size } from './previewGeometry';
 import { mediaErrorProblem, PLAYBACK_KEYS, type PlaybackProblem } from './studioErrors';
@@ -42,20 +42,16 @@ export interface GradePreviewProps {
   problem: PlaybackProblem | null;
   win: PlayWindow;
   grade: GradeParams | null;
+  /** The automatic pass, applied before the grade; null — none (off, or not computed yet). */
+  auto: AutoParams | null;
   crop: Crop | null;
-  /** The crop tab is open: draw the whole frame and the editable overlay. */
-  editingCrop: boolean;
-  onCropChange: (crop: Crop | null) => void;
-  /** Normalised `w / h` the crop keeps, or null. */
-  cropRatio: number | null;
-  /** The video's displayed pixel size, once known (for aspect presets). */
-  onVideoSize: (size: Size) => void;
+  /** The video's displayed pixel size, once known. */
+  onVideoSize?: (size: Size) => void;
   /**
    * Sign the piece again. A signed URL expires; a video that stalls on a network error after a
    * long pause is usually that, and reloading the same URL would fail the same way.
    */
   onRetrySource?: () => void;
-  readOnly?: boolean;
 }
 
 export function GradePreview({
@@ -63,13 +59,10 @@ export function GradePreview({
   problem,
   win,
   grade,
+  auto,
   crop,
-  editingCrop,
-  onCropChange,
-  cropRatio,
   onVideoSize,
   onRetrySource,
-  readOnly,
 }: GradePreviewProps) {
   const { t } = useT();
   const room = useRef<HTMLDivElement>(null);
@@ -86,12 +79,11 @@ export function GradePreview({
   const [now, setNow] = useState(win.from);
   const [glKey, setGlKey] = useState(0);
 
-  const lut = useMemo(() => gradeToLut(grade ?? defaultGrade()), [grade]);
-  const applyCrop = !editingCrop;
-  const uniform = useMemo(() => cropUniform(crop, applyCrop), [crop, applyCrop]);
+  const lut = useMemo(() => studioLut(grade, auto), [grade, auto]);
+  const uniform = useMemo(() => cropUniform(crop, true), [crop]);
 
-  // What is drawn decides the box: the crop's aspect, or the frame's while the crop is edited.
-  const content = videoSize.w > 0 ? shownPixels(videoSize, crop, applyCrop) : { w: 16, h: 9 };
+  // What is drawn decides the box: the crop's aspect.
+  const content = videoSize.w > 0 ? shownPixels(videoSize, crop, true) : { w: 16, h: 9 };
   const box = fitInside(content, roomSize);
 
   // Live values for the frame loop, which is set up once per video.
@@ -207,7 +199,7 @@ export function GradePreview({
     const onMeta = () => {
       const size = { w: v.videoWidth, h: v.videoHeight };
       setVideoSize(size);
-      live.current.onVideoSize(size);
+      live.current.onVideoSize?.(size);
       v.currentTime = live.current.win.from;
       /*
        * iOS WebViews load metadata but no picture until something plays. A muted inline play
@@ -305,7 +297,7 @@ export function GradePreview({
 
   // Without the canvas the video itself is shown, scaled and shifted so only the crop is visible.
   const cssCrop: CSSProperties | undefined =
-    !useGl && applyCrop && crop
+    !useGl && crop
       ? {
           position: 'absolute',
           width: `${100 / crop.w}%`,
@@ -347,14 +339,6 @@ export function GradePreview({
             aria-label={t('app.studioPreviewLabel')}
             role="img"
           />
-          {editingCrop && videoSize.w > 0 ? (
-            <CropOverlay
-              crop={crop}
-              onChange={onCropChange}
-              ratio={cropRatio}
-              disabled={readOnly}
-            />
-          ) : null}
           {shownProblem ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-4 text-center text-[14px] text-white">
               <span>{t(PLAYBACK_KEYS[shownProblem])}</span>

@@ -1,7 +1,8 @@
 /**
  * «Студия», the landing: every filmed video that was cut here, and every clip with where it is on
- * its way — a draft waiting for a label or a grade, in the render queue, done, or failed with the
- * worker's reason. Two ways on: the cutter, and «Цвет и кадр» (the grader, `/admin/studio/grade`).
+ * its way — a draft waiting for a name or a colour, in the render queue, done, or failed with the
+ * worker's reason. A new video starts in the cutter; each video opens at the step it is at
+ * (`flow.ts` `currentStep`: names, colour or preview).
  *
  * The phone sees one column; from `lg` the sources sit beside the clips.
  */
@@ -23,6 +24,7 @@ import {
 import { LoadingBlock } from '@/app/components/LoadingBlock';
 import { useT } from '@/app/hooks/useT';
 import {
+  clipsOfSource,
   countByFilter,
   matchesFilter,
   needsLabel,
@@ -31,11 +33,15 @@ import {
   STATUS_TONE,
   type StudioFilter,
 } from './clipStatus';
+import { currentStep, STUDIO_CUT_PATH, studioStepPath, type StudioStep } from './flow';
 import { formatTimecode, segmentSeconds } from './timeline';
 
-export const STUDIO_CUT_PATH = '/admin/studio/cut';
-/** The grader is its own screen (S3); the landing only links to it. */
-export const STUDIO_GRADE_PATH = '/admin/studio/grade';
+const STEP_ACTION = {
+  cut: 'app.studioOpenCut',
+  name: 'app.studioOpenName',
+  color: 'app.studioOpenColor',
+  preview: 'app.studioOpenPreview',
+} as const satisfies Record<StudioStep, string>;
 
 type Status = 'loading' | 'ready' | 'error' | 'offline';
 
@@ -100,14 +106,6 @@ export function StudioOverview() {
       >
         {t('app.studioCutAction')}
       </Button>
-      <Button
-        variant="secondary"
-        onClick={() => navigate(STUDIO_GRADE_PATH)}
-        className="flex-1 sm:flex-none"
-        disabled={clips.length === 0}
-      >
-        {t('app.studioGradeAction')}
-      </Button>
     </div>
   );
 
@@ -139,8 +137,9 @@ export function StudioOverview() {
               {sources.map((s) => {
                 const active = s.id === sourceId;
                 const drafts = sourceDrafts(s);
+                const step = currentStep(clipsOfSource(clips, s.id));
                 return (
-                  <li key={s.id} className="border-t border-border">
+                  <li key={s.id} className="flex flex-col gap-1 border-t border-border pb-3">
                     <button
                       type="button"
                       aria-pressed={active}
@@ -179,6 +178,15 @@ export function StudioOverview() {
                         </span>
                       ) : null}
                     </button>
+                    <span className="px-1">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => navigate(studioStepPath(s.id, step))}
+                      >
+                        {t(STEP_ACTION[step])}
+                      </Button>
+                    </span>
                   </li>
                 );
               })}
