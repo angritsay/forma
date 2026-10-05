@@ -3,10 +3,11 @@
  * out. Naming, colour and framing are the next steps (`flow.ts`); this screen only cuts.
  *
  * 1. She picks the video. It plays from a local `blob:` URL; nothing big leaves the phone.
- * 2. She marks each exercise with «Начало» and «Конец» (I / O on a computer), frame-accurate with
- *    the ±1 frame and ±1 s steps. Tapping a piece selects it; the marks then move its edges. A
- *    range that is cut shows on the scrubber as a hatched «вырезано» band with its number, and
- *    cannot be cut again (`timeline.ts`): «Начало» is off while the playhead is inside one.
+ * 2. She finds each exercise on the timeline (`Timeline.tsx`: drag, pinch to zoom, tap) and marks
+ *    it with «Начало» and «Конец» (I / O on a computer), frame-accurate with the ±1 frame and
+ *    ±1 s steps. Tapping a piece selects it; the marks then move its edges. A range that is cut
+ *    shows on the timeline as a hatched «вырезано» band with its number, and cannot be cut again
+ *    (`timeline.ts`): «Начало» inside one says so right under the buttons.
  * 3. «Загрузить» cuts each piece by stream copy (`remux.ts`), uploads it over TUS
  *    (`rawUpload.ts`) and registers the clip (`addMediaClip`), one piece at a time, with progress
  *    per piece. A dropped connection resumes; a failed piece says why and offers a retry.
@@ -26,7 +27,6 @@ import {
   useRef,
   useState,
   type ChangeEvent,
-  type CSSProperties,
   type ReactNode,
   type Ref,
 } from 'react';
@@ -39,11 +39,12 @@ import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { useToast } from '@/components/ui/Toast';
-import { formatBytes } from '@/i18n/index';
+import { formatBytes, plural } from '@/i18n/index';
 import {
   addMediaClip,
   deleteMediaClip,
   listMediaClips,
+  listMediaSources,
   RAW_FILE_SIZE_LIMIT,
   rawClipPath,
   saveMediaSource,
@@ -65,6 +66,8 @@ import { runSegment } from './pipeline';
 import { openSource, type SourceInfo, type SourceReader } from './remux';
 import { cutterActionForKey, type CutterAction } from './shortcuts';
 import { studioStepPath } from './flow';
+import { STUDIO_FOOTER } from './footer';
+import { Timeline } from './Timeline';
 import {
   clampTime,
   cutAt,
@@ -76,6 +79,7 @@ import {
   segmentSeconds,
   stepFrame,
   stepSeconds,
+  uploadedFitFile,
   withUploaded,
   type MarkProblem,
   type MarkState,
@@ -88,6 +92,7 @@ import {
   UPLOAD_ERROR_KEY,
   type UploadErrorKind,
 } from './uploadErrors';
+import { useSeeker } from './useSeeker';
 
 const EMPTY_MARKS: MarkState = { segments: [], pendingIn: null, selectedId: null };
 
@@ -153,7 +158,7 @@ export interface CutterProps {
 
 export function Cutter({ sourceId: forSource, sourceTitle, onUploaded }: CutterProps = {}) {
   const tr = useT();
-  const { t } = tr;
+  const { t, locale } = tr;
   const toast = useToast();
   const navigate = useNavigate();
 
@@ -186,8 +191,14 @@ export function Cutter({ sourceId: forSource, sourceTitle, onUploaded }: CutterP
   const [thumbs, setThumbs] = useState<Record<string, string>>({});
   const pendingThumb = useRef<string | null>(null);
   const [problem, setProblem] = useState<MarkProblem | null>(null);
+  // Pieces already cut from this video when it was picked (a draft, or clips on the server).
+  const [restored, setRestored] = useState(0);
 
   const [now, setNow] = useState(0);
+  // The time she is looking at: where the playhead was sent, even before the picture lands there.
+  const nowRef = useRef(0);
+  nowRef.current = now;
+  const seeker = useSeeker(video);
   const [playing, setPlaying] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [removeFor, setRemoveFor] = useState<string | null>(null);
@@ -231,6 +242,7 @@ export function Cutter({ sourceId: forSource, sourceTitle, onUploaded }: CutterP
     setPlaybackError(false);
     setProblem(null);
     setThumbs({});
+    seeker.reset();
     setNow(0);
     setVideoUrl(URL.createObjectURL(f));
 
@@ -239,21 +251,14 @@ export function Cutter({ sourceId: forSource, sourceTitle, onUploaded }: CutterP
       setSourceId(draft.sourceId);
       setTitle(draft.title || titleFromFileName(f.name));
       setMarks({ segments: draft.segments, pendingIn: null, selectedId: null });
+      setRestored(draft.segments.length);
       if (draft.segments.length > 0)
         toast.show({ kind: 'info', title: t('app.studioDraftRestored') });
     } else {
       setSourceId(forSource ?? newId());
       setTitle(sourceTitle || titleFromFileName(f.name));
       setMarks(EMPTY_MARKS);
-    }
-    // More of a video already cut here: its uploaded clips are cut ranges too, draft or no draft.
-    if (forSource && (draft?.sourceId ?? forSource) === forSource) {
-      listMediaClips(forSource)
-        .then((clips) => {
-          if (seq !== pickSeq.current) return;
-          setMarks((m) => ({ ...m, segments: withUploaded(m.segments, clips) }));
-        })
-        .catch(() => undefined);
+      setRestored(0);
     }
 
     setOpening(true);
@@ -265,10 +270,43 @@ export function Cutter({ sourceId: forSource, sourceTitle, onUploaded }: CutterP
       }
       reader.current = r;
       setInfo(r.info);
+      // More of a video already cut here: its uploaded clips are cut ranges too, draft or no
+      // draft — once the file's duration is known, so they land only on the same video.
+      if (forSource && (draft?.sourceId ?? forSource) === forSource) {
+        void mergeUploaded(forSource, r.info.durationS, seq);
+      }
     } catch (err) {
       if (seq === pickSeq.current) setOpenError(classifyUploadError(err, navigator.onLine));
     } finally {
       if (seq === pickSeq.current) setOpening(false);
+    }
+  };
+
+  /**
+   * The clips already uploaded to `source`, added to the marks as cut ranges — when the file is
+   * the video they were cut from. The source keeps that video's duration; a file of another
+   * length is another video (picked under the same source by mistake), and its ranges would only
+   * refuse marks for no reason. Without the source's duration, every clip must at least end
+   * inside the file (`uploadedFitFile`).
+   */
+  const mergeUploaded = async (source: string, fileDurationS: number, seq: number) => {
+    try {
+      const [clips, sources] = await Promise.all([
+        listMediaClips(source),
+        listMediaSources().catch(() => null),
+      ]);
+      if (seq !== pickSeq.current || clips.length === 0) return;
+      const sourceDurationS = sources?.find((x) => x.id === source)?.durationS ?? null;
+      if (!uploadedFitFile(fileDurationS, sourceDurationS, clips)) {
+        toast.show({ kind: 'info', title: t('app.studioOtherFile') });
+        return;
+      }
+      const have = new Set(marksRef.current.segments.map((x) => x.id));
+      const extra = clips.filter((c) => !have.has(c.id)).length;
+      setMarks((m) => ({ ...m, segments: withUploaded(m.segments, clips) }));
+      setRestored((n) => n + extra);
+    } catch {
+      // Offline: the marks still work; the server refuses an overlap on upload anyway.
     }
   };
 
@@ -284,24 +322,39 @@ export function Cutter({ sourceId: forSource, sourceTitle, onUploaded }: CutterP
 
   // --- the player ---------------------------------------------------------------------------
 
+  /**
+   * Sends the playhead to `t0` and pauses: a frame she is looking for is a still frame. The
+   * readout moves at once; the picture follows through the seeker, which keeps one seek in flight
+   * and goes to the newest target next (`useSeeker`). `fast` — a finger still moving over a
+   * zoomed-out timeline — may land on a keyframe; the release always asks for the exact frame.
+   */
   const seek = useCallback(
-    (t0: number) => {
+    (t0: number, fast = false) => {
       const v = video.current;
       const target = clampTime(
         t0,
         durationS ?? (v && Number.isFinite(v.duration) ? v.duration : null),
       );
-      if (v) {
-        try {
-          v.currentTime = target;
-        } catch {
-          // Not seekable yet.
-        }
-      }
+      if (v && !v.paused) v.pause();
+      seeker.seek(target, fast);
+      nowRef.current = target;
       setNow(target);
+      setProblem((p) => (p === 'inside_cut' || p === 'no_in' ? null : p));
     },
-    [durationS],
+    [durationS, seeker],
   );
+
+  /** Where the playhead is: the picture's time while it plays, else where it was sent. */
+  const current = useCallback((): number => {
+    const v = video.current;
+    return v && !v.paused ? v.currentTime : nowRef.current;
+  }, []);
+
+  /** The video reports where it is; ignored while a seek is still on its way somewhere else. */
+  const syncNow = useCallback(() => {
+    const v = video.current;
+    if (v && seeker.idle()) setNow(v.currentTime);
+  }, [seeker]);
 
   // The readout follows the picture smoothly while it plays (timeupdate is only ~4 Hz).
   useEffect(() => {
@@ -309,7 +362,7 @@ export function Cutter({ sourceId: forSource, sourceTitle, onUploaded }: CutterP
     let raf = 0;
     const tick = () => {
       const v = video.current;
-      if (v) setNow(v.currentTime);
+      if (v && !v.paused) setNow(v.currentTime);
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -331,7 +384,7 @@ export function Cutter({ sourceId: forSource, sourceTitle, onUploaded }: CutterP
   }, []);
 
   const doMarkIn = useCallback(() => {
-    const at = video.current?.currentTime ?? now;
+    const at = current();
     const result = markIn(marks, at);
     if (!result.problem) {
       const thumb = captureThumb(video.current);
@@ -339,10 +392,10 @@ export function Cutter({ sourceId: forSource, sourceTitle, onUploaded }: CutterP
       else pendingThumb.current = thumb;
     }
     applyMark(result);
-  }, [marks, now, applyMark]);
+  }, [marks, current, applyMark]);
 
   const doMarkOut = useCallback(() => {
-    const at = video.current?.currentTime ?? now;
+    const at = current();
     const result = markOut(marks, at, newId);
     if (!result.problem && !marks.selectedId && result.state.selectedId) {
       const id = result.state.selectedId;
@@ -352,7 +405,7 @@ export function Cutter({ sourceId: forSource, sourceTitle, onUploaded }: CutterP
       video.current?.pause();
     }
     applyMark(result);
-  }, [marks, now, applyMark]);
+  }, [marks, current, applyMark]);
 
   const run = useCallback(
     (action: CutterAction) => {
@@ -364,18 +417,16 @@ export function Cutter({ sourceId: forSource, sourceTitle, onUploaded }: CutterP
         case 'toggle_play':
           return togglePlay();
         case 'frame_back':
-          video.current?.pause();
-          return seek(stepFrame(video.current?.currentTime ?? now, fps, -1, durationS));
+          return seek(stepFrame(current(), fps, -1, durationS));
         case 'frame_forward':
-          video.current?.pause();
-          return seek(stepFrame(video.current?.currentTime ?? now, fps, 1, durationS));
+          return seek(stepFrame(current(), fps, 1, durationS));
         case 'second_back':
-          return seek(stepSeconds(video.current?.currentTime ?? now, -1, durationS));
+          return seek(stepSeconds(current(), -1, durationS));
         case 'second_forward':
-          return seek(stepSeconds(video.current?.currentTime ?? now, 1, durationS));
+          return seek(stepSeconds(current(), 1, durationS));
       }
     },
-    [doMarkIn, doMarkOut, togglePlay, seek, now, fps, durationS],
+    [doMarkIn, doMarkOut, togglePlay, seek, current, fps, durationS],
   );
 
   // Desktop keys. Off while a sheet is open: there the keys are the sheet's.
@@ -410,16 +461,26 @@ export function Cutter({ sourceId: forSource, sourceTitle, onUploaded }: CutterP
     return () => window.removeEventListener('beforeunload', onBefore);
   }, [uploading]);
 
-  const select = (s: Segment) => {
+  /** A piece picked in the list (a second tap lets it go) or on the timeline. */
+  const select = (s: Segment, toggle = true) => {
     setProblem(null);
     if (marks.selectedId === s.id) {
-      setMarks((m) => ({ ...m, selectedId: null }));
+      if (toggle) setMarks((m) => ({ ...m, selectedId: null }));
       return;
     }
     setMarks((m) => ({ ...m, selectedId: s.id, pendingIn: null }));
-    video.current?.pause();
     seek(s.startS);
   };
+
+  const selectById = (id: string) => {
+    const s = segments.find((x) => x.id === id);
+    if (s) select(s, false);
+  };
+
+  const pauseVideo = useCallback(() => {
+    const v = video.current;
+    if (v && !v.paused) v.pause();
+  }, []);
 
   // --- piece edits ------------------------------------------------------------------------------
 
@@ -596,15 +657,17 @@ export function Cutter({ sourceId: forSource, sourceTitle, onUploaded }: CutterP
   }
 
   const under = segmentAt(segments, now);
+  // A new piece cannot start inside one already cut; a selected piece's own range is its to move.
+  const inCut = marks.selectedId === null && cutAt(segments, now) !== null;
   const hint: ReactNode = problem
     ? t(PROBLEM_KEY[problem])
     : selected
       ? t('app.studioSelectedHint')
-      : marks.pendingIn !== null
-        ? t('app.studioPendingIn', { time: formatTimecode(marks.pendingIn) })
-        : t('app.studioMarkHint');
-  // A new piece cannot start inside one already cut; a selected piece's own range is its to move.
-  const inCut = marks.selectedId === null && cutAt(segments, now) !== null;
+      : inCut && marks.pendingIn === null
+        ? t('app.studioProblemInsideCut')
+        : marks.pendingIn !== null
+          ? t('app.studioPendingIn', { time: formatTimecode(marks.pendingIn) })
+          : t('app.studioMarkHint');
   const removeSeg = segments.find((s) => s.id === removeFor) ?? null;
   const allDone = segments.length > 0 && toUpload.length === 0;
   const anyUploaded = segments.some((s) => s.upload === 'done');
@@ -641,6 +704,15 @@ export function Cutter({ sourceId: forSource, sourceTitle, onUploaded }: CutterP
             })}
           </p>
         ) : null}
+        {restored > 0 ? (
+          <p className="text-[13px] text-muted">
+            {plural(locale, restored, {
+              one: t('app.studioAlreadyCutOne', { n: restored }),
+              few: t('app.studioAlreadyCutFew', { n: restored }),
+              many: t('app.studioAlreadyCutMany', { n: restored }),
+            })}
+          </p>
+        ) : null}
 
         <div className="relative overflow-hidden bg-black">
           {videoUrl ? (
@@ -654,10 +726,15 @@ export function Cutter({ sourceId: forSource, sourceTitle, onUploaded }: CutterP
               onPlay={() => setPlaying(true)}
               onPause={() => {
                 setPlaying(false);
-                if (video.current) setNow(video.current.currentTime);
+                syncNow();
               }}
-              onSeeked={() => video.current && setNow(video.current.currentTime)}
-              onTimeUpdate={() => !playing && video.current && setNow(video.current.currentTime)}
+              onSeeked={() => {
+                seeker.settled();
+                syncNow();
+              }}
+              onTimeUpdate={() => {
+                if (!playing) syncNow();
+              }}
               onError={() => setPlaybackError(true)}
               onClick={togglePlay}
             />
@@ -682,13 +759,18 @@ export function Cutter({ sourceId: forSource, sourceTitle, onUploaded }: CutterP
           </p>
         ) : null}
 
-        <Scrubber
+        <Timeline
           now={now}
           durationS={durationS}
+          fps={fps}
           segments={segments}
           pendingIn={marks.pendingIn}
           selectedId={marks.selectedId}
+          videoUrl={videoUrl}
+          playing={playing}
+          onScrubStart={pauseVideo}
           onSeek={seek}
+          onSelect={selectById}
           label={t('app.studioScrubber')}
         />
 
@@ -739,7 +821,8 @@ export function Cutter({ sourceId: forSource, sourceTitle, onUploaded }: CutterP
         <div className="grid grid-cols-2 gap-2">
           <Button
             variant={marks.pendingIn !== null && !selected ? 'secondary' : 'primary'}
-            disabled={!info || inCut}
+            disabled={!info}
+            aria-describedby="cut-mark-hint"
             onClick={doMarkIn}
           >
             {t('app.studioMarkIn')}
@@ -753,7 +836,14 @@ export function Cutter({ sourceId: forSource, sourceTitle, onUploaded }: CutterP
           </Button>
         </div>
         <p
-          className={clsx('text-[14px]', problem ? 'text-danger' : 'text-muted')}
+          id="cut-mark-hint"
+          role={problem ? 'alert' : undefined}
+          className={clsx(
+            'text-[14px]',
+            problem
+              ? 'rounded-control border border-danger/40 bg-danger/10 px-3 py-2 text-danger'
+              : 'text-muted',
+          )}
           aria-live="polite"
         >
           {hint}
@@ -799,7 +889,7 @@ export function Cutter({ sourceId: forSource, sourceTitle, onUploaded }: CutterP
           </ol>
         )}
 
-        <div className="sticky bottom-[var(--nav-inset,0px)] z-10 -mx-4 flex flex-col gap-2 bg-bg px-4 pt-3 pb-[calc(var(--safe-bottom)+16px)] sm:mx-0 sm:px-0">
+        <div className={STUDIO_FOOTER}>
           {uploading ? (
             <>
               <p className="text-[13px] text-muted">{t('app.studioKeepOpen')}</p>
@@ -873,85 +963,6 @@ function FileInput({
       tabIndex={-1}
       onChange={(e) => void onPick(e)}
     />
-  );
-}
-
-/**
- * Diagonal hatching for a range that is cut: a cut range must not read as free footage, nor as the
- * plain bar of the free strip around it.
- */
-const CUT_HATCH: CSSProperties = {
-  backgroundImage:
-    'repeating-linear-gradient(135deg, color-mix(in srgb, currentColor 35%, transparent) 0 2px, transparent 2px 6px)',
-};
-
-/**
- * The scrubber: a range input over a strip that draws the cut pieces, the pending start and the
- * playhead, so where the next exercise begins is visible at a glance. A cut piece is a dimmed,
- * hatched band labelled with its number and «вырезано» (when it is wide enough for the word).
- */
-function Scrubber({
-  now,
-  durationS,
-  segments,
-  pendingIn,
-  selectedId,
-  onSeek,
-  label,
-}: {
-  now: number;
-  durationS: number | null;
-  segments: readonly Segment[];
-  pendingIn: number | null;
-  selectedId: string | null;
-  onSeek: (t: number) => void;
-  label: string;
-}) {
-  const { t } = useT();
-  const d = durationS && durationS > 0 ? durationS : 0;
-  const pct = (v: number) => (d > 0 ? `${Math.min(100, Math.max(0, (v / d) * 100))}%` : '0%');
-  return (
-    <div className="relative h-11">
-      <div className="pointer-events-none absolute inset-x-0 top-1/2 h-6 -translate-y-1/2 bg-surface-3">
-        {segments.map((s, i) => (
-          <span
-            key={s.id}
-            className={clsx(
-              'absolute inset-y-0 flex items-center overflow-hidden border-x px-1 text-[10px] leading-none whitespace-nowrap',
-              s.id === selectedId
-                ? 'border-accent bg-accent/60 text-ink'
-                : s.upload === 'done'
-                  ? 'border-success bg-success/25 text-text'
-                  : 'border-text/50 bg-text/15 text-text',
-            )}
-            style={{
-              ...CUT_HATCH,
-              left: pct(s.startS),
-              width: `calc(${pct(s.endS)} - ${pct(s.startS)})`,
-            }}
-          >
-            <span className="truncate">
-              {i + 1} · {t('app.studioCutBand')}
-            </span>
-          </span>
-        ))}
-        {pendingIn !== null ? (
-          <span className="absolute -inset-y-1 w-0.5 bg-accent" style={{ left: pct(pendingIn) }} />
-        ) : null}
-        <span className="absolute -inset-y-2 w-0.5 bg-text" style={{ left: pct(now) }} />
-      </div>
-      <input
-        type="range"
-        aria-label={label}
-        min={0}
-        max={d || 1}
-        step={0.01}
-        value={Math.min(now, d || 1)}
-        disabled={d === 0}
-        onChange={(e) => onSeek(Number(e.target.value))}
-        className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-      />
-    </div>
   );
 }
 

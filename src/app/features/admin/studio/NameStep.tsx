@@ -22,6 +22,7 @@ import {
 } from '@/lib/api/mediaStudio';
 import { useT } from '@/app/hooks/useT';
 import { ExerciseSheet, type PickedExercise } from './ExerciseSheet';
+import { STUDIO_FOOTER } from './footer';
 import { ClipStatusChip } from './grade/ClipStatus';
 import { isBusy } from './grade/selection';
 import { studioErrorTitle } from './grade/studioErrors';
@@ -74,7 +75,7 @@ export function NameStep({ clips, onSaved, onNext }: NameStepProps) {
         ))}
       </ol>
 
-      <div className="sticky bottom-[var(--nav-inset,0px)] z-10 -mx-4 flex flex-col gap-2 bg-bg px-4 pt-3 pb-[calc(var(--safe-bottom)+16px)] sm:mx-0 sm:px-0">
+      <div className={STUDIO_FOOTER}>
         {unnamed > 0 ? (
           <p className="text-[13px] text-muted">{t('app.studioNameLeft', { n: unnamed })}</p>
         ) : null}

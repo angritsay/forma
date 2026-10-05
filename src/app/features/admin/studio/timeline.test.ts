@@ -17,6 +17,7 @@ import {
   spanProblem,
   stepFrame,
   stepSeconds,
+  uploadedFitFile,
   withUploaded,
   type MarkState,
 } from './timeline';
@@ -260,5 +261,22 @@ describe('lists', () => {
     expect(isLocked(b)).toBe(false);
     expect(isLocked(c)).toBe(false);
     expect(isLocked({ ...b, upload: 'uploading' })).toBe(true);
+  });
+});
+
+describe('uploaded clips on a picked file', () => {
+  it('belong to a file of the source duration, within a second', () => {
+    const clips = [{ endS: 10 }, { endS: 200 }];
+    expect(uploadedFitFile(331, 331.4, clips)).toBe(true);
+    expect(uploadedFitFile(331, 330.1, clips)).toBe(true);
+    expect(uploadedFitFile(331, 333, clips)).toBe(false);
+    // Another video under the same source, long enough to hold every clip: still another video.
+    expect(uploadedFitFile(600, 331, clips)).toBe(false);
+  });
+
+  it('without the source duration, need every clip to end inside the file', () => {
+    expect(uploadedFitFile(201, null, [{ endS: 10 }, { endS: 200 }])).toBe(true);
+    expect(uploadedFitFile(120, null, [{ endS: 10 }, { endS: 200 }])).toBe(false);
+    expect(uploadedFitFile(0, null, [])).toBe(false);
   });
 });

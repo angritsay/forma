@@ -146,6 +146,27 @@ export function withUploaded(
   return extra.length === 0 ? [...list] : sortSegments([...list, ...extra]);
 }
 
+/** How far a file's duration may stray from the source's and still be the same video. */
+export const SAME_VIDEO_TOLERANCE_S = 1;
+
+/**
+ * Whether clips uploaded to a source belong on the file picked now: a cut range of another video
+ * would refuse marks for no reason. The source keeps the duration of the file it was first cut
+ * from (`saveMediaSource`); within {@link SAME_VIDEO_TOLERANCE_S} it is the same video. An older
+ * source without one can only be checked loosely: every clip must end inside the file.
+ */
+export function uploadedFitFile(
+  fileDurationS: number,
+  sourceDurationS: number | null,
+  clips: readonly { endS: number }[],
+): boolean {
+  if (!Number.isFinite(fileDurationS) || fileDurationS <= 0) return false;
+  if (sourceDurationS !== null && Number.isFinite(sourceDurationS) && sourceDurationS > 0) {
+    return Math.abs(fileDurationS - sourceDurationS) <= SAME_VIDEO_TOLERANCE_S;
+  }
+  return clips.every((c) => c.endS <= fileDurationS + SAME_VIDEO_TOLERANCE_S);
+}
+
 /** Segments in the order they were filmed. */
 export function sortSegments(list: readonly Segment[]): Segment[] {
   return [...list].sort((a, b) => a.startS - b.startS || a.endS - b.endS);
