@@ -37,6 +37,7 @@ import { useT } from '@/app/hooks/useT';
 import { BigClock } from '@/app/features/player/BigClock';
 import { Stepper } from '@/app/features/player/Stepper';
 import { StepHeading } from '@/app/features/player/steps/StepHeading';
+import { STUDIO_FOOTER } from './footer';
 import { useAutoParams } from './grade/autoSample';
 import { ClipStatusChip } from './grade/ClipStatus';
 import type { Size } from './grade/previewGeometry';
@@ -131,7 +132,7 @@ export function PreviewStep({ clips, activeId, onActive, onSaved, onReload }: Pr
         />
       ) : null}
 
-      <div className="sticky bottom-[var(--nav-inset,0px)] z-10 -mx-4 flex flex-col gap-2 border-t border-border bg-bg px-4 pt-3 pb-[calc(var(--safe-bottom)+16px)] sm:mx-0 sm:px-0">
+      <div className={clsx(STUDIO_FOOTER, 'border-t border-border')}>
         <Button
           fullWidth
           loading={actions.busy}
