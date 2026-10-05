@@ -218,6 +218,15 @@ end $$;
 --
 -- Стык двух машин: 0028 объявляет, 0027 отправляет. Проверяется то, что легко
 -- сломать при следующей правке любой из них.
+--
+-- Since 0062 the bot writes only to a paying winner (or an admin), so both winners here get a live
+-- subscription first. A winner without one is covered in 98_club_daily.sql.
+select pg_temp.as_super();
+insert into public.subscriptions (email, plan, status, started_at, expires_at)
+select e, 'monthly', 'active', now() - interval '1 day', now() + interval '30 days'
+from unnest(array['win-one@example.com', 'win-two@example.com']) as e
+on conflict (email) do update set status = 'active', expires_at = excluded.expires_at;
+
 select pg_temp.as_user('00000000-0000-0000-0000-0000000000e0', 'winner-admin@example.com');
 do $$
 declare i record; begin

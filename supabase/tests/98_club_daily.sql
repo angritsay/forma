@@ -11,6 +11,10 @@
 --   * `club_recap` — по воскресеньям, с местом и баллами той же доски;
 --   * вошедший человек функцию вызвать не может; свой флаг он ставит только `club_quiet`.
 --
+-- Since 0062 (the last section, in English): club messages go to paying members and admins only —
+-- a course buyer in the free club week gets none of them, nor the duo nudge, the winner message or
+-- the free-week warning; the one-off purge of 0062 removes what was already queued for them.
+--
 -- Текста сообщений здесь нет — он в `telegram-notify/copy.ts` и покрыт своими тестами.
 -- =============================================================================
 \set ON_ERROR_STOP on
@@ -241,6 +245,252 @@ begin
   select count(*) into v_n from public.telegram_outbox o
   where o.email like 'daily-%' and o.params::text ilike '%@example.com%';
   assert v_n = 0, 'в params не должно быть адресов';
+end $$;
+
+
+-- =============================================================================
+-- 0062: club messages go only to paying members (and admins).
+--
+--   paid-sub    a live subscription                       → gets the club messages
+--   paid-admin  an admin, no subscription                 → gets them
+--   paid-trial  a course 6.5 days ago (free club week),   → gets none of them, although the app
+--               an active member of both club rounds         still lets them into the club
+--   paid-mate   a live subscription, the positive control for the duo nudge
+-- =============================================================================
+select pg_temp.as_super();
+
+insert into auth.users (id, email, raw_user_meta_data) values
+  ('00000000-0000-0000-0000-0000000062a1', 'paid-sub@example.com',   '{}'),
+  ('00000000-0000-0000-0000-0000000062a2', 'paid-trial@example.com', '{}'),
+  ('00000000-0000-0000-0000-0000000062a3', 'paid-admin@example.com', '{}'),
+  ('00000000-0000-0000-0000-0000000062a4', 'paid-mate@example.com',  '{}')
+on conflict (id) do nothing;
+
+insert into public.admins (email) values ('paid-admin@example.com') on conflict (email) do nothing;
+
+insert into public.subscriptions (email, plan, status, started_at, expires_at)
+select e, 'monthly', 'active', now() - interval '1 day', now() + interval '30 days'
+from unnest(array['paid-sub@example.com', 'paid-mate@example.com']) as e
+on conflict (email) do update set status = 'active', expires_at = excluded.expires_at;
+
+insert into public.purchases (email, course_id, status, activated_at)
+values ('paid-trial@example.com', 'start', 'active', now() - interval '6 days 12 hours')
+on conflict (email, course_id) do update
+  set status = 'active', activated_at = excluded.activated_at;
+
+create temporary table paid_ids (club uuid, duo uuid, sub uuid, trial uuid, admin uuid,
+                                 sunday_task uuid) on commit preserve rows;
+
+-- --- the daily touches and the free-week warning ---------------------------------
+do $$
+declare
+  v_club   uuid := public.club_marathon(false);
+  v_duo    uuid := public.club_marathon(true);
+  v_tz     text;
+  v_today  date;
+  v_sunday date;
+  v_day    int;
+  v_y1     uuid;
+  v_sun    uuid;
+  v_sub    uuid;
+  v_trial  uuid;
+  v_admin  uuid;
+  v_at     timestamptz;
+  v_n      int;
+begin
+  select m.timezone into v_tz from public.marathons m where m.id = v_club;
+  v_today  := (now() at time zone v_tz)::date;
+  v_sunday := v_today + (7 - extract(isodow from v_today)::int);
+  select (v_today - m.starts_on) + 1 into v_day from public.marathons m where m.id = v_club;
+
+  -- The rule itself: the app still lets the course buyer in, the bot does not write to them.
+  assert public.club_member_reachable('paid-trial@example.com'), 'the free week still opens the club in the app';
+  assert not public.club_paid_reachable('paid-trial@example.com'), 'the free week is not paid membership';
+  assert public.club_paid_reachable('paid-sub@example.com'), 'a subscriber is a paying member';
+  assert public.club_paid_reachable('PAID-SUB@example.com'), 'addresses compare case-insensitively';
+  assert public.club_paid_reachable('paid-admin@example.com'), 'an admin is written to';
+  assert not public.club_paid_reachable(null), 'no address — no';
+  assert not public.club_paid_reachable(''), 'an empty address — no';
+  assert not has_function_privilege('authenticated', 'public.club_paid_reachable(text)', 'execute'),
+    'club_paid_reachable is service-side only';
+
+  insert into public.marathon_members (marathon_id, email) values (v_club, 'paid-sub@example.com')
+  on conflict (marathon_id, email) do update set status = 'active' returning id into v_sub;
+  insert into public.marathon_members (marathon_id, email) values (v_club, 'paid-trial@example.com')
+  on conflict (marathon_id, email) do update set status = 'active' returning id into v_trial;
+  insert into public.marathon_members (marathon_id, email) values (v_club, 'paid-admin@example.com')
+  on conflict (marathon_id, email) do update set status = 'active' returning id into v_admin;
+  -- The course buyer is in the duo round too, as `join_club()` would put them.
+  insert into public.marathon_members (marathon_id, email) values (v_duo, 'paid-trial@example.com')
+  on conflict (marathon_id, email) do update set status = 'active';
+
+  -- Yesterday done (a streak to save in the evening), today not yet. Plus a task on this week's
+  -- Sunday, so the recap has something to count whatever weekday the suite runs on.
+  select t.id into v_y1 from public.marathon_tasks t
+  where t.marathon_id = v_club and t.day_index = v_day - 1 and t.title = 'Вчера' limit 1;
+  assert v_y1 is not null, 'yesterday''s task from the block above is expected';
+  insert into public.marathon_submissions (task_id, member_id, marathon_id, day_index)
+  values (v_y1, v_sub, v_club, v_day - 1), (v_y1, v_trial, v_club, v_day - 1),
+         (v_y1, v_admin, v_club, v_day - 1);
+  insert into public.marathon_tasks (marathon_id, day_index, title, rule, points, late_counts)
+  values (v_club, v_day + (v_sunday - v_today), 'paid-sunday', 'per_member', 10, true)
+  returning id into v_sun;
+
+  insert into paid_ids values (v_club, v_duo, v_sub, v_trial, v_admin, v_sun);
+
+  -- Morning, evening, Sunday night: each run queues for the payer and the admin, not the buyer.
+  v_at := (v_today::timestamp + time '08:30') at time zone v_tz;
+  perform public.club_enqueue_daily('club_task', v_at);
+  v_at := (v_today::timestamp + time '20:30') at time zone v_tz;
+  perform public.club_enqueue_daily('club_reminder', v_at);
+  v_at := (v_sunday::timestamp + time '21:30') at time zone v_tz;
+  perform public.club_enqueue_daily('club_recap', v_at);
+
+  select count(*) into v_n from public.telegram_outbox o
+  where o.email = 'paid-trial@example.com'
+    and o.kind in ('club_task', 'club_reminder', 'club_recap');
+  assert v_n = 0, 'a course buyer in the free week gets no daily club message, got ' || v_n::text;
+
+  select count(*) into v_n from public.telegram_outbox o
+  where o.email = 'paid-sub@example.com' and o.kind in ('club_task', 'club_reminder', 'club_recap');
+  assert v_n = 3, 'a subscriber still gets the task, the reminder and the recap, got ' || v_n::text;
+
+  select count(*) into v_n from public.telegram_outbox o
+  where o.email = 'paid-admin@example.com' and o.kind in ('club_task', 'club_reminder', 'club_recap');
+  assert v_n = 3, 'an admin still gets the task, the reminder and the recap, got ' || v_n::text;
+
+  -- The free week ends within a day, and the buyer is in the club: still no warning.
+  perform public.club_enqueue_access_ending();
+  select count(*) into v_n from public.telegram_outbox o
+  where o.email = 'paid-trial@example.com' and o.kind = 'club_trial_tomorrow';
+  assert v_n = 0, 'no free-week warning since 0062, got ' || v_n::text;
+end $$;
+
+-- --- the duo nudge: nothing to a partner who does not pay --------------------------
+do $$
+declare
+  i   record;
+  v_a uuid;
+  v_b uuid;
+  v_c uuid;
+begin
+  select * into i from paid_ids;
+  insert into public.marathon_members (marathon_id, email) values (i.duo, 'paid-sub@example.com')
+  on conflict (marathon_id, email) do update set status = 'active' returning id into v_a;
+  select id into v_b from public.marathon_members where marathon_id = i.duo and email = 'paid-trial@example.com';
+  insert into public.marathon_members (marathon_id, email) values (i.duo, 'paid-mate@example.com')
+  on conflict (marathon_id, email) do update set status = 'active' returning id into v_c;
+  perform public.club_duo_pair(i.duo, v_a, v_b, false);
+end $$;
+
+select pg_temp.as_user('00000000-0000-0000-0000-0000000062a1', 'paid-sub@example.com');
+do $$ begin perform public.club_duo_nudge(); end $$;
+select pg_temp.as_super();
+
+do $$
+declare v_n int;
+begin
+  select count(*) into v_n from public.telegram_outbox o
+  where o.email = 'paid-trial@example.com' and o.kind = 'duo_nudge';
+  assert v_n = 0, 'a nudge to a partner without a subscription queues nothing, got ' || v_n::text;
+end $$;
+
+-- Positive control: re-paired with a subscriber, the same call queues one nudge.
+do $$
+declare i record; v_a uuid; v_c uuid;
+begin
+  select * into i from paid_ids;
+  select id into v_a from public.marathon_members where marathon_id = i.duo and email = 'paid-sub@example.com';
+  select id into v_c from public.marathon_members where marathon_id = i.duo and email = 'paid-mate@example.com';
+  perform public.club_duo_pair(i.duo, v_a, v_c, false);
+end $$;
+
+select pg_temp.as_user('00000000-0000-0000-0000-0000000062a1', 'paid-sub@example.com');
+do $$ begin perform public.club_duo_nudge(); end $$;
+select pg_temp.as_super();
+
+do $$
+declare v_n int;
+begin
+  select count(*) into v_n from public.telegram_outbox o
+  where o.email = 'paid-mate@example.com' and o.kind = 'duo_nudge';
+  assert v_n = 1, 'a nudge to a paying partner is queued, got ' || v_n::text;
+end $$;
+
+-- --- the weekly winner: nothing to a winner who does not pay ------------------------
+do $$
+declare i record; v_n int;
+begin
+  select * into i from paid_ids;
+  insert into public.marathon_winners (marathon_id, week, member_id, note)
+  values (i.club, 900, i.trial, 'paid-only test');
+  select count(*) into v_n from public.telegram_outbox o
+  where o.email = 'paid-trial@example.com' and o.kind = 'weekly_winner';
+  assert v_n = 0, 'a winner without a subscription gets no bot message, got ' || v_n::text;
+
+  -- The coach changes their mind: the win moves to the subscriber, who is written to.
+  update public.marathon_winners set member_id = i.sub where marathon_id = i.club and week = 900;
+  select count(*) into v_n from public.telegram_outbox o
+  where o.email = 'paid-sub@example.com' and o.kind = 'weekly_winner';
+  assert v_n = 1, 'a paying winner gets the message, got ' || v_n::text;
+end $$;
+
+-- --- the one-off purge -------------------------------------------------------------
+-- Rows as a database before 0062 could hold them: queued club messages for the buyer, plus rows
+-- the purge must leave alone.
+insert into public.telegram_outbox (email, kind, params, dedupe_key, status) values
+  ('paid-trial@example.com', 'club_task',           '{}', 'paid-purge:trial:task',        'pending'),
+  ('paid-trial@example.com', 'club_reminder',       '{}', 'paid-purge:trial:reminder',    'pending'),
+  ('paid-trial@example.com', 'club_recap',          '{}', 'paid-purge:trial:recap',       'pending'),
+  ('paid-trial@example.com', 'club_trial_tomorrow', '{}', 'paid-purge:trial:tomorrow',    'pending'),
+  ('paid-trial@example.com', 'duo_nudge',           '{}', 'paid-purge:trial:nudge',       'pending'),
+  ('paid-trial@example.com', 'weekly_winner',       '{}', 'paid-purge:trial:winner',      'pending'),
+  ('paid-trial@example.com', 'referral_reward',     '{"role":"owner","days":0}',  'paid-purge:trial:owner',  'pending'),
+  -- Kept: the friend's referral row, a transactional message, history.
+  ('paid-trial@example.com', 'referral_reward',     '{"role":"friend","days":30}', 'paid-purge:trial:friend', 'pending'),
+  ('paid-trial@example.com', 'course_paid',         '{}', 'paid-purge:trial:course',      'pending'),
+  ('paid-trial@example.com', 'club_task',           '{}', 'paid-purge:trial:sent',        'sent'),
+  -- Kept: the subscriber's and the admin's queued club messages.
+  ('paid-sub@example.com',   'club_task',           '{}', 'paid-purge:sub:task',          'pending'),
+  ('paid-sub@example.com',   'weekly_winner',       '{}', 'paid-purge:sub:winner',        'pending'),
+  ('paid-admin@example.com', 'club_reminder',       '{}', 'paid-purge:admin:reminder',    'pending');
+
+-- Applied twice: the migration is idempotent and the second pass finds nothing new.
+\ir ../migrations/0062_club_messages_paid_only.sql
+\ir ../migrations/0062_club_messages_paid_only.sql
+select pg_temp.as_super();
+
+do $$
+declare v_left text;
+begin
+  select string_agg(o.dedupe_key, ',' order by o.dedupe_key) into v_left
+  from public.telegram_outbox o where o.dedupe_key like 'paid-purge:%';
+  assert v_left = 'paid-purge:admin:reminder,paid-purge:sub:task,paid-purge:sub:winner,'
+                  'paid-purge:trial:course,paid-purge:trial:friend,paid-purge:trial:sent',
+    'the purge removes the buyer''s queued club rows and nothing else, left: ' || coalesce(v_left, 'none');
+end $$;
+
+-- --- clean up: the suites after this one count club members and outbox rows -------
+do $$
+declare i record; v_team uuid;
+begin
+  select * into i from paid_ids;
+  delete from public.marathon_winners where marathon_id = i.club and week = 900;
+  for v_team in
+    select distinct m.team_id from public.marathon_members m
+    where m.email like 'paid-%' and m.team_id is not null
+  loop
+    perform public.club_duo_break(v_team);
+  end loop;
+  delete from public.marathon_submissions s
+  using public.marathon_members m
+  where s.member_id = m.id and m.email like 'paid-%';
+  delete from public.marathon_members where email like 'paid-%';
+  delete from public.marathon_tasks where id = i.sunday_task;
+  delete from public.telegram_outbox where email like 'paid-%';
+  delete from public.purchases where email like 'paid-%';
+  delete from public.subscriptions where email like 'paid-%';
+  delete from public.admins where email = 'paid-admin@example.com';
 end $$;
 
 select 'ALL TESTS PASSED';

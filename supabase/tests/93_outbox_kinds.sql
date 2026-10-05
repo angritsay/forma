@@ -6,8 +6,8 @@
 --   * the rebuilt kind check drops a kind that 0052 allowed, or misses one of the six new ones;
 --   * `subscription_ending` goes to the wrong people: too early, to an admin, for a short manual
 --     grant, or twice for the same period — and not again after a renewal;
---   * `club_trial_tomorrow` goes to someone who never joined the club, whose subscription
---     outlives the trial, whose week is not ending, or whose newer course moved the end;
+--   * `club_trial_tomorrow` is queued at all: since 0062 club messages go to paying members only,
+--     and this warning was for course buyers in their free week;
 --   * a signed-in person or an anonymous visitor can call the function, or the service role cannot;
 --   * a queued warning outlives the moment it warns about.
 --
@@ -207,27 +207,24 @@ begin
   end if;
 end $$;
 
--- --- club_trial_tomorrow ----------------------------------------------------------
+-- --- club_trial_tomorrow: no longer queued (0062) ---------------------------------
+-- 0054 warned a course buyer the day before their free club week ended. Since 0062 club messages
+-- go to paying members only, so the same fixtures that used to earn exactly one warning (a club
+-- member whose week ends tomorrow) now earn none, at any hour.
 do $$
 declare
   v_club uuid := public.club_marathon(false);
   v_n    int;
-  v_row  record;
 begin
   assert v_club is not null, 'no solo club';
 
-  -- trial: a course 6.5 days ago, in the club → warned.
-  -- outsider: the same course, never joined the club → nothing.
-  -- subbed: in the club, but a subscription outlives the trial → nothing.
-  -- early: a course 3 days ago → not yet.
-  -- renewed: an old course 6.5 days ago and a newer one yesterday → the week moved, nothing.
+  -- trial: a course 6.5 days ago, in the club — warned before 0062, not any more.
+  -- subbed: in the club with a subscription that outlives the trial.
+  -- early: a course 3 days ago, reaches its last day later on.
   insert into public.purchases (email, course_id, status, activated_at) values
     ('ending-trial@example.com',    'start', 'active', now() - interval '6 days 12 hours'),
-    ('ending-outsider@example.com', 'start', 'active', now() - interval '6 days 12 hours'),
     ('ending-subbed@example.com',   'start', 'active', now() - interval '6 days 12 hours'),
-    ('ending-early@example.com',    'start', 'active', now() - interval '3 days'),
-    ('ending-renewed@example.com',  'start', 'active', now() - interval '6 days 12 hours'),
-    ('ending-renewed@example.com',  'dumbbells', 'active', now() - interval '1 day')
+    ('ending-early@example.com',    'start', 'active', now() - interval '3 days')
   on conflict (email, course_id) do update
     set status = excluded.status, activated_at = excluded.activated_at;
 
@@ -238,35 +235,17 @@ begin
   insert into public.marathon_members (marathon_id, email)
   select v_club, e
   from unnest(array['ending-trial@example.com', 'ending-subbed@example.com',
-                    'ending-early@example.com', 'ending-renewed@example.com']) as e
+                    'ending-early@example.com']) as e
   on conflict (marathon_id, email) do update set status = 'active';
 
-  v_n := public.club_enqueue_access_ending();
-  select count(*) into v_n from public.telegram_outbox o
-  where o.kind = 'club_trial_tomorrow' and o.email like 'ending-%';
-  assert v_n = 1, 'only the club member whose week ends tomorrow is warned, got ' || v_n::text;
-
-  select o.params into v_row from public.telegram_outbox o
-  where o.kind = 'club_trial_tomorrow' and o.email = 'ending-trial@example.com';
-  assert v_row.params is not null, 'the trial member is the one warned';
-  assert (v_row.params ->> 'ends_at')::timestamptz
-         = (select p.activated_at + interval '7 days' from public.purchases p
-            where p.email = 'ending-trial@example.com' and p.course_id = 'start'),
-    'the message carries the end of the week';
-  assert (select o.expires_at from public.telegram_outbox o
-          where o.kind = 'club_trial_tomorrow' and o.email = 'ending-trial@example.com')
-         <= (v_row.params ->> 'ends_at')::timestamptz,
-    'the row never outlives the week it warns about';
-
-  assert public.club_enqueue_access_ending(now() + interval '1 hour') = 0,
-    'a repeat within the window adds nothing';
-
-  -- «early» comes into the window three and a half days on — once.
+  perform public.club_enqueue_access_ending();
+  perform public.club_enqueue_access_ending(now() + interval '1 hour');
   perform public.club_enqueue_access_ending(now() + interval '3 days 12 hours');
-  perform public.club_enqueue_access_ending(now() + interval '3 days 13 hours');
-  select count(*) into v_n from public.telegram_outbox o
-  where o.kind = 'club_trial_tomorrow' and o.email = 'ending-early@example.com';
-  assert v_n = 1, 'warned once when the week comes to its last day, got ' || v_n::text;
+
+  select count(*) into v_n from public.telegram_outbox o where o.kind = 'club_trial_tomorrow';
+  assert v_n = 0, 'club_trial_tomorrow is never queued since 0062, got ' || v_n::text;
+
+  -- The kind itself stays allowed (old rows, the sender's copy): checked in the first block.
 
   -- Never a raw address in params.
   select count(*) into v_n from public.telegram_outbox o
