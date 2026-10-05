@@ -127,6 +127,10 @@ declare
   v_prize text;
 begin
   update public.marathons set prize_en = 'An hour with the coach' where id = v_club;
+  -- Since 0062 only a paying winner gets the bot message.
+  insert into public.subscriptions (email, plan, status, started_at, expires_at)
+  values ('lang-ru@example.com', 'monthly', 'active', now() - interval '1 day', now() + interval '30 days')
+  on conflict (email) do update set status = 'active', expires_at = excluded.expires_at;
   select id into v_mem from public.marathon_members
   where marathon_id = v_club and email = 'lang-ru@example.com';
 
@@ -154,7 +158,7 @@ select pg_temp.as_super();
 do $$
 declare v_params jsonb; begin
   select params into v_params from public.telegram_outbox
-  where kind = 'weekly_winner' order by created_at desc limit 1;
+  where kind = 'weekly_winner' and email = 'lang-ru@example.com' order by created_at desc limit 1;
   assert v_params is not null, 'сообщение победителю не встало в очередь';
   assert v_params ? 'prize', 'в очереди нет русского приза';
   assert v_params ? 'prize_en', 'в очереди нет английского приза';

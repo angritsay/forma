@@ -1211,13 +1211,14 @@ and sends it. A row can wait for its moment: `send_after` holds it back until th
 | `support_reply`                                                               | the coach's answer to an «Обращение» (§7.12)                                     | 0045        |
 | `referral_reward`, `duo_nudge`                                                | +30 days for a referral; the duo partner already did the day (§7.13)             | 0051        |
 | `club_task`, `club_reminder`, `club_recap`                                    | the club's morning, evening and Sunday messages (§7.14)                          | 0052        |
-| `subscription_ending`, `club_trial_tomorrow`                                  | club access ends in three days; a course's free club week ends tomorrow          | 0054        |
+| `subscription_ending`, `club_trial_tomorrow`                                  | club access ends in three days; (no longer queued since 0062) free week ends     | 0054        |
 | `session_confirmed`, `session_reminder`, `session_moved`, `session_cancelled` | a booked session: paid and confirmed, a day and an hour before, moved, cancelled | 0054 / 0055 |
 
 **Deploy `telegram-notify` before the migration that adds a kind.** An older sender marks a kind
 it does not know as `skipped`, for good; the newer sender is harmless before the migration. 0054
-only adds names to the list — the booking kinds are queued by 0055, the two access warnings by the
-hourly club run (§7.14).
+only adds names to the list — the booking kinds are queued by 0055, the access warning by the
+hourly club run (§7.14). The club kinds (`club_*`, `duo_nudge`, `weekly_winner`, the inviter's
+`referral_reward`) go only to paying club members and admins since 0062 (§7.14).
 
 The session messages carry the coach, the length, the time in the coach's zone and — except on a
 cancellation — the room link. The two reminders are queued with `send_after` at 24 h and 1 h
@@ -1773,13 +1774,16 @@ The owner's brief: a member should be pulled back every day — «регуляр
 
 | When         | Kind            | To whom                                                                        |
 | ------------ | --------------- | ------------------------------------------------------------------------------ |
-| 08:00 daily  | `club_task`     | Everyone reachable: the day's task («Задание на сегодня: … · 12 баллов»).      |
+| 08:00 daily  | `club_task`     | Every paying member: the day's task («Задание на сегодня: … · 12 баллов»).     |
 | 20:00 daily  | `club_reminder` | Only people with a streak and no tick today: «Серия 3 дня — сгорит в полночь». |
 | 21:00 Sunday | `club_recap`    | Place, points, done of total, streak; skipped for a week with nothing in it.   |
 
-«Reachable» is `club_access()` for that address (a live subscription, a course in its trial week,
-or an admin — so the coach gets them too) minus anyone who turned them off: **Профиль → Сообщения
-клуба в Telegram**. That switch is the `club_quiet` feature flag (§7.8's person page shows it
+**Club messages go only to paying club members** (since `0062_club_messages_paid_only.sql`):
+`club_paid_reachable(email)` — a live subscription, or an admin, so the coach gets them too. A
+course buyer in the free club week can still use the club in the app (`club_access()` is
+unchanged), but the bot writes nothing to them about it: no daily touches, no «free week ends
+tomorrow», no duo nudge, no winner message, no referral «thank you» without days. Paying members
+who turned the daily messages off are skipped too: **Профиль → Сообщения клуба в Telegram**. That switch is the `club_quiet` feature flag (§7.8's person page shows it
 too), the one flag a person sets on themselves. Someone in both the solo and the duo club gets
 each message once, from the solo round.
 
@@ -1805,8 +1809,9 @@ Each run prints one number per kind — how many rows were queued — and nothin
 
 **Access warnings (0054).** The same hourly run calls `club_enqueue_access_ending()`, which queues
 `subscription_ending` («Клуб открыт до 3 октября», three days ahead; not to admins, not for a
-grant of three days or less) and `club_trial_tomorrow` (a day before a course's free club week
-ends; only to someone in the club whose subscription does not outlive it), once per period.
+grant of three days or less), once per period. Until 0062 it also queued `club_trial_tomorrow` (a
+day before a course's free club week ended); since 0062 that warning is never queued — club
+messages go to paying members only — and the kind stays in the list only for old rows.
 `0054_outbox_kinds.sql` also adds `session_confirmed`, `session_reminder`, `session_moved` and
 `session_cancelled` to the kind list for the in-app booking (0055). To turn it on, **in this
 order**: run **`deploy-notify`** first, then apply **`0054_outbox_kinds.sql`**. The order matters:
@@ -1816,6 +1821,12 @@ queued once per period. The new sender is harmless before the migration. Until 0
 the workflow prints a notice for `access_ending` instead of failing. The sender checks each
 warning again right before sending and drops it if its moment has passed or the person has since
 renewed or subscribed.
+
+**Paying members only (0062).** Apply **`0062_club_messages_paid_only.sql`** (Actions → Supabase
+apply → `migration`; idempotent, no new kinds, so no `deploy-notify` is needed). It adds
+`club_paid_reachable()`, restates the club functions to use it, stops queueing
+`club_trial_tomorrow`, and once removes club messages already waiting (`pending`) for anyone who
+does not pay. `98_club_daily.sql` covers it.
 
 ---
 

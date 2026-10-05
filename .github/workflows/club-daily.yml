@@ -25,9 +25,14 @@ name: Club daily messages
 # ## Access warnings (0054)
 #
 # The same hourly run also calls `club_enqueue_access_ending()`: `subscription_ending` three days
-# before a subscription ends and `club_trial_tomorrow` a day before a course's free club week
-# ends. It has no hour of its own — its windows are 72 and 24 hours wide and its key is the
-# period — so it runs on every tick, and prints one number like the rest.
+# before a subscription ends. It has no hour of its own — its window is 72 hours wide and its key
+# is the period — so it runs on every tick, and prints one number like the rest.
+#
+# ## Who gets club messages (0062)
+#
+# Only paying club members — a live subscription — and admins (`club_paid_reachable`). A course
+# buyer in the free club week gets nothing from this job: no daily touches and, since 0062, no
+# `club_trial_tomorrow` warning (it is no longer queued). The app's club access is unchanged.
 
 on:
   schedule:
