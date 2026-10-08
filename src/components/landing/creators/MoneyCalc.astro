@@ -12,8 +12,17 @@
  * processor's fee is a slider too, because it depends on the creator's own Prodamus / lava.top
  * tariff; the default is only a starting point.
  *
- * The arithmetic is the deal stated on the page: the fee comes off first, then Forma's share —
- * 20% of course and club, 10% of sessions — and the rest is the creator's.
+ * The arithmetic is the deal stated on the page, per tier (`content/site/creatorTerms.ts`): the
+ * processor's fee comes off first, then Forma's share of what is left — Start: 20% of course and
+ * club, 10% of sessions; Pro: 10% and 5%, minus Pro's monthly fee — and the rest is the creator's.
+ * A switch picks the tier; under the total, the other tier's month is shown too, so the reader sees
+ * where Pro starts paying for itself without doing the sum.
+ *
+ * **From followers** (owner, 8 Oct 2026: «with 20k followers you'd make about X a month»): one more
+ * slider, the creator's audience. Moving it sets the course and club sliders at 1% and 3% of it —
+ * the same ratios the presets have always used (20 / 60 at 2 000, 200 / 600 at 20 000) — and the
+ * note says so, because they are an assumption about somebody else's audience, not a fact. The
+ * two sliders stay free to move afterwards.
  *
  * The script is self-contained (no imports, so nothing reaches the site bundle — `bundle.test.ts`)
  * and the numbers it needs ride on `data-*`. Without it, the result shows the defaults' month,
@@ -21,6 +30,8 @@
  */
 import type { Locale } from '@/content/schema';
 import { t } from '@/i18n/index';
+import { CREATOR_TIERS, percent } from '@content/site/creatorTerms';
+import { PRICING } from '@content/site/pricing';
 
 interface Props {
   locale: Locale;
@@ -40,21 +51,45 @@ const money = (n: number) =>
   new Intl.NumberFormat(intl, { style: 'currency', currency, maximumFractionDigits: 0 }).format(n);
 
 const FEE = 5;
+const cur = PRICING.currencyByLocale[locale];
+/* The tiers as the script needs them: Forma's shares and the monthly fee in this currency. */
+const tiers = CREATOR_TIERS.map((tier) => ({
+  id: tier.id,
+  label: k(tier.id === 'start' ? 'creatorsTierStart' : 'creatorsTierPro'),
+  sales: tier.salesShare,
+  sessions: tier.sessionsShare,
+  fee: tier.monthlyFee[cur],
+  open: tier.open,
+}));
+/* Opens on the tier a creator can start on today: a total on a closed tier would be a promise. */
+const TIER = tiers.find((x) => x.open)?.id ?? tiers[0]!.id;
+const tierOf = (id: string) => tiers.find((x) => x.id === id) ?? tiers[0]!;
+
+/* Followers → course buyers and club members, at the presets' own ratios (see the header). */
+const FOLLOW = { max: 500000, value: 2000, course: 0.01, club: 0.03 };
+
 const rows = [
   {
     id: 'course',
     label: k('creatorsCalcCourse'),
     price: coursePrice,
-    share: 0.8,
+    kind: 'sales',
     max: 5000,
     value: 20,
   },
-  { id: 'club', label: k('creatorsCalcClub'), price: clubPrice, share: 0.8, max: 10000, value: 60 },
+  {
+    id: 'club',
+    label: k('creatorsCalcClub'),
+    price: clubPrice,
+    kind: 'sales',
+    max: 15000,
+    value: 60,
+  },
   {
     id: 'sessions',
     label: k('creatorsCalcSessions'),
     price: hourPrice,
-    share: 0.9,
+    kind: 'sessions',
     max: 160,
     value: 8,
   },
@@ -69,29 +104,42 @@ const rows = [
 const STEPS = 1000;
 const toPos = (v: number, max: number) => Math.round(Math.sqrt(v / max) * STEPS);
 
-/* Three starting points, one per stage of a creator's business. */
+/* Three starting points, one per stage of a creator's business; followers at the same ratios. */
 const PRESETS = [
   {
     id: 'start',
     label: k('creatorsCalcPresetStart'),
-    values: { course: 20, club: 60, sessions: 8 },
+    values: { followers: 2000, course: 20, club: 60, sessions: 8 },
   },
   {
     id: 'growth',
     label: k('creatorsCalcPresetGrowth'),
-    values: { course: 200, club: 600, sessions: 40 },
+    values: { followers: 20000, course: 200, club: 600, sessions: 40 },
   },
   {
     id: 'scale',
     label: k('creatorsCalcPresetScale'),
-    values: { course: 2000, club: 5000, sessions: 120 },
+    values: { followers: 200000, course: 2000, club: 6000, sessions: 120 },
   },
 ];
 const count = (n: number) => new Intl.NumberFormat(intl).format(n);
 
-const yours = (r: (typeof rows)[number], count: number, fee: number) =>
-  count * r.price * (1 - fee / 100) * r.share;
-const total = rows.reduce((sum, r) => sum + yours(r, r.value, FEE), 0);
+/** The creator's month on a tier: after the processor's fee, Forma's share and the tier's fee. */
+const month = (tierId: string, fee: number) => {
+  const tier = tierOf(tierId);
+  const kept = rows.reduce(
+    (sum, r) =>
+      sum +
+      r.value *
+        r.price *
+        (1 - fee / 100) *
+        (1 - (r.kind === 'sessions' ? tier.sessions : tier.sales)),
+    0,
+  );
+  return kept - tier.fee;
+};
+const total = month(TIER, FEE);
+const other = tiers.find((x) => x.id !== TIER);
 ---
 
 <div
@@ -99,9 +147,43 @@ const total = rows.reduce((sum, r) => sum + yours(r, r.value, FEE), 0);
   data-locale={intl}
   data-currency={currency}
   data-year={k('creatorsCalcYear', { sum: '{sum}' })}
+  data-other={k('creatorsCalcOther', { tier: '{tier}', sum: '{sum}' })}
+  data-tiers={JSON.stringify(tiers)}
+  data-tier={TIER}
+  data-follow={JSON.stringify(FOLLOW)}
 >
   <div class="flex flex-col gap-6">
     <h3 class="font-display text-2xl leading-tight md:text-3xl">{k('creatorsCalcTitle')}</h3>
+    <div class="calc-tiers" role="radiogroup" aria-label={k('creatorsTiersTitle')}>
+      {
+        tiers.map((tier) => (
+          <button
+            type="button"
+            role="radio"
+            aria-checked={tier.id === TIER ? 'true' : 'false'}
+            class:list={['calc-tier rounded-tile', tier.id === TIER && 'is-on']}
+            data-tier-pick={tier.id}
+          >
+            <span class="block font-display text-lg leading-tight">
+              {tier.label}
+              {!tier.open && (
+                <span class="ml-1 align-middle text-[12px] font-normal opacity-75">
+                  {k('creatorsTierSoon')}
+                </span>
+              )}
+            </span>
+            <span class="block text-[13px] opacity-75">
+              {tier.fee > 0
+                ? k('creatorsTierFee', {
+                    fee: money(tier.fee),
+                    share: percent(tier.sales),
+                  })
+                : k('creatorsTierFree', { share: percent(tier.sales) })}
+            </span>
+          </button>
+        ))
+      }
+    </div>
     <div class="flex flex-wrap gap-2" role="group" aria-label={k('creatorsCalcTitle')}>
       {
         PRESETS.map((p, i) => (
@@ -115,6 +197,31 @@ const total = rows.reduce((sum, r) => sum + yours(r, r.value, FEE), 0);
         ))
       }
     </div>
+    <label class="flex flex-col gap-2">
+      <span class="flex items-baseline justify-between gap-3">
+        <span class="text-[15px]">{k('creatorsCalcFollowers')}</span>
+        <output class="numeral text-xl text-accent" data-out="followers">
+          {count(FOLLOW.value)}
+        </output>
+      </span>
+      <input
+        type="range"
+        min="0"
+        max={STEPS}
+        step="1"
+        value={toPos(FOLLOW.value, FOLLOW.max)}
+        data-max={FOLLOW.max}
+        data-followers
+      />
+      <span class="text-[13px] leading-snug text-muted">
+        {
+          k('creatorsCalcFollowersNote', {
+            course: percent(FOLLOW.course),
+            club: percent(FOLLOW.club),
+          })
+        }
+      </span>
+    </label>
     {
       rows.map((r) => (
         <label class="flex flex-col gap-2">
@@ -136,7 +243,7 @@ const total = rows.reduce((sum, r) => sum + yours(r, r.value, FEE), 0);
             data-max={r.max}
             data-row={r.id}
             data-price={r.price}
-            data-share={r.share}
+            data-kind={r.kind}
           />
         </label>
       ))
@@ -162,6 +269,13 @@ const total = rows.reduce((sum, r) => sum + yours(r, r.value, FEE), 0);
       <p class="numeral mt-3 text-lg opacity-80" data-year>
         {k('creatorsCalcYear', { sum: money(total * 12) })}
       </p>
+      {
+        other && (
+          <p class="numeral mt-1 text-[15px] opacity-70" data-other-out>
+            {k('creatorsCalcOther', { tier: other.label, sum: money(month(other.id, FEE)) })}
+          </p>
+        )
+      }
     </div>
     <p class="text-[13px] leading-snug opacity-75">{k('creatorsCalcNote')}</p>
   </div>
@@ -186,6 +300,30 @@ const total = rows.reduce((sum, r) => sum + yours(r, r.value, FEE), 0);
   }
   .calc-preset:hover {
     color: var(--text);
+  }
+  .calc-tiers {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .calc-tier {
+    padding: 12px 16px;
+    border: 1px solid var(--border-strong);
+    text-align: left;
+    color: var(--muted);
+    cursor: pointer;
+    transition:
+      background-color 0.15s,
+      color 0.15s;
+  }
+  .calc-tier:hover {
+    color: var(--text);
+  }
+  .calc-tier.is-on {
+    border-color: transparent;
+    background: var(--surface-2);
+    color: var(--text);
+    box-shadow: inset 0 0 0 1.5px var(--accent);
   }
   .calc-preset.is-on {
     border-color: transparent;
@@ -213,29 +351,96 @@ const total = rows.reduce((sum, r) => sum + yours(r, r.value, FEE), 0);
     });
     const num = new Intl.NumberFormat(locale);
     const rows = [...calc.querySelectorAll<HTMLInputElement>('input[data-row]')];
+    const followers = calc.querySelector<HTMLInputElement>('input[data-followers]');
+    const otherOut = calc.querySelector<HTMLElement>('[data-other-out]');
+    const otherTemplate = calc.dataset.other ?? '';
+    const tiers = JSON.parse(calc.dataset.tiers ?? '[]') as {
+      id: string;
+      label: string;
+      sales: number;
+      sessions: number;
+      fee: number;
+    }[];
+    const follow = JSON.parse(calc.dataset.follow ?? '{}') as {
+      max: number;
+      course: number;
+      club: number;
+    };
+    let tierId = calc.dataset.tier ?? tiers[0]?.id ?? '';
+    const tierPicks = [...calc.querySelectorAll<HTMLButtonElement>('[data-tier-pick]')];
     const fee = calc.querySelector<HTMLInputElement>('input[data-fee]');
     const total = calc.querySelector<HTMLElement>('[data-total]');
     const year = calc.querySelector<HTMLElement>('[data-year]');
     const yearTemplate = calc.dataset.year ?? '';
     const presets = [...calc.querySelectorAll<HTMLButtonElement>('[data-preset]')];
 
-    const update = () => {
-      const f = Number(fee?.value ?? 0);
+    /* The creator's month on a tier: the processor's fee, Forma's share, the tier's own fee. */
+    const monthOn = (id: string, f: number) => {
+      const tier = tiers.find((x) => x.id === id) ?? tiers[0];
+      if (!tier) return 0;
       let sum = 0;
       for (const r of rows) {
         const n = toValue(Number(r.value), Number(r.dataset.max));
-        sum += n * Number(r.dataset.price) * (1 - f / 100) * Number(r.dataset.share);
+        const share = r.dataset.kind === 'sessions' ? tier.sessions : tier.sales;
+        sum += n * Number(r.dataset.price) * (1 - f / 100) * (1 - share);
+      }
+      return sum - tier.fee;
+    };
+
+    const update = () => {
+      const f = Number(fee?.value ?? 0);
+      for (const r of rows) {
+        const n = toValue(Number(r.value), Number(r.dataset.max));
         const out = calc.querySelector(`[data-out="${r.dataset.row}"]`);
         if (out) out.textContent = num.format(n);
       }
+      if (followers) {
+        const out = calc.querySelector('[data-out="followers"]');
+        if (out) out.textContent = num.format(toValue(Number(followers.value), follow.max));
+      }
+      const sum = monthOn(tierId, f);
       const feeOut = calc.querySelector('[data-out="fee"]');
       if (feeOut) feeOut.textContent = `${f}%`;
       if (total) total.textContent = fmt.format(sum);
       if (year) year.textContent = yearTemplate.replace('{sum}', fmt.format(sum * 12));
+      const other = tiers.find((x) => x.id !== tierId);
+      if (otherOut && other) {
+        otherOut.textContent = otherTemplate
+          .replace('{tier}', other.label)
+          .replace('{sum}', fmt.format(monthOn(other.id, f)));
+      }
     };
 
+    /* Followers set the course and club sliders at the stated ratios; both stay free after. */
+    const fromFollowers = () => {
+      if (!followers) return;
+      const n = toValue(Number(followers.value), follow.max);
+      for (const r of rows) {
+        const ratio =
+          r.dataset.row === 'course' ? follow.course : r.dataset.row === 'club' ? follow.club : 0;
+        if (ratio > 0) {
+          const max = Number(r.dataset.max);
+          r.value = String(toPos(Math.min(max, Math.round(n * ratio)), max));
+        }
+      }
+    };
+
+    for (const b of tierPicks) {
+      b.addEventListener('click', () => {
+        tierId = b.dataset.tierPick ?? tierId;
+        for (const other of tierPicks) {
+          const on = other === b;
+          other.classList.toggle('is-on', on);
+          other.setAttribute('aria-checked', on ? 'true' : 'false');
+        }
+        update();
+      });
+    }
+
     calc.addEventListener('input', (e) => {
-      if ((e.target as HTMLElement).matches('input[data-row]')) {
+      const target = e.target as HTMLElement;
+      if (target.matches('input[data-followers]')) fromFollowers();
+      if (target.matches('input[data-row], input[data-followers]')) {
         for (const b of presets) b.classList.remove('is-on');
       }
       update();
@@ -249,6 +454,9 @@ const total = rows.reduce((sum, r) => sum + yours(r, r.value, FEE), 0);
         for (const r of rows) {
           const v = values[r.dataset.row ?? ''];
           if (v !== undefined) r.value = String(toPos(v, Number(r.dataset.max)));
+        }
+        if (followers && values.followers !== undefined) {
+          followers.value = String(toPos(values.followers, follow.max));
         }
         for (const other of presets) other.classList.toggle('is-on', other === b);
         update();

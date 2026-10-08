@@ -10,11 +10,13 @@
  *
  * **Honest by construction.** Every figure is read from where the business keeps it: the course
  * price and name from the demo course file, the club's prices from `PLANS`, the session lengths,
- * prices and the 20-minute hold from `BOOKING` and `HOLD_MINUTES`. The split — 80 / 20 for course
- * and club, 90 / 10 for sessions, after the payment processor's fee — is Nastia's decision and is
- * stated publicly. So is the shape of the deal: the creator's own bot, site and app on their own
+ * prices and the 20-minute hold from `BOOKING` and `HOLD_MINUTES`. The split is two tiers
+ * (`content/site/creatorTerms.ts`, owner, 8 Oct 2026): **Start** — no monthly fee, 80 / 20 for
+ * course and club, 90 / 10 for sessions, inside the Forma app, marked «скоро» until creator
+ * accounts exist (docs/PLATFORM.md); **Pro** — a monthly fee, 90 / 10 and 95 / 5, and the shape of
+ * the deal this page has always described: the creator's own bot, site and app on their own
  * domain, payments into their own Prodamus / lava.top, no Forma branding anywhere, the stores as an
- * extra. Nothing else is promised: settlement, exclusivity, content rights, prices and the legal
+ * extra. Shares are counted after the payment processor's fee. Nothing else is promised: settlement, exclusivity, content rights, prices and the legal
  * form are each «фиксируем в договоре». No user counts, no reviews.
  *
  * **Two worked examples.** `BrandExample` dresses the product as two fictional brands, a CrossFit
@@ -58,8 +60,9 @@ import { BOOKING } from '@content/site/booking';
 import { CREATOR_EXAMPLES } from '@content/site/creator-examples';
 import { CREATOR_CONTACT } from '@content/site/links';
 import { NASTIA } from '@content/site/nastia';
+import { CREATOR_TIERS, percent, proBreakEven } from '@content/site/creatorTerms';
 import { PLAN_BY_ID, planMonthlyPrice } from '@content/site/plans';
-import { formatPrice, priceForLocale } from '@content/site/pricing';
+import { formatPrice, PRICING, priceForLocale } from '@content/site/pricing';
 
 export function getStaticPaths() {
   return localeStaticPaths();
@@ -130,6 +133,39 @@ const products = [
   },
 ];
 
+/* The tiers, as the money block and the FAQ state them. */
+const cur = PRICING.currencyByLocale[locale];
+const fmtFee = (n: number) => formatPrice(locale, { rub: n, usd: n });
+const tierCards = CREATOR_TIERS.map((tier) => ({
+  id: tier.id,
+  open: tier.open,
+  name: k(tier.id === 'start' ? 'creatorsTierStart' : 'creatorsTierPro'),
+  line: k(tier.id === 'start' ? 'creatorsTierStartLine' : 'creatorsTierProLine'),
+  fee:
+    tier.monthlyFee[cur] > 0
+      ? k('creatorsTierFeeMonth', { fee: formatPrice(locale, tier.monthlyFee) })
+      : k('creatorsTierFeeNone'),
+  you: Math.round((1 - tier.salesShare) * 100),
+  us: Math.round(tier.salesShare * 100),
+  sessions: k('creatorsTierSessions', {
+    you: percent(1 - tier.sessionsShare),
+    us: percent(tier.sessionsShare),
+  }),
+}));
+const startTier = CREATOR_TIERS.find((x) => x.id === 'start')!;
+const proTier = CREATOR_TIERS.find((x) => x.id === 'pro')!;
+const breakEven = k('creatorsTierBreakEven', { sum: fmtFee(proBreakEven(cur)) });
+/* «80–90%»: what a creator keeps, from Start to Pro. */
+const keepRange = (a: number, b: number) =>
+  `${Math.round((1 - a) * 100)}–${Math.round((1 - b) * 100)}%`;
+const termParams = {
+  startYou: percent(1 - startTier.salesShare),
+  startSessions: percent(1 - startTier.sessionsShare),
+  proYou: percent(1 - proTier.salesShare),
+  proSessions: percent(1 - proTier.sessionsShare),
+  fee: formatPrice(locale, proTier.monthlyFee),
+};
+
 /* The calculator's prices, whole units in the visitor's currency. */
 const currency = course ? priceForLocale(course.price, locale).currency : 'RUB';
 const calcPrices = {
@@ -169,7 +205,7 @@ const compare = [1, 2, 3, 4, 5].map((n) => ({
 }));
 const faq = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => ({
   q: k(`creatorsFaq${n}Q`),
-  a: k(`creatorsFaq${n}A`),
+  a: k(`creatorsFaq${n}A`, termParams),
 }));
 
 /* The Studio's picture: three of the coach's real loops, the movements of workout 1. */
@@ -242,8 +278,16 @@ const studioLoops = (facts?.moves ?? []).slice(0, 3);
     </div>
 
     <div class="mt-12 grid grid-cols-3 gap-4 border-t border-border pt-8 md:mt-16">
-      <Stat value="80%" label={k('creatorsStatCourse')} tone="accent" />
-      <Stat value="90%" label={k('creatorsStatSessions')} tone="accent" />
+      <Stat
+        value={keepRange(startTier.salesShare, proTier.salesShare)}
+        label={k('creatorsStatCourse')}
+        tone="accent"
+      />
+      <Stat
+        value={keepRange(startTier.sessionsShare, proTier.sessionsShare)}
+        label={k('creatorsStatSessions')}
+        tone="accent"
+      />
       <Stat value="0" label={k('creatorsStatWays')} />
     </div>
   </div>
@@ -382,20 +426,29 @@ const studioLoops = (facts?.moves ?? []).slice(0, 3);
   <Section id="money" title={k('creatorsMoneyTitle')}>
     <div class="grid gap-3 sm:grid-cols-2">
       {
-        [
-          { you: 80, us: 20, label: k('creatorsMoneyCourse') },
-          { you: 90, us: 10, label: k('creatorsMoneySessions') },
-        ].map((s) => (
+        tierCards.map((tier) => (
           <div class="glass-card flex flex-col justify-between gap-6 rounded-card border border-border p-6 md:p-8">
-            <p class="numeral leading-none tracking-tight">
-              <span class="text-[clamp(4.5rem,20vw,8rem)] text-accent">{s.you}</span>
-              <span class="t-thin text-[clamp(2.25rem,10vw,4rem)] text-muted">/{s.us}</span>
-            </p>
-            <p class="eyebrow">{s.label}</p>
+            <div class="flex flex-col gap-2">
+              <p class="flex flex-wrap items-center gap-2">
+                <span class="font-display text-2xl leading-tight">{tier.name}</span>
+                {!tier.open && <Pill tone="neutral">{k('creatorsTierSoon')}</Pill>}
+              </p>
+              <p class="numeral text-lg text-text">{tier.fee}</p>
+              <p class="max-w-sm text-[15px] leading-snug text-muted">{tier.line}</p>
+            </div>
+            <div>
+              <p class="numeral leading-none tracking-tight">
+                <span class="text-[clamp(4.5rem,20vw,8rem)] text-accent">{tier.you}</span>
+                <span class="t-thin text-[clamp(2.25rem,10vw,4rem)] text-muted">/{tier.us}</span>
+              </p>
+              <p class="eyebrow mt-3">{k('creatorsMoneyCourse')}</p>
+              <p class="mt-1 text-[14px] text-muted">{tier.sessions}</p>
+            </div>
           </div>
         ))
       }
     </div>
+    <p class="mt-4 text-[15px] leading-snug text-muted">{breakEven}</p>
     <div class="mt-3">
       <MoneyCalc
         locale={locale}
@@ -416,9 +469,19 @@ const studioLoops = (facts?.moves ?? []).slice(0, 3);
         </h3>
         <div>
           <p class="numeral text-[clamp(4.5rem,16vw,8rem)] leading-none tracking-tight text-accent">
-            20%
+            {percent(startTier.salesShare)}
           </p>
-          <p class="mt-2 flex"><Pill tone="neutral">{k('creatorsCoversSessions')}</Pill></p>
+          <p class="mt-2 flex">
+            <Pill tone="neutral">
+              {
+                k('creatorsCoversSessions', {
+                  sessions: percent(startTier.sessionsShare),
+                  pro: percent(proTier.salesShare),
+                  proSessions: percent(proTier.sessionsShare),
+                })
+              }
+            </Pill>
+          </p>
           <p class="mt-4 max-w-sm font-display text-xl leading-tight text-balance md:text-2xl">
             {k('creatorsCoversLine')}
           </p>
