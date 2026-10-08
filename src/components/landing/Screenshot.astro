@@ -7,7 +7,8 @@
  *   </Screenshot>
  *
  * Drop `public/screens/<name>.webp` (or `.png` / `.jpg`) into the repo and the next build shows
- * it — in a phone bezel (`frame="phone"`, a portrait app screen) or a browser window
+ * it — in a phone (`frame="phone"`, a portrait app screen: a near-black bezel and the island, so
+ * the capture reads as a device) or a browser window
  * (`frame="window"`, the admin on a computer), or as is (`frame="bare"`, inside a frame the
  * caller already draws). With no file, the slot renders: the HTML sketch the
  * page already had, so a missing screenshot never leaves a hole. The check runs at build time, so
@@ -16,7 +17,6 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { withBase } from '@/lib/util/paths';
-import PhoneFrame from './PhoneFrame.astro';
 
 interface Props {
   /** Path under `public/screens/`, without the extension. */
@@ -37,9 +37,10 @@ const src = ext ? withBase(`/screens/${name}.${ext}`) : undefined;
   !src ? (
     <slot />
   ) : frame === 'phone' ? (
-    <PhoneFrame class={extra}>
+    <div class={`device mx-auto w-[280px] max-w-full ${extra}`}>
       <img src={src} alt={alt} loading="lazy" decoding="async" class="block w-full" />
-    </PhoneFrame>
+      <span class="device-island" aria-hidden="true" />
+    </div>
   ) : frame === 'bare' ? (
     <img
       src={src}
@@ -54,3 +55,29 @@ const src = ext ? withBase(`/screens/${name}.${ext}`) : undefined;
     </div>
   )
 }
+
+<style>
+  .device {
+    position: relative;
+    overflow: hidden;
+    border: 9px solid #050505;
+    border-radius: 44px;
+    background: #050505;
+    box-shadow:
+      0 0 0 1px var(--border-strong),
+      0 30px 80px -20px rgba(0, 0, 0, 0.8);
+  }
+  .device img {
+    border-radius: 35px;
+  }
+  .device-island {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    width: 84px;
+    height: 24px;
+    border-radius: 999px;
+    background: #050505;
+    transform: translateX(-50%);
+  }
+</style>

@@ -42,6 +42,9 @@ import SessionTickets from '@/components/landing/SessionTickets.astro';
 import Stat from '@/components/landing/Stat.astro';
 import ClubDay from '@/components/landing/club/ClubDay.astro';
 import BrandExample from '@/components/landing/creators/BrandExample.astro';
+import MoneyCalc from '@/components/landing/creators/MoneyCalc.astro';
+import CoverIcon from '@/components/landing/creators/CoverIcon.astro';
+import GetVisual from '@/components/landing/creators/GetVisual.astro';
 import ToolTour from '@/components/landing/creators/ToolTour.astro';
 import LoopTile from '@/components/landing/media/LoopTile.astro';
 import { DEMO_COURSE_ID, firstWorkoutFacts } from '@/components/landing/demo';
@@ -56,7 +59,7 @@ import { CREATOR_EXAMPLES } from '@content/site/creator-examples';
 import { CREATOR_CONTACT } from '@content/site/links';
 import { NASTIA } from '@content/site/nastia';
 import { PLAN_BY_ID, planMonthlyPrice } from '@content/site/plans';
-import { formatPrice } from '@content/site/pricing';
+import { formatPrice, priceForLocale } from '@content/site/pricing';
 
 export function getStaticPaths() {
   return localeStaticPaths();
@@ -84,12 +87,14 @@ const annual = PLAN_BY_ID.get('annual');
 const monthly = PLAN_BY_ID.get('monthly');
 const clubPrice =
   annual && monthly
-    ? k('creatorsClubPrice', {
-        year: formatPrice(locale, annual.price),
-        month: formatPrice(locale, planMonthlyPrice(annual)),
-        month30: formatPrice(locale, monthly.price),
-      })
-    : '';
+    ? {
+        value: k('creatorsClubPrice', { year: formatPrice(locale, annual.price) }),
+        note: k('creatorsClubPriceNote', {
+          month: formatPrice(locale, planMonthlyPrice(annual)),
+          month30: formatPrice(locale, monthly.price),
+        }),
+      }
+    : undefined;
 const clubSteps = [
   { glyph: '✎', n: 1 },
   { glyph: '◉', n: 2 },
@@ -103,7 +108,6 @@ const clubSteps = [
 
 /* Sessions: the hour is the worked example in the money block. */
 const hour = BOOKING.options.find((o) => o.id === 'hour');
-const hourPrice = hour ? formatPrice(locale, hour.price) : '';
 
 const products = [
   {
@@ -111,47 +115,53 @@ const products = [
     title: k('creatorsCourseTitle'),
     line: k('creatorsCourseLine'),
     price: course
-      ? k('creatorsCoursePrice', { name: l(course.name, locale), price: coursePrice })
-      : '',
+      ? {
+          value: k('creatorsCoursePrice', { price: coursePrice }),
+          note: k('creatorsCoursePriceNote', { name: l(course.name, locale) }),
+        }
+      : undefined,
   },
   { id: 'club', title: k('creatorsClubTitle'), line: k('creatorsClubLine'), price: clubPrice },
   {
     id: 'sessions',
     title: k('creatorsSessionsTitle'),
     line: k('creatorsSessionsLine', { n: HOLD_MINUTES, h: MOVE_CUTOFF_HOURS }),
-    price: '',
+    price: undefined,
   },
+];
+
+/* The calculator's prices, whole units in the visitor's currency. */
+const currency = course ? priceForLocale(course.price, locale).currency : 'RUB';
+const calcPrices = {
+  course: course ? priceForLocale(course.price, locale).amount : 0,
+  club: monthly ? priceForLocale(monthly.price, locale).amount : 0,
+  hour: hour ? priceForLocale(hour.price, locale).amount : 0,
+};
+
+const coverIcons = [
+  'phone',
+  'card',
+  'send',
+  'support',
+  'video',
+  'wrench',
+  'sliders',
+  'clapper',
 ] as const;
-
-const examples = [
-  course && {
-    label: k('creatorsMoneyExampleCourse', { price: coursePrice }),
-    price: coursePrice,
-    share: 80,
-  },
-  hour && {
-    label: k('creatorsMoneyExampleSession', { price: hourPrice }),
-    price: hourPrice,
-    share: 90,
-  },
-].filter((e): e is { label: string; price: string; share: number } => Boolean(e));
-
-const coverGlyphs = ['▢', '¤', '✈', '♡', '▶', '⚙', '✦', '◉'];
 const covers = [1, 2, 3, 4, 5, 6, 7, 8].map((n) => ({
-  glyph: coverGlyphs[n - 1],
+  icon: coverIcons[n - 1] ?? 'phone',
   label: k(`creatorsCover${n}`),
 }));
-const getGlyphs = ['✈', '◎', '▢', '☆'];
+const getKinds = ['bot', 'site', 'app', 'stores'] as const;
 const gets = [1, 2, 3, 4].map((n) => ({
-  glyph: getGlyphs[n - 1],
+  kind: getKinds[n - 1] ?? 'bot',
   title: k(`creatorsGet${n}Title`),
   line: k(`creatorsGet${n}Line`),
   extra: n === 4,
 }));
 const white = [1, 2, 3, 4, 5].map((n) => k(`creatorsWhite${n}`));
 const steps = [1, 2, 3, 4, 5].map((n) => k(`creatorsStep${n}`));
-const compare = [1, 2, 3, 4, 5, 6, 7].map((n) => ({
-  label: k(`creatorsCompare${n}Label`),
+const compare = [1, 2, 3, 4, 5].map((n) => ({
   a: k(`creatorsCompare${n}A`),
   b: k(`creatorsCompare${n}B`),
 }));
@@ -206,12 +216,9 @@ const studioLoops = (facts?.moves ?? []).slice(0, 3);
         </div>
       </HeroField>
 
-      <figure
-        class="glass-card m-0 flex flex-col items-center justify-between gap-5 rounded-card border border-border p-5 md:p-6"
-      >
-        <div
-          class="relative mt-2 w-full max-w-[17rem] -rotate-3 overflow-hidden rounded-tile border-4 border-paper bg-surface-2 shadow-2xl"
-        >
+      <figure class="polaroid-wrap m-0 flex items-center justify-center py-4 md:py-0">
+        <div class="polaroid relative w-full max-w-[22rem] rotate-2">
+          <span class="tape" aria-hidden="true"></span>
           <img
             src={withBase(NASTIA.photo)}
             alt={nastiaName}
@@ -220,22 +227,22 @@ const studioLoops = (facts?.moves ?? []).slice(0, 3);
             loading="eager"
             fetchpriority="high"
             decoding="async"
-            class="aspect-[4/5] w-full object-cover"
+            class="aspect-square w-full object-cover object-[50%_35%]"
           />
-        </div>
-        <figcaption class="w-full">
-          <p class="font-display text-lg leading-tight">{k('creatorsNastiaHello')}</p>
-          <p class="mt-1 text-[14px] leading-snug text-muted">{k('creatorsNastiaLine')}</p>
-          <ul class="mt-3 flex flex-wrap gap-1.5">
+          <figcaption class="note">
+            <span class="block font-display text-xl leading-tight">{k('creatorsNastiaHello')}</span>
+            <span class="mt-1.5 block text-[15px] leading-snug">{k('creatorsNastiaLine')}</span>
+          </figcaption>
+          <ul class="absolute -right-3 -bottom-4 flex -rotate-6 flex-col items-end gap-1.5">
             {
               NASTIA.roles.map((r) => (
                 <li class="flex">
-                  <Pill tone="neutral">{l(r, locale)}</Pill>
+                  <Pill tone="sky">{l(r, locale)}</Pill>
                 </li>
               ))
             }
           </ul>
-        </figcaption>
+        </div>
       </figure>
     </div>
 
@@ -252,13 +259,11 @@ const studioLoops = (facts?.moves ?? []).slice(0, 3);
         gets.map((g) => (
           <li
             class:list={[
-              'glass-card flex min-h-[10rem] flex-col justify-between gap-4 rounded-tile border p-5',
+              'glass-card flex flex-col justify-between gap-5 rounded-tile border p-5',
               g.extra ? 'border-dashed border-border' : 'border-border',
             ]}
           >
-            <span class="glyph text-2xl leading-none text-accent" aria-hidden="true">
-              {g.glyph}
-            </span>
+            <GetVisual kind={g.kind} locale={locale} workout={facts?.nodeTitle} />
             <span>
               <span class="block font-display text-lg leading-tight text-balance">{g.title}</span>
               <span class="mt-1.5 block text-[14px] leading-snug text-muted">{g.line}</span>
@@ -273,23 +278,47 @@ const studioLoops = (facts?.moves ?? []).slice(0, 3);
       }
     </ul>
     <div
-      class="glass-card mt-10 flex flex-col gap-6 rounded-card border border-border p-6 md:mt-14 md:p-10 lg:flex-row lg:items-end lg:justify-between"
+      class="mt-10 flex flex-col gap-6 rounded-card border border-border bg-surface p-6 md:mt-14 md:p-10 lg:flex-row lg:items-end lg:justify-between"
     >
       <p
         class="max-w-[18ch] font-display text-[clamp(1.75rem,5vw,3rem)] leading-[1.05] text-balance"
       >
         {k('creatorsWhiteLabel')}
       </p>
-      <ul class="flex flex-wrap gap-2 lg:max-w-md lg:justify-end">
-        {
-          white.map((w, i) => (
-            <li class="flex">
-              <Pill size="md" tone={i === 0 ? 'sky' : 'neutral'}>
-                {w}
-              </Pill>
-            </li>
-          ))
-        }
+      <ul
+        class="kit grid w-full grid-cols-2 gap-2 lg:max-w-md"
+        aria-label={k('creatorsWhiteLabel')}
+      >
+        <li class="kit-tile col-span-2">
+          <span class="kit-url">
+            <span class="glyph text-accent" aria-hidden="true">●</span>
+            {k('creatorsGetMockDomain')}
+          </span>
+          <span class="kit-label">{white[0]}</span>
+        </li>
+        <li class="kit-tile">
+          <span class="flex items-center gap-1.5" aria-hidden="true">
+            <span class="kit-logo">{k('creatorsGetMockBrand').slice(0, 1)}</span>
+            <i class="kit-swatch bg-accent"></i>
+            <i class="kit-swatch bg-orange"></i>
+            <i class="kit-swatch bg-beige"></i>
+          </span>
+          <span class="kit-label">{white[1]}</span>
+        </li>
+        <li class="kit-tile">
+          <span class="font-display text-3xl leading-none" aria-hidden="true">
+            Aa<span class="t-thin text-muted">Aa</span>
+          </span>
+          <span class="kit-label">{white[2]}</span>
+        </li>
+        <li class="kit-tile">
+          <span class="text-[15px] text-accent" aria-hidden="true">@{k('creatorsMockBot')}</span>
+          <span class="kit-label">{white[3]}</span>
+        </li>
+        <li class="kit-tile">
+          <span class="text-[13px] leading-tight" aria-hidden="true">Prodamus<br />lava.top</span>
+          <span class="kit-label">{white[4]}</span>
+        </li>
       </ul>
     </div>
   </Section>
@@ -319,10 +348,18 @@ const studioLoops = (facts?.moves ?? []).slice(0, 3);
                 </div>
               )}
               {p.price && (
-                <p class="mt-6 flex">
-                  <Pill size="md" tone={p.id === 'club' ? 'warm' : 'sky'}>
-                    {p.price}
-                  </Pill>
+                <p class="mt-8 border-t border-border pt-5">
+                  <span
+                    class:list={[
+                      'numeral block text-[clamp(2rem,6vw,3rem)] leading-none',
+                      p.id === 'club' ? 'text-gradient' : 'text-accent',
+                    ]}
+                  >
+                    {p.price.value}
+                  </span>
+                  <span class="mt-2 block max-w-md text-[14px] leading-snug text-muted">
+                    {p.price.note}
+                  </span>
                 </p>
               )}
             </div>
@@ -356,38 +393,20 @@ const studioLoops = (facts?.moves ?? []).slice(0, 3);
         ))
       }
     </div>
+    <div class="mt-3">
+      <MoneyCalc
+        locale={locale}
+        coursePrice={calcPrices.course}
+        clubPrice={calcPrices.club}
+        hourPrice={calcPrices.hour}
+        currency={currency}
+      />
+    </div>
     <p class="mt-5 max-w-xl text-base leading-snug text-muted md:text-lg">
-      {k('creatorsMoneyNote')}
-    </p>
-    <p class="mt-3 max-w-xl text-base leading-snug md:text-lg">
       {k('creatorsMoneyIntl')}
     </p>
 
-    {
-      examples.length > 0 && (
-        <div class="mt-12">
-          <h3 class="eyebrow">{k('creatorsMoneyExampleTitle')}</h3>
-          <ul class="mt-4 flex flex-col divide-y divide-border border-y border-border">
-            {examples.map((e) => (
-              <li class="flex flex-col gap-2 py-5 md:flex-row md:items-baseline md:justify-between md:gap-8">
-                <span class="text-[15px] text-muted">{e.label}</span>
-                <span class="numeral text-[clamp(1.25rem,5.5vw,2rem)] leading-tight">
-                  ({e.price} − {k('creatorsMoneyFee')}) × {e.share}%{' '}
-                  <span class="glyph text-muted" aria-hidden="true">
-                    →
-                  </span>{' '}
-                  <span class="text-accent">{k('creatorsMoneyYou')}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )
-    }
-
-    <div
-      class="glass-card mt-12 grid gap-8 rounded-card border border-border p-6 md:mt-16 md:p-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-12"
-    >
+    <div class="mt-12 grid gap-8 md:mt-16 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-12">
       <div class="flex flex-col justify-between gap-6">
         <h3 class="font-display text-2xl leading-tight md:text-3xl">
           {k('creatorsMoneyCoversTitle')}
@@ -405,10 +424,8 @@ const studioLoops = (facts?.moves ?? []).slice(0, 3);
       <ul class="grid grid-cols-2 gap-2 md:gap-3">
         {
           covers.map((c) => (
-            <li class="flex min-h-[7.5rem] flex-col justify-between gap-4 rounded-tile border border-border bg-surface-2 p-4 md:p-5">
-              <span class="glyph text-2xl leading-none text-accent" aria-hidden="true">
-                {c.glyph}
-              </span>
+            <li class="glass-card flex min-h-[7.5rem] flex-col justify-between gap-4 rounded-tile border border-border p-4 md:p-5">
+              <CoverIcon name={c.icon} class="size-7 text-accent" />
               <span class="font-display text-[15px] leading-snug text-balance md:text-base">
                 {c.label}
               </span>
@@ -419,32 +436,39 @@ const studioLoops = (facts?.moves ?? []).slice(0, 3);
     </div>
   </Section>
 
-  <Section id="compare" title={k('creatorsCompareTitle')} intro={k('creatorsCompareIntro')}>
-    <div class="overflow-hidden rounded-card border border-border">
-      <div
-        class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-4 border-b border-border px-4 py-3 md:grid-cols-[minmax(0,3fr)_minmax(0,4fr)_minmax(0,5fr)] md:px-6"
-      >
-        <span class="hidden md:block" aria-hidden="true"></span>
-        <span class="eyebrow text-muted">{k('creatorsCompareColA')}</span>
-        <span class="eyebrow text-accent">{k('creatorsCompareColB')}</span>
+  <Section id="compare" title={k('creatorsCompareTitle')}>
+    <div class="grid gap-3 md:grid-cols-2">
+      <div class="rounded-card border border-border p-6 md:p-8">
+        <h3 class="text-[15px] text-muted">{k('creatorsCompareColA')}</h3>
+        <ul class="mt-5 flex flex-col gap-3">
+          {
+            compare.map((row) => (
+              <li class="flex items-baseline gap-3 text-lg leading-snug text-muted md:text-xl">
+                <span class="glyph text-muted-2" aria-hidden="true">
+                  ✕
+                </span>
+                {row.a}
+              </li>
+            ))
+          }
+        </ul>
       </div>
-      <dl class="divide-y divide-border">
-        {
-          compare.map((row) => (
-            <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-x-4 gap-y-1.5 px-4 py-4 md:grid-cols-[minmax(0,3fr)_minmax(0,4fr)_minmax(0,5fr)] md:items-baseline md:px-6">
-              <dt class="col-span-2 font-display text-[15px] leading-snug md:col-span-1 md:text-base">
-                {row.label}
-              </dt>
-              <dd class="m-0 text-[14px] leading-snug text-muted md:text-[15px]">{row.a}</dd>
-              <dd class="m-0 text-[14px] leading-snug text-text md:text-[15px]">{row.b}</dd>
-            </div>
-          ))
-        }
-      </dl>
+      <div class="rounded-card bg-accent p-6 text-on-accent md:p-8">
+        <h3 class="font-display text-xl">{k('creatorsCompareColB')}</h3>
+        <ul class="mt-5 flex flex-col gap-3">
+          {
+            compare.map((row) => (
+              <li class="flex items-baseline gap-3 font-display text-lg leading-snug md:text-xl">
+                <span class="glyph" aria-hidden="true">
+                  ✓
+                </span>
+                {row.b}
+              </li>
+            ))
+          }
+        </ul>
+      </div>
     </div>
-    <p class="mt-5 max-w-xl text-base leading-snug text-muted md:text-lg">
-      {k('creatorsCompareNote')}
-    </p>
   </Section>
 
   <Section id="tools" title={k('creatorsToolsTitle')}>
@@ -610,6 +634,75 @@ const studioLoops = (facts?.moves ?? []).slice(0, 3);
         transparent 60%
       ),
       var(--surface);
+  }
+  /* The white-label band's brand kit: each of the creator's own things, shown, with its label. */
+  .kit-tile {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 6rem;
+    padding: 14px;
+    border-radius: var(--r-inner);
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+  }
+  .kit-label {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .kit-url {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: var(--bg);
+    border: 1px solid var(--border-strong);
+    font-size: 14px;
+  }
+  .kit-logo {
+    display: inline-grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 999px;
+    background: var(--text);
+    color: var(--bg);
+    font-family: var(--font-display, inherit);
+    font-weight: 800;
+    font-size: 14px;
+  }
+  .kit-swatch {
+    width: 16px;
+    height: 16px;
+    border-radius: 999px;
+  }
+  /* The hero's Polaroid: Nastia's photo on white card stock, her note on the wide bottom strip. */
+  .polaroid {
+    padding: 14px 14px 22px;
+    border-radius: 6px;
+    background: #f7f5f0;
+    color: #141414;
+    box-shadow:
+      0 30px 60px -20px rgba(0, 0, 0, 0.75),
+      0 2px 6px rgba(0, 0, 0, 0.4);
+  }
+  .polaroid img {
+    border-radius: 2px;
+  }
+  .note {
+    padding: 16px 4px 0;
+  }
+  .tape {
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    width: 110px;
+    height: 30px;
+    transform: translateX(-50%) rotate(-4deg);
+    background: color-mix(in srgb, var(--accent) 55%, transparent);
+    border-radius: 2px;
   }
   .final-bubble {
     align-self: flex-start;
