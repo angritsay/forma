@@ -24,8 +24,10 @@
  * **A deck, not a brochure.** Big type, short lines, the product's own screens: the course's path
  * (`PathPhone`), a day in the club (`club/ClubDay`), the session tickets without their buttons
  * (`SessionTickets actions={false}` — this reader is not booking), and the coach's real exercise
- * loops for the Studio. One blue hero field; one neon, the hero's «Написать Насте». The closing
- * band repeats it in white so the page still has one neon.
+ * loops for the Studio, and the admin's tools as a clickable tour (`creators/ToolTour`). Each
+ * product picture sits in a `Screenshot` slot: a real capture dropped into `public/screens/creators/`
+ * replaces the sketch. One blue hero field, holding both buttons; one neon, its «Написать Насте».
+ * The closing band repeats it in white so the page still has one neon.
  */
 import Landing from '@/layouts/Landing.astro';
 import Button from '@/components/landing/Button.astro';
@@ -34,11 +36,13 @@ import HeroField from '@/components/landing/HeroField.astro';
 import KeyTitle from '@/components/landing/KeyTitle.astro';
 import PathPhone from '@/components/landing/PathPhone.astro';
 import Pill from '@/components/landing/Pill.astro';
+import Screenshot from '@/components/landing/Screenshot.astro';
 import Section from '@/components/landing/Section.astro';
 import SessionTickets from '@/components/landing/SessionTickets.astro';
 import Stat from '@/components/landing/Stat.astro';
 import ClubDay from '@/components/landing/club/ClubDay.astro';
 import BrandExample from '@/components/landing/creators/BrandExample.astro';
+import ToolTour from '@/components/landing/creators/ToolTour.astro';
 import LoopTile from '@/components/landing/media/LoopTile.astro';
 import { DEMO_COURSE_ID, firstWorkoutFacts } from '@/components/landing/demo';
 import { COURSE_BY_ID } from '@/content/registry';
@@ -67,6 +71,8 @@ const description = t(locale, 'seo.creatorsDescription');
 
 const tryHref = appHref('', { locale });
 const nastiaName = l(NASTIA.name, locale);
+/* «@aggritsay», read off the link so the two never disagree. */
+const telegramHandle = `@${CREATOR_CONTACT.replace(/^https?:\/\/t\.me\//, '')}`;
 
 /* The course: the one on sale, its own name and price. */
 const course = COURSE_BY_ID.get(DEMO_COURSE_ID) ?? SITE_COURSES[0];
@@ -84,7 +90,16 @@ const clubPrice =
         month30: formatPrice(locale, monthly.price),
       })
     : '';
-const clubPoints = [1, 2, 3, 4, 5, 6, 7].map((n) => k(`creatorsClubPoint${n}`));
+const clubSteps = [
+  { glyph: '✎', n: 1 },
+  { glyph: '◉', n: 2 },
+  { glyph: '↗', n: 3 },
+  { glyph: '★', n: 4 },
+].map((s) => ({
+  glyph: s.glyph,
+  title: k(`creatorsClubStep${s.n}Title`),
+  line: k(`creatorsClubStep${s.n}Line`),
+}));
 
 /* Sessions: the hour is the worked example in the money block. */
 const hour = BOOKING.options.find((o) => o.id === 'hour');
@@ -121,12 +136,14 @@ const examples = [
   },
 ].filter((e): e is { label: string; price: string; share: number } => Boolean(e));
 
-const covers = [1, 2, 3, 4, 5, 6, 7, 8].map((n) => k(`creatorsCover${n}`));
-const tools = [1, 2, 3, 4, 5, 6, 7].map((n) => ({
-  title: k(`creatorsTool${n}Title`),
-  line: k(`creatorsTool${n}Line`),
+const coverGlyphs = ['▢', '¤', '✈', '♡', '▶', '⚙', '✦', '◉'];
+const covers = [1, 2, 3, 4, 5, 6, 7, 8].map((n) => ({
+  glyph: coverGlyphs[n - 1],
+  label: k(`creatorsCover${n}`),
 }));
+const getGlyphs = ['✈', '◎', '▢', '☆'];
 const gets = [1, 2, 3, 4].map((n) => ({
+  glyph: getGlyphs[n - 1],
   title: k(`creatorsGet${n}Title`),
   line: k(`creatorsGet${n}Line`),
   extra: n === 4,
@@ -162,34 +179,51 @@ const studioLoops = (facts?.moves ?? []).slice(0, 3);
             {k('creatorsLead')}
           </p>
         </div>
-        <ul class="mt-6 flex flex-wrap gap-2">
-          <li class="flex">
-            <Pill size="md" tone="white" tilt="left">{k('creatorsPillCourse')}</Pill>
-          </li>
-          <li class="flex"><Pill size="md" tone="ghost">{k('creatorsPillClub')}</Pill></li>
-          <li class="flex">
-            <Pill size="md" tone="ghost" tilt="right">{k('creatorsPillSessions')}</Pill>
-          </li>
-        </ul>
+        <div class="mt-8">
+          <ul class="flex flex-wrap gap-2">
+            <li class="flex">
+              <Pill size="md" tone="white" tilt="left">{k('creatorsPillCourse')}</Pill>
+            </li>
+            <li class="flex"><Pill size="md" tone="ghost">{k('creatorsPillClub')}</Pill></li>
+            <li class="flex">
+              <Pill size="md" tone="ghost" tilt="right">{k('creatorsPillSessions')}</Pill>
+            </li>
+          </ul>
+          <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Button
+              href={CREATOR_CONTACT}
+              size="lg"
+              class="w-full sm:w-auto"
+              data-goal="creators_write"
+            >
+              {k('creatorsWrite')}
+              <span class="glyph" aria-hidden="true">→</span>
+            </Button>
+            <Button href={tryHref} variant="plain" size="lg" class="w-full sm:w-auto" data-app-link>
+              {k('creatorsTry')}
+            </Button>
+          </div>
+        </div>
       </HeroField>
 
       <figure
-        class="relative m-0 aspect-[4/5] max-h-[560px] overflow-hidden rounded-card border border-border bg-surface-2 max-md:aspect-[4/3]"
+        class="glass-card m-0 flex flex-col items-center justify-between gap-5 rounded-card border border-border p-5 md:p-6"
       >
-        <img
-          src={withBase(NASTIA.photo)}
-          alt={nastiaName}
-          width="512"
-          height="640"
-          loading="eager"
-          fetchpriority="high"
-          decoding="async"
-          class="photo-mono absolute inset-0 size-full object-cover object-[50%_25%]"
-        />
-        <div class="photo-grain" aria-hidden="true"></div>
-        <figcaption
-          class="glass-card absolute inset-x-3 bottom-3 rounded-tile border border-border p-4"
+        <div
+          class="relative mt-2 w-full max-w-[17rem] -rotate-3 overflow-hidden rounded-tile border-4 border-paper bg-surface-2 shadow-2xl"
         >
+          <img
+            src={withBase(NASTIA.photo)}
+            alt={nastiaName}
+            width="512"
+            height="640"
+            loading="eager"
+            fetchpriority="high"
+            decoding="async"
+            class="aspect-[4/5] w-full object-cover"
+          />
+        </div>
+        <figcaption class="w-full">
           <p class="font-display text-lg leading-tight">{k('creatorsNastiaHello')}</p>
           <p class="mt-1 text-[14px] leading-snug text-muted">{k('creatorsNastiaLine')}</p>
           <ul class="mt-3 flex flex-wrap gap-1.5">
@@ -205,16 +239,6 @@ const studioLoops = (facts?.moves ?? []).slice(0, 3);
       </figure>
     </div>
 
-    <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
-      <Button href={CREATOR_CONTACT} size="lg" class="w-full sm:w-auto" data-goal="creators_write">
-        {k('creatorsWrite')}
-        <span class="glyph" aria-hidden="true">→</span>
-      </Button>
-      <Button href={tryHref} variant="plain" size="lg" class="w-full sm:w-auto" data-app-link>
-        {k('creatorsTry')}
-      </Button>
-    </div>
-
     <div class="mt-12 grid grid-cols-3 gap-4 border-t border-border pt-8 md:mt-16">
       <Stat value="80%" label={k('creatorsStatCourse')} tone="accent" />
       <Stat value="90%" label={k('creatorsStatSessions')} tone="accent" />
@@ -222,18 +246,18 @@ const studioLoops = (facts?.moves ?? []).slice(0, 3);
     </div>
   </div>
 
-  <Section id="get" n={1} eyebrow={k('creatorsGetEyebrow')} title={k('creatorsGetTitle')}>
+  <Section id="get" title={k('creatorsGetTitle')}>
     <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {
-        gets.map((g, i) => (
+        gets.map((g) => (
           <li
             class:list={[
               'glass-card flex min-h-[10rem] flex-col justify-between gap-4 rounded-tile border p-5',
               g.extra ? 'border-dashed border-border' : 'border-border',
             ]}
           >
-            <span class="numeral text-sm text-muted-2" aria-hidden="true">
-              {String(i + 1).padStart(2, '0')}
+            <span class="glyph text-2xl leading-none text-accent" aria-hidden="true">
+              {g.glyph}
             </span>
             <span>
               <span class="block font-display text-lg leading-tight text-balance">{g.title}</span>
@@ -248,46 +272,51 @@ const studioLoops = (facts?.moves ?? []).slice(0, 3);
         ))
       }
     </ul>
-    <p
-      class="mt-8 max-w-3xl font-display text-[clamp(1.375rem,5vw,2.25rem)] leading-tight text-balance"
+    <div
+      class="glass-card mt-10 flex flex-col gap-6 rounded-card border border-border p-6 md:mt-14 md:p-10 lg:flex-row lg:items-end lg:justify-between"
     >
-      {k('creatorsWhiteLabel')}
-    </p>
-    <ul class="mt-5 flex flex-wrap gap-2">
-      {
-        white.map((w, i) => (
-          <li class="flex">
-            <Pill size="md" tone={i === 0 ? 'sky' : 'neutral'}>
-              {w}
-            </Pill>
-          </li>
-        ))
-      }
-    </ul>
+      <p
+        class="max-w-[18ch] font-display text-[clamp(1.75rem,5vw,3rem)] leading-[1.05] text-balance"
+      >
+        {k('creatorsWhiteLabel')}
+      </p>
+      <ul class="flex flex-wrap gap-2 lg:max-w-md lg:justify-end">
+        {
+          white.map((w, i) => (
+            <li class="flex">
+              <Pill size="md" tone={i === 0 ? 'sky' : 'neutral'}>
+                {w}
+              </Pill>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
   </Section>
 
-  <Section id="ways" n={2} eyebrow={k('creatorsWaysEyebrow')} title={k('creatorsWaysTitle')}>
+  <Section id="ways" title={k('creatorsWaysTitle')}>
     <ol class="flex flex-col gap-16 md:gap-24">
       {
         products.map((p, i) => (
           <li class="grid items-center gap-8 md:grid-cols-2 md:gap-12">
             <div class:list={[i % 2 === 1 && 'md:order-2']}>
-              <p class="numeral text-sm text-muted" aria-hidden="true">
-                {String(i + 1).padStart(2, '0')}
-              </p>
-              <h3 class="display mt-2 text-[clamp(2.5rem,10vw,4.5rem)] leading-none">{p.title}</h3>
+              <h3 class="display text-[clamp(2.5rem,10vw,4.5rem)] leading-none">{p.title}</h3>
               <p class="mt-5 max-w-md text-lg leading-snug text-text md:text-xl">{p.line}</p>
               {p.id === 'club' && (
-                <ul class="mt-6 flex max-w-md flex-col divide-y divide-border border-y border-border">
-                  {clubPoints.map((point) => (
-                    <li class="flex items-baseline gap-3 py-2.5 text-[15px] leading-snug">
-                      <span class="glyph text-accent" aria-hidden="true">
-                        ›
-                      </span>
-                      {point}
-                    </li>
-                  ))}
-                </ul>
+                <div class="mt-6 max-w-md">
+                  <p class="text-[14px] text-muted">{k('creatorsClubHow')}</p>
+                  <ol class="mt-3 grid grid-cols-2 gap-2">
+                    {clubSteps.map((st) => (
+                      <li class="glass-card flex flex-col gap-2 rounded-tile border border-border p-4">
+                        <span class="glyph text-xl leading-none text-accent" aria-hidden="true">
+                          {st.glyph}
+                        </span>
+                        <span class="font-display text-base leading-tight">{st.title}</span>
+                        <span class="text-[13px] leading-snug text-muted">{st.line}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
               )}
               {p.price && (
                 <p class="mt-6 flex">
@@ -298,9 +327,11 @@ const studioLoops = (facts?.moves ?? []).slice(0, 3);
               )}
             </div>
             <div class:list={['min-w-0', i % 2 === 1 && 'md:order-1']}>
-              {p.id === 'course' && <PathPhone locale={locale} />}
-              {p.id === 'club' && <ClubDay locale={locale} />}
-              {p.id === 'sessions' && <SessionTickets locale={locale} actions={false} />}
+              <Screenshot name={`creators/${p.id}`} alt={p.title}>
+                {p.id === 'course' && <PathPhone locale={locale} />}
+                {p.id === 'club' && <ClubDay locale={locale} />}
+                {p.id === 'sessions' && <SessionTickets locale={locale} actions={false} />}
+              </Screenshot>
             </div>
           </li>
         ))
@@ -308,7 +339,7 @@ const studioLoops = (facts?.moves ?? []).slice(0, 3);
     </ol>
   </Section>
 
-  <Section id="money" n={3} eyebrow={k('creatorsMoneyEyebrow')} title={k('creatorsMoneyTitle')}>
+  <Section id="money" title={k('creatorsMoneyTitle')}>
     <div class="grid gap-3 sm:grid-cols-2">
       {
         [
@@ -354,28 +385,41 @@ const studioLoops = (facts?.moves ?? []).slice(0, 3);
       )
     }
 
-    <h3 class="mt-12 font-display text-2xl md:text-3xl">{k('creatorsMoneyCoversTitle')}</h3>
-    <ul class="mt-6 grid grid-cols-2 gap-2 md:grid-cols-4">
-      {
-        covers.map((c) => (
-          <li class="glass-card flex items-center gap-2.5 rounded-tile border border-border px-4 py-3.5 text-[15px] leading-snug">
-            <span class="glyph text-accent" aria-hidden="true">
-              ✓
-            </span>
-            {c}
-          </li>
-        ))
-      }
-    </ul>
+    <div
+      class="glass-card mt-12 grid gap-8 rounded-card border border-border p-6 md:mt-16 md:p-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-12"
+    >
+      <div class="flex flex-col justify-between gap-6">
+        <h3 class="font-display text-2xl leading-tight md:text-3xl">
+          {k('creatorsMoneyCoversTitle')}
+        </h3>
+        <div>
+          <p class="numeral text-[clamp(4.5rem,16vw,8rem)] leading-none tracking-tight text-accent">
+            20%
+          </p>
+          <p class="mt-2 flex"><Pill tone="neutral">{k('creatorsCoversSessions')}</Pill></p>
+          <p class="mt-4 max-w-sm font-display text-xl leading-tight text-balance md:text-2xl">
+            {k('creatorsCoversLine')}
+          </p>
+        </div>
+      </div>
+      <ul class="grid grid-cols-2 gap-2 md:gap-3">
+        {
+          covers.map((c) => (
+            <li class="flex min-h-[7.5rem] flex-col justify-between gap-4 rounded-tile border border-border bg-surface-2 p-4 md:p-5">
+              <span class="glyph text-2xl leading-none text-accent" aria-hidden="true">
+                {c.glyph}
+              </span>
+              <span class="font-display text-[15px] leading-snug text-balance md:text-base">
+                {c.label}
+              </span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
   </Section>
 
-  <Section
-    id="compare"
-    n={4}
-    eyebrow={k('creatorsCompareEyebrow')}
-    title={k('creatorsCompareTitle')}
-    intro={k('creatorsCompareIntro')}
-  >
+  <Section id="compare" title={k('creatorsCompareTitle')} intro={k('creatorsCompareIntro')}>
     <div class="overflow-hidden rounded-card border border-border">
       <div
         class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-4 border-b border-border px-4 py-3 md:grid-cols-[minmax(0,3fr)_minmax(0,4fr)_minmax(0,5fr)] md:px-6"
@@ -403,7 +447,7 @@ const studioLoops = (facts?.moves ?? []).slice(0, 3);
     </p>
   </Section>
 
-  <Section id="tools" n={5} eyebrow={k('creatorsToolsEyebrow')} title={k('creatorsToolsTitle')}>
+  <Section id="tools" title={k('creatorsToolsTitle')}>
     <div
       class="glass-card grid items-center gap-6 rounded-card border border-border p-5 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-10 md:p-8"
     >
@@ -429,48 +473,59 @@ const studioLoops = (facts?.moves ?? []).slice(0, 3);
       }
     </div>
 
-    <ul class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      {
-        tools.map((tool, i) => (
-          <li class="glass-card flex min-h-[8.5rem] flex-col justify-between gap-4 rounded-tile border border-border p-5">
-            <span class="numeral text-sm text-muted-2" aria-hidden="true">
-              {String(i + 1).padStart(2, '0')}
-            </span>
-            <span>
-              <span class="block font-display text-lg leading-tight">{tool.title}</span>
-              <span class="mt-1.5 block text-[14px] leading-snug text-muted">{tool.line}</span>
-            </span>
-          </li>
-        ))
-      }
-    </ul>
+    <div class="mt-10 md:mt-14">
+      <ToolTour locale={locale} course={course} workoutId={facts?.workoutId} />
+    </div>
   </Section>
 
-  <Section
-    id="custom"
-    n={6}
-    eyebrow={k('creatorsCustomEyebrow')}
-    title={k('creatorsCustomTitle')}
-    intro={k('creatorsCustomIntro')}
-  >
+  <Section id="custom" title={k('creatorsCustomTitle')} intro={k('creatorsCustomIntro')}>
     <div class="grid gap-4 lg:grid-cols-2">
       {CREATOR_EXAMPLES.map((example) => <BrandExample example={example} locale={locale} />)}
     </div>
   </Section>
 
-  <Section id="start" n={7} eyebrow={k('creatorsStepsEyebrow')} title={k('creatorsStepsTitle')}>
-    <ol class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-      {
-        steps.map((s, i) => (
-          <li class="glass-card flex items-center gap-4 rounded-tile border border-border p-4 lg:min-h-[10rem] lg:flex-col lg:items-start lg:justify-between lg:p-5">
-            <span class="numeral text-3xl leading-none text-accent md:text-4xl" aria-hidden="true">
-              {String(i + 1).padStart(2, '0')}
-            </span>
-            <span class="font-display text-[15px] leading-snug text-balance md:text-base">{s}</span>
-          </li>
-        ))
-      }
-    </ol>
+  <Section id="start" title={k('creatorsStepsTitle')}>
+    <div class="grid gap-3 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+      <div
+        class="flex flex-col justify-between gap-8 rounded-card bg-accent p-6 text-on-accent md:p-8"
+      >
+        <div>
+          <span class="numeral text-5xl leading-none md:text-6xl" aria-hidden="true">01</span>
+          <h3 class="mt-6 font-display text-[clamp(1.75rem,5vw,2.75rem)] leading-[1.02]">
+            {steps[0]}
+          </h3>
+          <p class="mt-3 max-w-sm text-base leading-snug opacity-80">{k('creatorsStep1Line')}</p>
+        </div>
+        <div>
+          <Button
+            href={CREATOR_CONTACT}
+            variant="secondary"
+            size="lg"
+            class="w-full sm:w-auto"
+            data-goal="creators_write"
+          >
+            {k('creatorsTelegram')}
+            <span class="glyph" aria-hidden="true">→</span>
+          </Button>
+          <p class="mt-3 text-[14px] opacity-75">{telegramHandle}</p>
+        </div>
+      </div>
+      <ol class="grid gap-3 sm:grid-cols-2" start="2">
+        {
+          steps.slice(1).map((s, i) => (
+            <li class="glass-card flex min-h-[9rem] flex-col justify-between gap-4 rounded-card border border-border p-5 md:p-6">
+              <span class="flex items-center gap-3" aria-hidden="true">
+                <span class="numeral text-3xl leading-none text-accent md:text-4xl">
+                  {String(i + 2).padStart(2, '0')}
+                </span>
+                <span class="h-px flex-1 bg-gradient-to-r from-accent/60 to-transparent" />
+              </span>
+              <span class="font-display text-lg leading-snug text-balance md:text-xl">{s}</span>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
   </Section>
 
   <Section id="faq" title={t(locale, 'landing.faqTitle')}>
@@ -478,26 +533,91 @@ const studioLoops = (facts?.moves ?? []).slice(0, 3);
   </Section>
 
   <section class="mx-auto max-w-6xl px-5 py-8 md:py-12">
-    <div class="border-t border-border pt-12 md:pt-16">
-      <h2 class="display max-w-[16ch] text-[clamp(2.25rem,9vw,4rem)] leading-[1.02] text-balance">
-        {k('creatorsFinalTitle')}
-      </h2>
-      <p class="mt-5 max-w-xl text-lg text-muted">{k('creatorsFinalText')}</p>
-      <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <Button
-          href={CREATOR_CONTACT}
-          variant="plain"
-          size="lg"
-          class="w-full sm:w-auto"
-          data-goal="creators_write"
-        >
-          {k('creatorsWrite')}
-          <span class="glyph" aria-hidden="true">→</span>
-        </Button>
-        <Button href={tryHref} variant="secondary" size="lg" class="w-full sm:w-auto" data-app-link>
-          {k('creatorsTry')}
-        </Button>
+    <div
+      class="final relative grid items-center gap-8 overflow-hidden rounded-card border border-border p-6 sm:p-8 md:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] md:p-12"
+    >
+      <div class="relative">
+        <KeyTitle
+          text={k('creatorsFinalTitle')}
+          as="h2"
+          keyWords={1}
+          class="display max-w-[14ch] text-[clamp(2.25rem,8vw,4.5rem)] leading-[1.02]"
+        />
+        <p class="mt-5 max-w-md text-lg text-muted">{k('creatorsFinalText')}</p>
+        <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <Button
+            href={CREATOR_CONTACT}
+            variant="plain"
+            size="lg"
+            class="w-full sm:w-auto"
+            data-goal="creators_write"
+          >
+            {k('creatorsTelegram')}
+            <span class="glyph" aria-hidden="true">→</span>
+          </Button>
+          <Button
+            href={tryHref}
+            variant="secondary"
+            size="lg"
+            class="w-full sm:w-auto"
+            data-app-link
+          >
+            {k('creatorsTry')}
+          </Button>
+        </div>
       </div>
+      <a
+        href={CREATOR_CONTACT}
+        class="glass-card relative flex flex-col gap-3 rounded-tile border border-border p-4 transition-colors hover:border-border-strong md:p-5"
+        data-goal="creators_write"
+        aria-label={`${k('creatorsTelegram')} ${telegramHandle}`}
+      >
+        <span class="flex items-center gap-3">
+          <img
+            src={withBase(NASTIA.photo)}
+            alt=""
+            width="48"
+            height="48"
+            loading="lazy"
+            decoding="async"
+            class="size-12 rounded-full object-cover"
+          />
+          <span>
+            <span class="block font-display text-base leading-tight">{nastiaName}</span>
+            <span class="block text-[13px] text-accent">{telegramHandle}</span>
+          </span>
+        </span>
+        <span class="final-bubble">{k('creatorsNastiaHello')} 👋</span>
+        <span class="final-bubble">{k('creatorsNastiaLine')}</span>
+      </a>
     </div>
   </section>
 </Landing>
+
+<style>
+  /* The closing band: graphite lit from one corner by the brand's blues — brighter than the
+     ground, without being a second solid hero field. */
+  .final {
+    background:
+      radial-gradient(
+        120% 90% at 100% 0%,
+        color-mix(in srgb, var(--field) 55%, transparent),
+        transparent 60%
+      ),
+      radial-gradient(
+        80% 70% at 0% 100%,
+        color-mix(in srgb, var(--accent) 14%, transparent),
+        transparent 60%
+      ),
+      var(--surface);
+  }
+  .final-bubble {
+    align-self: flex-start;
+    max-width: 92%;
+    padding: 10px 14px;
+    border-radius: 16px 16px 16px 4px;
+    background: var(--surface-3);
+    font-size: 14px;
+    line-height: 1.35;
+  }
+</style>

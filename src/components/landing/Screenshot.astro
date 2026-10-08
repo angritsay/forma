@@ -1,0 +1,56 @@
+---
+/**
+ * A real screenshot of Forma when there is one, the drawn sketch until then.
+ *
+ *   <Screenshot name="creators/course-path" alt="Путь курса" frame="phone">
+ *     <PathPhone locale={locale} />
+ *   </Screenshot>
+ *
+ * Drop `public/screens/<name>.webp` (or `.png` / `.jpg`) into the repo and the next build shows
+ * it — in a phone bezel (`frame="phone"`, a portrait app screen) or a browser window
+ * (`frame="window"`, the admin on a computer), or as is (`frame="bare"`, inside a frame the
+ * caller already draws). With no file, the slot renders: the HTML sketch the
+ * page already had, so a missing screenshot never leaves a hole. The check runs at build time, so
+ * there is no script and no request for a file that is not there.
+ */
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { withBase } from '@/lib/util/paths';
+import PhoneFrame from './PhoneFrame.astro';
+
+interface Props {
+  /** Path under `public/screens/`, without the extension. */
+  name: string;
+  alt: string;
+  frame?: 'phone' | 'window' | 'bare';
+  class?: string;
+}
+
+const { name, alt, frame = 'phone', class: extra = '' } = Astro.props;
+const ext = ['webp', 'png', 'jpg'].find((e) =>
+  existsSync(join(process.cwd(), 'public', 'screens', `${name}.${e}`)),
+);
+const src = ext ? withBase(`/screens/${name}.${ext}`) : undefined;
+---
+
+{
+  !src ? (
+    <slot />
+  ) : frame === 'phone' ? (
+    <PhoneFrame class={extra}>
+      <img src={src} alt={alt} loading="lazy" decoding="async" class="block w-full" />
+    </PhoneFrame>
+  ) : frame === 'bare' ? (
+    <img
+      src={src}
+      alt={alt}
+      loading="lazy"
+      decoding="async"
+      class={`block w-full rounded-inner ${extra}`}
+    />
+  ) : (
+    <div class={`overflow-hidden rounded-card border border-border-strong ${extra}`}>
+      <img src={src} alt={alt} loading="lazy" decoding="async" class="block w-full" />
+    </div>
+  )
+}

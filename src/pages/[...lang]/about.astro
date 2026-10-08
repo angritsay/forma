@@ -199,11 +199,7 @@ const jsonLd = [
 
   {
     BOOKING.enabled && (
-      <Section
-        id="outcomes"
-        eyebrow={t(locale, 'landing.aboutOutcomesEyebrow')}
-        title={t(locale, 'landing.aboutOutcomesTitle')}
-      >
+      <Section id="outcomes" title={t(locale, 'landing.aboutOutcomesTitle')}>
         <ul class="grid gap-3 md:grid-cols-3 md:gap-4">
           {BOOKING.outcomes.map((o) => (
             <li class="glass-card flex flex-col gap-4 rounded-card border border-border p-5 md:p-6">
@@ -220,12 +216,7 @@ const jsonLd = [
 
   {
     BOOKING.enabled && (
-      <Section
-        id="sessions"
-        eyebrow={t(locale, 'landing.aboutSessionsEyebrow')}
-        title={t(locale, 'landing.aboutSessionsTitle')}
-        class="scroll-mt-16"
-      >
+      <Section id="sessions" title={t(locale, 'landing.aboutSessionsTitle')} class="scroll-mt-16">
         <ul class="mb-5 flex flex-wrap gap-2">
           <li class="flex max-w-full">
             <Pill tone="ciel" size="md" tilt="left">
@@ -265,11 +256,7 @@ const jsonLd = [
     )
   }
 
-  <Section
-    id="daily"
-    eyebrow={t(locale, 'landing.aboutDailyEyebrow')}
-    title={t(locale, 'landing.aboutDailyTitle')}
-  >
+  <Section id="daily" title={t(locale, 'landing.aboutDailyTitle')}>
     <div class="grid items-stretch gap-4 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-6">
       <figure
         class="relative m-0 aspect-[4/3] overflow-hidden rounded-card border border-border bg-surface md:aspect-auto md:min-h-[22rem]"
@@ -310,11 +297,7 @@ const jsonLd = [
     }
   </Section>
 
-  <Section
-    id="principles"
-    eyebrow={t(locale, 'landing.aboutPhilosophyEyebrow')}
-    title={t(locale, 'landing.aboutPhilosophyTitle')}
-  >
+  <Section id="principles" title={t(locale, 'landing.aboutPhilosophyTitle')}>
     <ol class="grid gap-3 md:grid-cols-3 md:gap-4">
       {
         principles.map((p, i) => (
@@ -330,11 +313,7 @@ const jsonLd = [
     </ol>
   </Section>
 
-  <Section
-    id="record"
-    eyebrow={t(locale, 'landing.aboutCredEyebrow')}
-    title={t(locale, 'landing.coachCredentials')}
-  >
+  <Section id="record" title={t(locale, 'landing.coachCredentials')}>
     <div class="grid gap-10 md:grid-cols-12 md:gap-8">
       {
         COACH.credentials.length > 0 && (
@@ -393,7 +372,6 @@ const jsonLd = [
 
   <Section
     id="science"
-    eyebrow={t(locale, 'landing.aboutScienceEyebrow')}
     title={t(locale, 'landing.aboutScienceTitle')}
     intro={t(locale, 'landing.aboutScienceText')}
   >

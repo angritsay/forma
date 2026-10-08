@@ -258,11 +258,7 @@ const jsonLd = [
     </div>
   </section>
 
-  <Section
-    id="day"
-    eyebrow={t(locale, 'landing.subscribeDayEyebrow')}
-    title={t(locale, 'landing.subscribeDayTitle')}
-  >
+  <Section id="day" title={t(locale, 'landing.subscribeDayTitle')}>
     <div class="grid items-center gap-10 lg:grid-cols-[320px_minmax(0,1fr)] lg:gap-14">
       <ClubDay locale={locale} class="mx-auto w-full max-w-[320px]" />
       <ul class="flex flex-col divide-y divide-border border-y border-border">
@@ -287,30 +283,18 @@ const jsonLd = [
     </div>
   </Section>
 
-  <Section
-    id="streak"
-    eyebrow={t(locale, 'landing.subscribeStreakEyebrow')}
-    title={t(locale, 'landing.subscribeStreakTitle')}
-  >
+  <Section id="streak" title={t(locale, 'landing.subscribeStreakTitle')}>
     <ClubStreakPrize locale={locale} />
   </Section>
 
-  <Section
-    id="together"
-    eyebrow={t(locale, 'landing.subscribeDuoEyebrow')}
-    title={t(locale, 'landing.subscribeDuoTitle')}
-  >
+  <Section id="together" title={t(locale, 'landing.subscribeDuoTitle')}>
     <p class="max-w-md text-base leading-snug text-muted">{t(locale, 'app.duoNoneBody')}</p>
     <div class="mt-8">
       <ShareInvite client:visible compact {...shareInviteProps(locale, site)} />
     </div>
   </Section>
 
-  <Section
-    id="bot"
-    eyebrow={t(locale, 'landing.subscribeBotEyebrow')}
-    title={t(locale, 'landing.subscribeBotTitle')}
-  >
+  <Section id="bot" title={t(locale, 'landing.subscribeBotTitle')}>
     <ClubBotMoments locale={locale} />
     <div class="mt-6 flex flex-wrap items-center justify-between gap-x-8 gap-y-3">
       <p class="max-w-md text-[14px] leading-snug text-muted">
@@ -329,11 +313,7 @@ const jsonLd = [
     </div>
   </Section>
 
-  <Section
-    id="plans"
-    eyebrow={t(locale, 'landing.subscribePlansEyebrow')}
-    title={t(locale, 'landing.subscribePlansTitle')}
-  >
+  <Section id="plans" title={t(locale, 'landing.subscribePlansTitle')}>
     <ClubPlans locale={locale} />
   </Section>
 
@@ -396,14 +376,13 @@ const jsonLd = [
 
   <Section
     id="vs"
-    eyebrow={t(locale, 'landing.subscribeVsEyebrow')}
     title={t(locale, 'landing.subscribeVsTitle')}
     intro={t(locale, 'landing.subscribeVsLine')}
   >
     <PriceLadder locale={locale} omit={['free', 'coach']} />
   </Section>
 
-  <Section id="faq" eyebrow={t(locale, 'landing.faqEyebrow')} title={t(locale, 'landing.faqTitle')}>
+  <Section id="faq" title={t(locale, 'landing.faqTitle')}>
     <Faq items={faq} />
   </Section>
 

@@ -1,0 +1,599 @@
+---
+/**
+ * `/creators/`'s «Наши инструменты» as a tour: the seven tools on the left, the admin screen of the
+ * picked one on the right. Seven text cards said what the tools are called; this shows what is
+ * inside them.
+ *
+ * **No script.** The list is a radio group (one `name`, arrow keys move between the tools for
+ * free) and the screens follow it through `:has(:checked)`. Before `:has` — or before anyone picks —
+ * the first screen shows, so the block is never empty.
+ *
+ * **Sketches, honestly drawn.** The real admin cannot be screenshotted at build time, so each
+ * screen is painted in HTML, tagged «Схема экрана», from what the business actually has: the
+ * course's own days, the first workout's real block (format, minutes, rest, counts), the coach's
+ * filmed loops for the library, the session lengths and the 20-minute hold from `BOOKING`, and the
+ * analytics funnel's own step names (`app.adminStatsStep*`). The analytics bars carry no numbers:
+ * this page states no user counts. The member names and the bot's lines are illustrations.
+ *
+ * The screens are pictures (`aria-hidden`); the tool's name and line in the list carry the text.
+ * No neon here — the page keeps it for the hero's «Написать Насте».
+ */
+import LoopTile from '@/components/landing/media/LoopTile.astro';
+import { EXERCISE_BY_ID } from '@/content/registry';
+import type { Course, Locale } from '@/content/schema';
+import { l, t } from '@/i18n/index';
+import { HOLD_MINUTES } from '@/lib/coach/slots';
+import { BOOKING } from '@content/site/booking';
+
+interface Props {
+  locale: Locale;
+  course: Course | undefined;
+  /** The free first workout's id (`firstWorkoutFacts`), the one the builder screen opens. */
+  workoutId: string | undefined;
+}
+
+const { locale, course, workoutId } = Astro.props;
+const k = (key: string, params?: Record<string, string | number>) =>
+  t(locale, `landing.${key}` as 'landing.creatorsH1', params);
+
+const GLYPHS = ['▤', '⏱', '▶', '★', '◷', '✈', '↗'];
+const tools = [1, 2, 3, 4, 5, 6, 7].map((n) => ({
+  n,
+  glyph: GLYPHS[n - 1],
+  title: k(`creatorsTool${n}Title`),
+  line: k(`creatorsTool${n}Line`),
+}));
+
+/* 1 — the course builder: its first days, in the order the path walks them. */
+const days = [...(course?.nodes ?? [])]
+  .sort((a, b) => a.week - b.week || a.day - b.day)
+  .slice(0, 5)
+  .map((n) => ({
+    when: k('creatorsMockDay', { w: n.week, d: n.day }),
+    title: l(n.title, locale),
+    sub: n.subtitle ? l(n.subtitle, locale) : '',
+  }));
+
+/* 2 — the workout builder: workout 1's training block, as authored. */
+const workout = course?.workouts.find((w) => w.id === workoutId) ?? course?.workouts[0];
+const block = workout?.blocks.find((b) => b.type !== 'warmup' && b.type !== 'cooldown');
+const blockTabs = (workout?.blocks ?? []).map((b) => ({
+  label: t(locale, `training.block_${b.type}` as 'training.rest'),
+  on: b === block,
+}));
+const unit = (it: { reps?: number; seconds?: number }) =>
+  it.reps !== undefined
+    ? `×${it.reps}`
+    : it.seconds !== undefined
+      ? `${it.seconds} ${t(locale, 'training.seconds')}`
+      : '';
+const items = (block?.items ?? []).map((it) => ({
+  name: l(EXERCISE_BY_ID.get(it.exerciseId)?.name, locale) || it.exerciseId,
+  count: unit(it),
+}));
+const blockFacts = block
+  ? [
+      t(locale, `training.format_${block.format}` as 'training.rest'),
+      block.rounds ? `${k('creatorsMockRounds')} · ${block.rounds}` : '',
+      block.restBetweenRoundsSec
+        ? `${t(locale, 'training.rest')} · ${block.restBetweenRoundsSec} ${t(locale, 'training.seconds')}`
+        : '',
+    ].filter(Boolean)
+  : [];
+
+/* 3 — the library: the course's own filmed movements. */
+const moveIds = [
+  ...new Set(
+    (course?.workouts ?? []).flatMap((w) =>
+      w.blocks
+        .filter((b) => b.type !== 'warmup' && b.type !== 'cooldown')
+        .flatMap((b) => b.items.map((i) => i.exerciseId)),
+    ),
+  ),
+]
+  .filter((id) => EXERCISE_BY_ID.has(id))
+  .slice(0, 6)
+  .map((id) => ({ id, name: l(EXERCISE_BY_ID.get(id)?.name, locale) }));
+
+/* 4 — the club: names are illustrations. */
+const members = [1, 2, 3, 4].map((n) => k(`creatorsMockMember${n}`));
+const member = (i: number) => members[i] ?? '';
+const initial = (i: number) => member(i).slice(0, 1);
+
+/* 5 — the calendar: a week of slots in the two real lengths, one held for `HOLD_MINUTES`. */
+const weekdays = k('creatorsMockDays').split(',');
+const half = BOOKING.options.find((o) => o.id === 'half');
+const hour = BOOKING.options.find((o) => o.id === 'hour');
+type Slot = { time: string; state: 'free' | 'booked' | 'held' | 'moved'; min?: number };
+const grid: Slot[][] = [
+  [
+    { time: '09:00', state: 'booked', min: hour?.durationMin },
+    { time: '18:00', state: 'free' },
+  ],
+  [{ time: '10:00', state: 'held', min: half?.durationMin }],
+  [
+    { time: '08:30', state: 'free' },
+    { time: '19:00', state: 'moved', min: hour?.durationMin },
+  ],
+  [{ time: '12:00', state: 'booked', min: half?.durationMin }],
+  [
+    { time: '10:00', state: 'free' },
+    { time: '17:30', state: 'free' },
+  ],
+];
+const slotLabel = (s: Slot) =>
+  s.state === 'free'
+    ? k('creatorsMockFree')
+    : s.state === 'held'
+      ? k('creatorsMockHeld', { n: HOLD_MINUTES })
+      : s.state === 'moved'
+        ? k('creatorsMockMoved')
+        : k('creatorsMockBooked');
+
+/* 7 — analytics: the funnel's own steps, bars without numbers. */
+const funnel = (['SignedUp', 'Onboarded', 'Trained', 'Repeated', 'Paid'] as const).map((s, i) => ({
+  label: t(locale, `app.adminStatsStep${s}` as 'app.adminStatsStepPaid'),
+  width: [100, 78, 60, 42, 26][i],
+}));
+const heat = [
+  [4, 3, 3, 2, 1],
+  [4, 4, 3, 2, 2],
+  [4, 3, 2, 2, 1],
+  [4, 4, 3, 3, 2],
+];
+---
+
+<div class="tour grid gap-4 lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] lg:gap-6">
+  <fieldset class="tour-list min-w-0">
+    <legend class="sr-only">{k('creatorsToolsTitle')}</legend>
+    <p class="mb-3 flex items-center gap-2 text-[14px] text-muted" aria-hidden="true">
+      <span class="glyph text-accent">↓</span>
+      {k('creatorsToolsHint')}
+    </p>
+    <div
+      class="-mx-5 flex snap-x gap-2 overflow-x-auto px-5 pb-1 lg:mx-0 lg:flex-col lg:overflow-visible lg:px-0"
+    >
+      {
+        tools.map((tool) => (
+          <label class="tour-tab glass-card flex shrink-0 snap-start cursor-pointer items-center gap-3 rounded-tile border border-border p-3 lg:p-4">
+            <input
+              type="radio"
+              name="creators-tool"
+              id={`tool-${tool.n}`}
+              value={tool.n}
+              checked={tool.n === 1}
+              class="sr-only"
+            />
+            <span
+              class="tour-num glyph grid size-9 shrink-0 place-items-center rounded-full text-[15px]"
+              aria-hidden="true"
+            >
+              {tool.glyph}
+            </span>
+            <span class="min-w-0">
+              <span class="block font-display text-[15px] leading-tight whitespace-nowrap lg:text-base">
+                {tool.title}
+              </span>
+              <span class="mt-1 hidden text-[13px] leading-snug text-muted lg:block">
+                {tool.line}
+              </span>
+            </span>
+          </label>
+        ))
+      }
+    </div>
+  </fieldset>
+
+  <div class="tour-window glass-card min-w-0 overflow-hidden rounded-card border border-border">
+    <div class="flex items-center gap-3 border-b border-border px-4 py-2.5">
+      <span class="flex gap-1.5" aria-hidden="true"
+        ><i class="dot"></i><i class="dot"></i><i class="dot"></i></span
+      >
+      <span class="truncate text-[12px] text-muted-2">
+        {k('creatorsMockAdmin')} ·
+        {
+          tools.map((tool) => (
+            <span class="tour-crumb" data-n={tool.n}>
+              {tool.title}
+            </span>
+          ))
+        }
+      </span>
+      <span
+        class="ml-auto shrink-0 rounded-pill border border-border px-2 py-0.5 text-[11px] text-muted-2"
+      >
+        {k('creatorsToolsSketch')}
+      </span>
+    </div>
+
+    <div class="tour-stage p-4 md:p-6" aria-hidden="true">
+      <!-- 1 · course builder -->
+      <div class="panel" data-n="1">
+        <div class="flex items-center justify-between gap-3">
+          <div class="min-w-0">
+            <p class="truncate font-display text-lg leading-tight md:text-xl">
+              {course ? l(course.name, locale) : ''}
+            </p>
+            <p class="mt-1 flex items-center gap-1.5 text-[12px] text-accent">
+              <span class="size-1.5 rounded-full bg-accent"></span>{k('creatorsMockLive')}
+            </p>
+          </div>
+          <span class="mock-btn bg-accent text-on-accent">{k('creatorsMockPublish')}</span>
+        </div>
+        <ol class="mt-4 flex flex-col gap-2">
+          {
+            days.map((d, i) => (
+              <li class:list={['mock-row', i === 0 && 'mock-row-on']}>
+                <span class="glyph text-muted-2">⋮⋮</span>
+                <span class="w-28 shrink-0 text-[12px] text-muted-2">{d.when}</span>
+                <span class="min-w-0 flex-1">
+                  <span class="block truncate text-[14px]">{d.title}</span>
+                  {d.sub && <span class="block truncate text-[12px] text-muted">{d.sub}</span>}
+                </span>
+                <span class="glyph text-muted-2">›</span>
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+
+      <!-- 2 · workout builder -->
+      <div class="panel" data-n="2">
+        <ul class="flex flex-wrap gap-1.5">
+          {
+            blockTabs.map((b) => (
+              <li class:list={['mock-chip', b.on && 'mock-chip-on']}>{b.label}</li>
+            ))
+          }
+        </ul>
+        <div class="mt-4 flex flex-wrap gap-2">
+          {blockFacts.map((f) => <span class="mock-field">{f}</span>)}
+        </div>
+        <ol class="mt-4 flex flex-col gap-2">
+          {
+            items.map((it, i) => (
+              <li class="mock-row">
+                <span class="numeral w-6 text-[12px] text-muted-2">{i + 1}</span>
+                <span class="min-w-0 flex-1 truncate text-[14px]">{it.name}</span>
+                <span class="mock-field numeral text-orange">{it.count}</span>
+              </li>
+            ))
+          }
+          <li class="mock-row mock-row-add text-[13px] text-accent">{k('creatorsMockAddMove')}</li>
+        </ol>
+      </div>
+
+      <!-- 3 · exercise library: the coach's real loops -->
+      <div class="panel" data-n="3">
+        <p class="mock-search">
+          <span class="glyph">⌕</span>{k('creatorsMockSearch')}
+        </p>
+        <ul class="mt-4 grid grid-cols-3 gap-2 md:gap-3">
+          {
+            moveIds.map((m) => (
+              <li>
+                <LoopTile id={m.id} name={m.name} ratio="square" />
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+
+      <!-- 4 · club -->
+      <div class="panel" data-n="4">
+        <div class="grid gap-3 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+          <div class="flex flex-col gap-2">
+            <div class="mock-row flex-col items-start! gap-1!">
+              <span class="text-[12px] text-muted-2">{k('creatorsMockTask')}</span>
+              <span class="font-display text-[15px]">{k('creatorsMockTaskText')}</span>
+            </div>
+            {
+              members.slice(0, 2).map((m, i) => (
+                <div class="mock-row">
+                  <span class="avatar">{m.slice(0, 1)}</span>
+                  <span class="min-w-0 flex-1">
+                    <span class="block text-[14px]">{m}</span>
+                    <span class="block text-[12px] text-muted">{k('creatorsMockProof')}</span>
+                  </span>
+                  <span class="mock-btn bg-accent text-on-accent">{k('creatorsMockAccept')}</span>
+                  {i === 1 && (
+                    <span class="mock-btn border border-border">{k('creatorsMockReturn')}</span>
+                  )}
+                </div>
+              ))
+            }
+          </div>
+          <div class="flex flex-col gap-2">
+            <div class="mock-row flex-col items-start! gap-2!">
+              <span class="text-[12px] text-muted-2">{k('creatorsMockPairs')}</span>
+              <span class="flex items-center gap-1.5 text-[13px]">
+                <span class="avatar">{initial(0)}</span>+<span class="avatar">{initial(2)}</span>
+              </span>
+              <span class="flex items-center gap-1.5 text-[13px]">
+                <span class="avatar">{initial(1)}</span>+<span class="avatar">{initial(3)}</span>
+              </span>
+            </div>
+            <div class="mock-winner">
+              <span class="text-[12px]">{k('creatorsMockWinner')}</span>
+              <span class="font-display text-lg">{member(2)}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5 · booking calendar -->
+      <div class="panel" data-n="5">
+        <div class="grid grid-cols-5 gap-1.5 md:gap-2">
+          {
+            weekdays.map((d, i) => (
+              <div class="flex min-w-0 flex-col gap-1.5">
+                <span class="text-center text-[12px] text-muted-2">{d}</span>
+                {grid[i]?.map((s) => (
+                  <span class:list={['slot', `slot-${s.state}`]}>
+                    <span class="numeral text-[13px]">{s.time}</span>
+                    <span class="truncate text-[10px] md:text-[11px]">{slotLabel(s)}</span>
+                    {s.min && <span class="text-[10px] opacity-80">{s.min}′</span>}
+                  </span>
+                ))}
+              </div>
+            ))
+          }
+        </div>
+      </div>
+
+      <!-- 6 · telegram bot -->
+      <div class="panel" data-n="6">
+        <div class="mx-auto flex max-w-md flex-col gap-2">
+          <p class="flex items-center gap-2 text-[13px] text-muted">
+            <span class="avatar bg-ciel! text-ink!">B</span>@{k('creatorsMockBot')}
+          </p>
+          <p class="bubble">{k('creatorsMockBot1')}</p>
+          <p class="bubble bubble-me">{k('creatorsMockBot2')}</p>
+          <p class="bubble">{k('creatorsMockBot3')}</p>
+          <p class="mock-search mt-2">
+            <span class="glyph">✎</span>{k('creatorsMockBotReply')}
+          </p>
+        </div>
+      </div>
+
+      <!-- 7 · analytics: steps without numbers -->
+      <div class="panel" data-n="7">
+        <p class="text-[12px] text-muted-2">{k('creatorsMockFunnel')}</p>
+        <ol class="mt-2 flex flex-col gap-2">
+          {
+            funnel.map((f) => (
+              <li class="flex items-center gap-3">
+                <span class="w-36 shrink-0 truncate text-[13px] text-muted md:w-44">{f.label}</span>
+                <span class="h-5 flex-1 rounded-pill bg-surface-3">
+                  <span class="block h-full rounded-pill bg-accent" style={`width:${f.width}%`} />
+                </span>
+              </li>
+            ))
+          }
+        </ol>
+        <p class="mt-5 text-[12px] text-muted-2">{k('creatorsMockWeeks')}</p>
+        <div class="mt-2 grid grid-cols-5 gap-1">
+          {
+            heat
+              .flat()
+              .map((v) => <span class="h-4 rounded-sm bg-accent" style={`opacity:${v / 4}`} />)
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .tour-tab {
+    transition:
+      border-color 0.2s,
+      background-color 0.2s;
+  }
+  .tour-num {
+    border: 1px solid var(--border-strong);
+    color: var(--muted);
+    transition:
+      background-color 0.2s,
+      color 0.2s;
+  }
+  .tour-tab:hover {
+    border-color: var(--border-strong);
+  }
+  .tour-tab:has(:checked) {
+    border-color: var(--accent);
+  }
+  .tour-tab:has(:checked) .tour-num {
+    border-color: transparent;
+    background: var(--accent);
+    color: var(--on-accent);
+  }
+  .tour-tab:has(:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .tour-window {
+    align-self: start;
+  }
+  @media (min-width: 1024px) {
+    .tour-window {
+      position: sticky;
+      top: 6rem;
+    }
+  }
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--surface-3);
+  }
+  .tour-stage {
+    display: grid;
+    min-height: 22rem;
+  }
+
+  /* One screen at a time: the first until something else is picked, then the picked one. */
+  .panel,
+  .tour-crumb {
+    display: none;
+  }
+  .panel[data-n='1'] {
+    display: block;
+  }
+  .tour-crumb[data-n='1'] {
+    display: inline;
+  }
+  .tour:has(.tour-list :checked:not(#tool-1)) :is(.panel, .tour-crumb)[data-n='1'] {
+    display: none;
+  }
+  .tour:has(#tool-2:checked) .panel[data-n='2'],
+  .tour:has(#tool-3:checked) .panel[data-n='3'],
+  .tour:has(#tool-4:checked) .panel[data-n='4'],
+  .tour:has(#tool-5:checked) .panel[data-n='5'],
+  .tour:has(#tool-6:checked) .panel[data-n='6'],
+  .tour:has(#tool-7:checked) .panel[data-n='7'] {
+    display: block;
+    animation: panel-in 0.28s ease-out;
+  }
+  .tour:has(#tool-2:checked) .tour-crumb[data-n='2'],
+  .tour:has(#tool-3:checked) .tour-crumb[data-n='3'],
+  .tour:has(#tool-4:checked) .tour-crumb[data-n='4'],
+  .tour:has(#tool-5:checked) .tour-crumb[data-n='5'],
+  .tour:has(#tool-6:checked) .tour-crumb[data-n='6'],
+  .tour:has(#tool-7:checked) .tour-crumb[data-n='7'] {
+    display: inline;
+  }
+  @keyframes panel-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .panel {
+      animation: none !important;
+    }
+  }
+
+  /* The sketch's own parts: solid rows on the glass window, like the admin's lists. */
+  .mock-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: var(--r-inner);
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+  }
+  .mock-row-on {
+    border-color: var(--accent);
+  }
+  .mock-row-add {
+    justify-content: center;
+    border-style: dashed;
+    background: transparent;
+  }
+  .mock-btn {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .mock-chip {
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border-strong);
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .mock-chip-on {
+    border-color: transparent;
+    background: var(--accent);
+    color: var(--on-accent);
+  }
+  .mock-field {
+    padding: 4px 10px;
+    border-radius: 8px;
+    background: var(--surface-3);
+    font-size: 13px;
+  }
+  .mock-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    font-size: 13px;
+    color: var(--muted-2);
+  }
+  .avatar {
+    display: inline-grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+    border-radius: 999px;
+    background: var(--surface-3);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .mock-winner {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 12px 14px;
+    border-radius: var(--r-inner);
+    background: var(--grad-warm);
+    color: var(--ink);
+  }
+  .slot {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+    padding: 8px 6px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text);
+  }
+  .slot-free {
+    border-style: dashed;
+    background: transparent;
+    color: var(--muted);
+  }
+  .slot-booked {
+    border-color: transparent;
+    background: var(--accent);
+    color: var(--on-accent);
+  }
+  .slot-held {
+    border-color: var(--accent);
+    border-style: dashed;
+    color: var(--accent);
+  }
+  .slot-moved {
+    border-color: var(--border-strong);
+  }
+  .bubble {
+    max-width: 85%;
+    padding: 10px 14px;
+    border-radius: 16px 16px 16px 4px;
+    background: var(--surface-3);
+    font-size: 14px;
+    line-height: 1.35;
+  }
+  .bubble-me {
+    align-self: flex-end;
+    border-radius: 16px 16px 4px 16px;
+    background: var(--accent);
+    color: var(--on-accent);
+  }
+</style>
