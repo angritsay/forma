@@ -16,9 +16,11 @@ interface Props {
   locale: Locale;
   /** The app screen's workout title, e.g. «Тренировка 1». */
   workout?: string;
+  /** A base-resolved photo for the bot's card, the site's hero and the app's tile. */
+  photo?: string;
 }
 
-const { kind, locale, workout = '' } = Astro.props;
+const { kind, locale, workout = '', photo } = Astro.props;
 const k = (key: string) => t(locale, `landing.${key}` as 'landing.creatorsH1');
 const brand = k('creatorsGetMockBrand');
 const domain = k('creatorsGetMockDomain');
@@ -31,7 +33,10 @@ const domain = k('creatorsGetMockDomain');
         <span class="flex items-center gap-2 text-[11px] text-muted">
           <span class="gv-avatar">{brand.slice(0, 1)}</span>@{k('creatorsMockBot')}
         </span>
-        <span class="gv-bubble">{k('creatorsGetMockBotLine')}</span>
+        <span class="gv-bubble gv-bubble-photo">
+          {photo && <img src={photo} alt="" loading="lazy" decoding="async" />}
+          <span class="block px-2.5 py-1.5">{k('creatorsGetMockBotLine')}</span>
+        </span>
         <span class="gv-bubble gv-bubble-me">{k('creatorsMockBot2')}</span>
       </div>
     )
@@ -45,7 +50,10 @@ const domain = k('creatorsGetMockDomain');
           <i />
           <span class="gv-url">{domain}</span>
         </span>
-        <span class="flex flex-1 flex-col items-start justify-center gap-1.5 px-3">
+        <span
+          class="gv-hero flex flex-1 flex-col items-start justify-end gap-1.5 px-3 pb-3"
+          style={photo ? `background-image:url('${photo}')` : undefined}
+        >
           <span class="text-[10px] tracking-wide text-accent">{brand}</span>
           <span class="font-display text-[15px] leading-tight">{k('creatorsGetMockSiteLine')}</span>
           <span class="gv-btn">{k('creatorsGetMockBuy')}</span>
@@ -77,9 +85,8 @@ const domain = k('creatorsGetMockDomain');
         </span>
         <span class="gv-phone">
           <span class="truncate text-[9px] text-accent">{brand}</span>
-          <span class="gv-card">
-            <span class="truncate text-[9px]">{workout}</span>
-          </span>
+          {photo && <img class="gv-thumb" src={photo} alt="" loading="lazy" decoding="async" />}
+          <span class="truncate text-[9px]">{workout}</span>
           <span class="gv-btn gv-btn-block">▶</span>
         </span>
       </div>
@@ -87,14 +94,17 @@ const domain = k('creatorsGetMockDomain');
   }
   {
     kind === 'stores' && (
-      <div class="flex h-full flex-col items-start justify-center gap-2">
-        <span class="gv-badge">
-          <span class="text-[9px] text-muted">Download on the</span>
-          <span class="font-display text-[14px] leading-none">App Store</span>
-        </span>
-        <span class="gv-badge">
-          <span class="text-[9px] text-muted">Get it on</span>
-          <span class="font-display text-[14px] leading-none">Google Play</span>
+      <div class="flex h-full items-center gap-4">
+        <span class="gv-icon">{brand.slice(0, 1)}</span>
+        <span class="flex flex-col gap-2">
+          <span class="gv-badge -rotate-3">
+            <span class="text-[9px] opacity-70">Download on the</span>
+            <span class="font-display text-[15px] leading-none">App Store</span>
+          </span>
+          <span class="gv-badge rotate-2">
+            <span class="text-[9px] opacity-70">Get it on</span>
+            <span class="font-display text-[15px] leading-none">Google Play</span>
+          </span>
         </span>
       </div>
     )
@@ -102,8 +112,60 @@ const domain = k('creatorsGetMockDomain');
 </div>
 
 <style>
+  /* The picture's stage: the brand's electric blue glowing up from a corner of the surface. */
   .gv {
-    height: 7.5rem;
+    height: 10rem;
+    padding: 14px;
+    overflow: hidden;
+    border-radius: var(--r-inner);
+    background:
+      radial-gradient(
+        110% 90% at 100% 100%,
+        color-mix(in srgb, var(--field) 70%, transparent),
+        transparent 65%
+      ),
+      radial-gradient(
+        70% 60% at 0% 0%,
+        color-mix(in srgb, var(--accent) 18%, transparent),
+        transparent 70%
+      ),
+      var(--surface-2);
+  }
+  .gv-bubble-photo {
+    padding: 0;
+    overflow: hidden;
+  }
+  .gv-bubble-photo img {
+    display: block;
+    width: 100%;
+    height: 54px;
+    object-fit: cover;
+  }
+  .gv-hero {
+    background-color: var(--surface-2);
+    background-size: cover;
+    background-position: center;
+    box-shadow: inset 0 -60px 50px -10px rgba(0, 0, 0, 0.75);
+  }
+  .gv-thumb {
+    width: 100%;
+    height: 44px;
+    border-radius: 6px;
+    object-fit: cover;
+  }
+  .gv-icon {
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    background: var(--accent);
+    color: var(--on-accent);
+    font-family: var(--font-display, inherit);
+    font-size: 30px;
+    font-weight: 800;
+    box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.6);
   }
   .gv-frame {
     display: flex;
@@ -208,7 +270,10 @@ const domain = k('creatorsGetMockDomain');
     min-width: 8.5rem;
     padding: 7px 12px;
     border-radius: 10px;
-    border: 1px solid var(--border-strong);
-    background: var(--bg);
+    background: #050505;
+    color: var(--paper);
+    box-shadow:
+      0 0 0 1px var(--border-strong),
+      0 10px 24px -8px rgba(0, 0, 0, 0.7);
   }
 </style>

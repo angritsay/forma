@@ -29,8 +29,9 @@ import { stripEmoji } from './stripEmoji';
 interface Props {
   locale: Locale;
   class?: string;
+  device?: 'frame' | 'iphone';
 }
-const { locale, class: extra = '' } = Astro.props;
+const { locale, class: extra = '', device = 'frame' } = Astro.props;
 
 const eyebrow = t(locale, 'app.clubDemoEyebrow');
 const messages = [
@@ -45,7 +46,7 @@ const messages = [
 ];
 ---
 
-<PhoneFrame class={extra}>
+<PhoneFrame class={extra} device={device}>
   <section aria-label={eyebrow} class="flex flex-col gap-3 px-3 pt-3 pb-4">
     <p class="eyebrow">{eyebrow}</p>
     <header class="flex items-center gap-2.5">
