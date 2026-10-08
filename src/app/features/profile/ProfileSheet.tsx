@@ -442,6 +442,20 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
              * what the difficulty sheet or the club actually do. `/intro` is the same six slides
              * with a × back to «Курсы».
              */}
+            {/*
+             * «Для авторов» (0064): a coach who uses Forma is the likeliest creator there is, and
+             * the account is where they would look. Applying, then their own sales, live there.
+             */}
+            <li>
+              <ListRow
+                title={t('app.profileCreator')}
+                onClick={() => {
+                  onClose();
+                  navigate('/creator');
+                }}
+                trailing={<Glyph size={16}>›</Glyph>}
+              />
+            </li>
             <li>
               <ListRow
                 title={t('app.introRow')}

@@ -178,6 +178,7 @@ const TOOLS: { key: TKey; to: string }[] = [
   { key: 'app.studioTitle', to: '/admin/studio' },
   { key: 'app.mAdminNav', to: '/admin/marathons' },
   { key: 'app.adminStatsTitle', to: '/admin/stats' },
+  { key: 'app.creatorsNav', to: '/admin/creators' },
   { key: 'app.inboxNav', to: '/admin/support' },
   { key: 'app.bookingsNav', to: '/admin/bookings' },
 ];

@@ -1,0 +1,79 @@
+name: Creator invoices
+
+# On the 1st of every month, freezes last month into numbered invoices for every open creator
+# (`close_creator_month`, 0064): course sales of their courses, Forma's share and theirs, Pro's
+# monthly fee, and who owes whom. A second run for the same month writes nothing — the invoices
+# are unique per creator, month and currency — so a re-run or a manual run is always safe.
+#
+# 03:17 UTC is 06:17 in Moscow: the month being closed ended six hours ago in the zone the
+# statements are counted in. Minute 17 rather than 0, because Actions is busiest on the hour.
+#
+# ## Only a number in the log
+#
+# The function returns how many invoices it wrote. No names, no amounts: the run page of a public
+# repository is visible to everyone and stays for good.
+
+on:
+  schedule:
+    - cron: '17 3 1 * *'
+  workflow_dispatch:
+    inputs:
+      month:
+        description: 'First day of the month to close, YYYY-MM-01 (empty — last month)'
+        type: string
+        default: ''
+
+concurrency:
+  group: creator-invoices
+  cancel-in-progress: false
+
+jobs:
+  close:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Close the month
+        env:
+          TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
+          MONTH: ${{ inputs.month || '' }}
+        run: |
+          set -uo pipefail
+          # No secret or project yet: invoices are simply not on. Not a failure.
+          if [ -z "${TOKEN:-}" ] || [ -z "${SUPABASE_URL:-}" ]; then
+            echo "::notice::Creator invoices are not on: no SUPABASE_ACCESS_TOKEN secret or PUBLIC_SUPABASE_URL variable."
+            exit 0
+          fi
+          PROJECT_REF=$(printf '%s' "$SUPABASE_URL" | sed -E 's#^https?://##; s#\..*$##')
+          if [ -z "$PROJECT_REF" ]; then
+            echo "::error::PUBLIC_SUPABASE_URL does not name a project."
+            exit 1
+          fi
+
+          if [ -n "$MONTH" ]; then
+            if ! printf '%s' "$MONTH" | grep -Eq '^[0-9]{4}-[0-9]{2}-01$'; then
+              echo "::error::The month must be written YYYY-MM-01."
+              exit 1
+            fi
+            SQL="select public.close_creator_month('$MONTH'::date) as written;"
+          else
+            SQL="select public.close_creator_month(null) as written;"
+          fi
+          printf '%s' "$SQL" | jq -Rs '{query: .}' > /tmp/body.json
+          code=$(curl -sS -o /tmp/out.json -w '%{http_code}' \
+            -X POST "https://api.supabase.com/v1/projects/$PROJECT_REF/database/query" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H 'Content-Type: application/json' \
+            --data-binary @/tmp/body.json)
+
+          if [ "$code" -ge 300 ] && jq -r '.message // ""' < /tmp/out.json 2>/dev/null \
+               | grep -q 'close_creator_month.*does not exist'; then
+            echo "::notice::Creator invoices are not on yet: apply 0064_creators.sql."
+            exit 0
+          fi
+          if [ "$code" -ge 300 ]; then
+            echo "::error::Supabase answered HTTP $code."
+            jq -r '.message // .error // "(no message)"' < /tmp/out.json || true
+            exit 1
+          fi
+          written=$(jq -r '.[0].written // 0' < /tmp/out.json 2>/dev/null || echo '?')
+          echo "::notice::Invoices written: $written"

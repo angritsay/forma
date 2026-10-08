@@ -302,7 +302,8 @@ booking of 0055 (slots, holds, the overlap constraint, moves, payment confirming
 over its own old time, the reminder's lifetime) and `96_booking_edge_cases.sql` for 0058 (the
 anti-squat answer, a coach without a room link, booking a payment for the person the admin picked,
 a late confirmation, who has Telegram), and `99_money_reports.sql` for 0063 (the first touch, money
-per month, paying members and churn, money per channel).
+per month, paying members and churn, money per channel), and `99_creators.sql` for 0064
+(applying, opening, a creator's statement on Start and on Pro, closing a month).
 Each ends with a "PASSED" line. The test files are **not** idempotent — they insert fixtures — so
 rebuild the database for each run.
 
@@ -2014,6 +2015,32 @@ on the Prodamus side:
      becomes «your card will be charged on …» rather than «renew or lose access».
 4. Keep the old one-off links working until the last period bought through them has run out —
    the webhook matches by amount, so both kinds of payment extend the same subscription.
+
+## 7.19 Creators: applications, courses, monthly invoices (0064)
+
+Apply **`0064_creators.sql`** after 0063, then deploy the site. What it is and why: docs/PLATFORM.md.
+
+- **A creator applies** from «Для авторов» in the account sheet (`/creator`): page address, name, a
+  line about them, a link to their audience, followers. **You open or decline** in Admin →
+  **Авторы** (`/admin/creators`), set their plan (Start / Pro) and the payment processor's fee
+  their shares are counted after (on Pro, their own Prodamus / lava.top tariff), and give them a
+  course from the builder with «Отдать курс автору…».
+- **Their money** is counted from the payments journal: every course sale of their courses (the
+  payment ↔ purchase link is the order number). «Расчёты» under a creator, and «Кабинет автора»
+  for the creator, show each month and who owes whom: on **Start** Forma took the money and owes
+  them their share; on **Pro** it landed in their account and they owe Forma its share plus
+  4 990 ₽ a month. Club and session money are not per-creator yet (docs/PLATFORM.md, phase 2).
+- **Invoices close by themselves.** `.github/workflows/creator-invoices.yml` runs on the 1st at
+  06:17 Moscow and freezes last month into numbered invoices (`F-YYYYMM-<slug>-<currency>`); it
+  needs the same `SUPABASE_ACCESS_TOKEN` secret and `PUBLIC_SUPABASE_URL` variable as the club's
+  daily job, and does nothing without them. Run it by hand (Actions → Creator invoices) or press
+  «Закрыть прошлый месяц» in «Авторы» — closing twice writes nothing twice. Mark an invoice
+  «Расчёт проведён» when the money has moved.
+- **Start is not open to the public yet** (`content/site/creatorTerms.ts`, `open: false`): taking
+  creators' money through Forma's till needs an agency agreement checked by an accountant first.
+  Pro is open.
+
+Verify on a database: `supabase/tests/99_creators.sql` (§2).
 
 ## 7.10 What is still only in Russian
 

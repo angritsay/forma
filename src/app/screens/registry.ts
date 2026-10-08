@@ -28,6 +28,8 @@ export const SCREEN_NAMES = [
   'DuoInviteScreen',
   // «Позови друга»: the referral link, how it works, what it has brought (0051).
   'ClubInviteScreen',
+  // «Кабинет автора»: applying as a creator, then their sales and settlement (0064).
+  'CreatorScreen',
   'BookScreen',
   'AdminScreen',
   'AdminWorkoutsScreen',
@@ -51,6 +53,8 @@ export const SCREEN_NAMES = [
   'AdminBookingsScreen',
   // One person by email: everything known about them and what can be done (0046).
   'AdminPersonScreen',
+  // «Авторы»: applications, plans, courses and invoices of creators (0064).
+  'AdminCreatorsScreen',
   'CustomWorkoutScreen',
 ] as const;
 
