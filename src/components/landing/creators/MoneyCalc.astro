@@ -6,7 +6,9 @@
  *
  * **The prices are real**, read where the business keeps them: the course's price, the club's
  * 30-day plan, the coach's hour (`BOOKING`). **The counts are the visitor's**: the sliders start at
- * round illustrative numbers and nothing on the page claims anyone sells that many. The
+ * round illustrative numbers and nothing on the page claims anyone sells that many. Three
+ * presets (start, growth, scale) jump the sliders to a bigger business, and the year is shown under
+ * the month, so the reader sees what growing the numbers does. The
  * processor's fee is a slider too, because it depends on the creator's own Prodamus / lava.top
  * tariff; the default is only a starting point.
  *
@@ -44,19 +46,48 @@ const rows = [
     label: k('creatorsCalcCourse'),
     price: coursePrice,
     share: 0.8,
-    max: 200,
+    max: 5000,
     value: 20,
   },
-  { id: 'club', label: k('creatorsCalcClub'), price: clubPrice, share: 0.8, max: 500, value: 60 },
+  { id: 'club', label: k('creatorsCalcClub'), price: clubPrice, share: 0.8, max: 10000, value: 60 },
   {
     id: 'sessions',
     label: k('creatorsCalcSessions'),
     price: hourPrice,
     share: 0.9,
-    max: 60,
+    max: 160,
     value: 8,
   },
 ].filter((r) => r.price > 0);
+
+/*
+ * The sliders run on a curve, not a line: position 0…1000 maps to `max · (p/1000)²`, so the first
+ * half of the track holds the first quarter of the range. A starting creator can set 8 hours or 20
+ * sales precisely, and the same track still reaches thousands — which is the point of the block:
+ * see what the month becomes when the numbers grow.
+ */
+const STEPS = 1000;
+const toPos = (v: number, max: number) => Math.round(Math.sqrt(v / max) * STEPS);
+
+/* Three starting points, one per stage of a creator's business. */
+const PRESETS = [
+  {
+    id: 'start',
+    label: k('creatorsCalcPresetStart'),
+    values: { course: 20, club: 60, sessions: 8 },
+  },
+  {
+    id: 'growth',
+    label: k('creatorsCalcPresetGrowth'),
+    values: { course: 200, club: 600, sessions: 40 },
+  },
+  {
+    id: 'scale',
+    label: k('creatorsCalcPresetScale'),
+    values: { course: 2000, club: 5000, sessions: 120 },
+  },
+];
+const count = (n: number) => new Intl.NumberFormat(intl).format(n);
 
 const yours = (r: (typeof rows)[number], count: number, fee: number) =>
   count * r.price * (1 - fee / 100) * r.share;
@@ -67,9 +98,23 @@ const total = rows.reduce((sum, r) => sum + yours(r, r.value, FEE), 0);
   class="calc grid bg-surface gap-8 rounded-card border border-border p-6 md:p-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-12"
   data-locale={intl}
   data-currency={currency}
+  data-year={k('creatorsCalcYear', { sum: '{sum}' })}
 >
   <div class="flex flex-col gap-6">
     <h3 class="font-display text-2xl leading-tight md:text-3xl">{k('creatorsCalcTitle')}</h3>
+    <div class="flex flex-wrap gap-2" role="group" aria-label={k('creatorsCalcTitle')}>
+      {
+        PRESETS.map((p, i) => (
+          <button
+            type="button"
+            class:list={['calc-preset', i === 0 && 'is-on']}
+            data-preset={JSON.stringify(p.values)}
+          >
+            {p.label}
+          </button>
+        ))
+      }
+    </div>
     {
       rows.map((r) => (
         <label class="flex flex-col gap-2">
@@ -79,15 +124,16 @@ const total = rows.reduce((sum, r) => sum + yours(r, r.value, FEE), 0);
               <span class="text-muted">{k('creatorsCalcEach', { price: money(r.price) })}</span>
             </span>
             <output class="numeral text-xl text-accent" data-out={r.id}>
-              {r.value}
+              {count(r.value)}
             </output>
           </span>
           <input
             type="range"
             min="0"
-            max={r.max}
+            max={STEPS}
             step="1"
-            value={r.value}
+            value={toPos(r.value, r.max)}
+            data-max={r.max}
             data-row={r.id}
             data-price={r.price}
             data-share={r.share}
@@ -113,6 +159,9 @@ const total = rows.reduce((sum, r) => sum + yours(r, r.value, FEE), 0);
       >
         {money(total)}
       </p>
+      <p class="numeral mt-3 text-lg opacity-80" data-year>
+        {k('creatorsCalcYear', { sum: money(total * 12) })}
+      </p>
     </div>
     <p class="text-[13px] leading-snug opacity-75">{k('creatorsCalcNote')}</p>
   </div>
@@ -124,31 +173,86 @@ const total = rows.reduce((sum, r) => sum + yours(r, r.value, FEE), 0);
     accent-color: var(--accent);
     cursor: pointer;
   }
+  .calc-preset {
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1px solid var(--border-strong);
+    font-size: 14px;
+    color: var(--muted);
+    cursor: pointer;
+    transition:
+      background-color 0.15s,
+      color 0.15s;
+  }
+  .calc-preset:hover {
+    color: var(--text);
+  }
+  .calc-preset.is-on {
+    border-color: transparent;
+    background: var(--accent);
+    color: var(--on-accent);
+  }
 </style>
 
 <script>
+  const STEPS = 1000;
+  /* Position → count on the curve, rounded to a step that reads well at that size. */
+  const toValue = (pos: number, max: number) => {
+    const raw = max * (pos / STEPS) ** 2;
+    const step = raw < 100 ? 1 : raw < 1000 ? 10 : 50;
+    return Math.round(raw / step) * step;
+  };
+  const toPos = (v: number, max: number) => Math.round(Math.sqrt(v / max) * STEPS);
+
   for (const calc of document.querySelectorAll<HTMLElement>('.calc')) {
-    const fmt = new Intl.NumberFormat(calc.dataset.locale, {
+    const locale = calc.dataset.locale;
+    const fmt = new Intl.NumberFormat(locale, {
       style: 'currency',
       currency: calc.dataset.currency,
       maximumFractionDigits: 0,
     });
+    const num = new Intl.NumberFormat(locale);
     const rows = [...calc.querySelectorAll<HTMLInputElement>('input[data-row]')];
     const fee = calc.querySelector<HTMLInputElement>('input[data-fee]');
     const total = calc.querySelector<HTMLElement>('[data-total]');
+    const year = calc.querySelector<HTMLElement>('[data-year]');
+    const yearTemplate = calc.dataset.year ?? '';
+    const presets = [...calc.querySelectorAll<HTMLButtonElement>('[data-preset]')];
+
     const update = () => {
       const f = Number(fee?.value ?? 0);
       let sum = 0;
       for (const r of rows) {
-        const n = Number(r.value);
+        const n = toValue(Number(r.value), Number(r.dataset.max));
         sum += n * Number(r.dataset.price) * (1 - f / 100) * Number(r.dataset.share);
         const out = calc.querySelector(`[data-out="${r.dataset.row}"]`);
-        if (out) out.textContent = String(n);
+        if (out) out.textContent = num.format(n);
       }
       const feeOut = calc.querySelector('[data-out="fee"]');
       if (feeOut) feeOut.textContent = `${f}%`;
       if (total) total.textContent = fmt.format(sum);
+      if (year) year.textContent = yearTemplate.replace('{sum}', fmt.format(sum * 12));
     };
-    calc.addEventListener('input', update);
+
+    calc.addEventListener('input', (e) => {
+      if ((e.target as HTMLElement).matches('input[data-row]')) {
+        for (const b of presets) b.classList.remove('is-on');
+      }
+      update();
+    });
+    // Slider positions are whole steps on the curve, so a default can land one unit off; read the
+    // numbers back from the sliders once so the page and the arithmetic agree from the start.
+    update();
+    for (const b of presets) {
+      b.addEventListener('click', () => {
+        const values = JSON.parse(b.dataset.preset ?? '{}') as Record<string, number>;
+        for (const r of rows) {
+          const v = values[r.dataset.row ?? ''];
+          if (v !== undefined) r.value = String(toPos(v, Number(r.dataset.max)));
+        }
+        for (const other of presets) other.classList.toggle('is-on', other === b);
+        update();
+      });
+    }
   }
 </script>
