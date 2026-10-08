@@ -535,6 +535,10 @@ export const landing = {
   creatorsCalcFee: 'Комиссия платёжной системы',
   creatorsCalcEach: 'по {price}',
   creatorsCalcResult: 'Тебе в месяц',
+  creatorsCalcYear: '≈ {sum} в год',
+  creatorsCalcPresetStart: 'Старт',
+  creatorsCalcPresetGrowth: 'Рост',
+  creatorsCalcPresetScale: 'Масштаб',
   creatorsCalcNote:
     'Сначала комиссия платёжной системы, потом 20% Forma (с занятий 10%) — остальное твоё. Клуб — по цене 30 дней.',
   creatorsMoneyIntl:

@@ -515,6 +515,10 @@ export const landing = {
   creatorsCalcFee: 'Payment processor fee',
   creatorsCalcEach: 'at {price}',
   creatorsCalcResult: 'Yours a month',
+  creatorsCalcYear: '≈ {sum} a year',
+  creatorsCalcPresetStart: 'Starting',
+  creatorsCalcPresetGrowth: 'Growing',
+  creatorsCalcPresetScale: 'At scale',
   creatorsCalcNote:
     'The fee comes off first, then Forma’s 20% (10% on sessions); the rest is yours. Club at the 30-day price.',
   creatorsMoneyIntl:
