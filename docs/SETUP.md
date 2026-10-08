@@ -301,7 +301,8 @@ booking of 0055 (slots, holds, the overlap constraint, moves, payment confirming
 `95_booking_admin.sql` for 0056 (booking a paid session from the admin, holds in «Записи», a move
 over its own old time, the reminder's lifetime) and `96_booking_edge_cases.sql` for 0058 (the
 anti-squat answer, a coach without a room link, booking a payment for the person the admin picked,
-a late confirmation, who has Telegram).
+a late confirmation, who has Telegram), and `99_money_reports.sql` for 0063 (the first touch, money
+per month, paying members and churn, money per channel).
 Each ends with a "PASSED" line. The test files are **not** idempotent — they insert fixtures — so
 rebuild the database for each run.
 
@@ -1947,6 +1948,72 @@ coach **without a room link offers no new time** in the app: set the link in Adm
 Расписание before opening a coach's calendar. «Записать на время» in Платежи now asks who the
 session is for when no account stands behind the payment, and an unmatched payment of the wrong
 amount can be booked as a session with «Это занятие».
+
+## 7.17 Money and channels in «Аналитика» (0063)
+
+Apply **`0063_money_reports.sql`** (Actions → Supabase apply → `migration`, or paste it), then
+deploy the site. Nothing else needs configuring. «Аналитика» gains two blocks:
+
+- **Деньги** — what came in this month, how many people pay for the club right now, the monthly
+  recurring revenue (monthly payments in full, annual ones at a twelfth), last month's churn, and
+  the same month by month for a year. Built from the payments journal (`payments`), so the
+  coach's free grants are not revenue. A payment dismissed in Платежи is left out — that is how a
+  test payment or a duplicate leaves the books; a refund is counted until its payment is
+  dismissed. Roubles and dollars are never added together.
+- **Откуда люди** — the people who signed up in the last 90 days, per first-touch channel: how many
+  trained, how many paid, and what they paid. Divide an ad's spend by its «Опл.» and you have the
+  cost of one paying person in that channel. A friend's link is always `referral`.
+
+**How a channel gets its name.** The first time a browser reaches the site or the app, it
+remembers one label (`forma.src`) and never overwrites it; after sign-in the app writes it to the
+profile once (`profiles.first_source`). The label is, in order:
+
+1. `utm_source-utm_campaign` from the link — `?utm_source=tgads&utm_campaign=oct` → `tgads-oct`;
+2. `?src=<label>` — for links you place yourself (a blogger, a post): `forma-app.co/?src=blogger-anna`;
+3. for a Telegram Mini App link, `?startapp=src_<label>` — `t.me/<bot>/<app>?startapp=src_tgads-oct`;
+4. otherwise the site page the person landed on (`site-guides-…`), or `unknown` for someone who
+   opened the app with nothing at all.
+
+Labels are lower-case `a-z 0-9 _ -`, up to 40 characters; anything else is cut to that shape.
+**Give every ad and every blogger their own label** before the money goes out — a channel without
+a label cannot be told from the rest afterwards. Only people who signed up after 0063 carry a
+label; everybody before it is `unknown`.
+
+Verify on a database: `supabase/tests/99_money_reports.sql` (§2).
+
+## 7.18 Automatic monthly renewal through Prodamus — what switching it on takes
+
+Today the 30-day plan is a one-off payment, «renewed by hand» (`content/site/plans.ts`): Prodamus
+charges a card again only through its subscription module, which is applied for and paid for
+separately. lava.top already renews on its own (§7.9). Renewal by hand loses far more people every
+month than a saved card does, so this is the biggest money lever there is — and almost all of it is
+on the Prodamus side:
+
+1. **Apply for Prodamus subscriptions** (the recurring module) in the Prodamus account and create
+   two subscription products at exactly **1 990 ₽ / month** and **7 990 ₽ / year**. Each gets its
+   own payment link.
+2. **Nothing changes in the webhook.** A renewal arrives as an ordinary payment notification at the
+   plan's amount; `prodamus-webhook` recognises the plan by amount, as today, and
+   `apply_subscription_payment()` extends the period. Make the first real renewal the test: Logs
+   should read `ok: monthly for …` a month after the first payment. A cancellation or a declined
+   card arrives as a non-success notification and goes to the owner's channel as «Возврат или
+   отмена в кассе» (0057) — it opens and closes nothing; the paid period runs out by itself.
+3. **The words change together, in one pull request, after a lawyer has read them.** Every place
+   that promises «автосписаний нет» has to say instead that the plan renews until cancelled and
+   how to cancel (in the Prodamus receipt or by writing to support):
+   - `content/site/plans.ts` — the two `paymentUrl` links and the monthly plan's `note`;
+   - the offer and the refund policy, `src/components/landing/legal.ts` (the subscription clause
+     and the refund clause for a period) — `docs/LEGAL.md` already lists auto-renewal as a point
+     for the lawyer, including the notice a seller must give before each charge;
+   - `src/i18n/*/landing.ts`: `clubNoAutoRenew`, `ladderFootnoteShort`, the FAQ answer about
+     auto-renewal, `creatorsClubPriceNote` and the club's meta description;
+   - the app: `clubRenewNote` and the renewal row (`src/app/features/marathon/ClubRenew.tsx`,
+     `src/app/features/profile/subscription.ts`) — with a saved card a «renew now» button three
+     days before the end would charge some people twice;
+   - the bot's `subscription_ending` message (`supabase/functions/telegram-notify`), which then
+     becomes «your card will be charged on …» rather than «renew or lose access».
+4. Keep the old one-off links working until the last period bought through them has run out —
+   the webhook matches by amount, so both kinds of payment extend the same subscription.
 
 ## 7.10 What is still only in Russian
 

@@ -23,6 +23,12 @@
  * 4. **Люди** — кто стоит за числами. Воронка говорит «теряем половину», список говорит, кого
  *    именно и когда они были здесь в последний раз.
  *
+ * Between «Сейчас» and the funnel, **Деньги** (0063): what came in this month, who pays for the
+ * club now, the recurring revenue and last month's churn, then month by month. After the weekly
+ * table, **Откуда люди**: each first-touch channel of the last 90 days, how many of its people
+ * paid and what they paid — the number an ad budget is judged by. Both load apart from the rest:
+ * a database without 0063 loses these two blocks, not the screen.
+ *
  * ## Чего здесь нет
  *
  * Шага «открыл приложение»: входы мы не пишем. Придумать первое число воронки и поделить на него
@@ -36,6 +42,7 @@ import { Input } from '@/components/ui/Input';
 import { Screen } from '@/components/ui/Screen';
 import { formatDate, formatNumber, type TKey } from '@/i18n/index';
 import { getAdminOverview, listFunnel, listProgress } from '@/lib/api/admin';
+import { listMemberMonths, listMoneyMonths, listSources } from '@/lib/api/money';
 import type { AdminOverview, FunnelWeek, ProgressRow } from '@/lib/api/types';
 import { toLocalDateIso } from '@/lib/util/dates';
 import { LoadingBlock } from '@/app/components/LoadingBlock';
@@ -57,9 +64,33 @@ import {
   totals,
   type FunnelStep,
 } from '@/app/features/admin/funnel';
+import {
+  formatAmounts,
+  memberMonths,
+  moneyMonths,
+  sourceTotals,
+  type MemberMonth,
+  type MoneyMonth,
+  type SourceTotal,
+} from '@/app/features/admin/money';
 
 /** Сколько недель просить у базы. Квартал — столько, сколько имеет смысл сравнивать глазами. */
 const WEEKS = 12;
+
+/** Months of money: a year, so a renewal of an annual plan has its first payment on screen. */
+const MONTHS = 12;
+
+/** The channels' window: long enough for a slow buyer to have paid, short enough to be this season. */
+const SOURCE_DAYS = 90;
+
+/** «Сен 2026» — a month short enough to share a phone row with four numbers. */
+function monthLabel(locale: string, iso: string): string {
+  return new Intl.DateTimeFormat(locale === 'ru' ? 'ru-RU' : 'en-GB', {
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(new Date(`${iso.slice(0, 10)}T00:00:00Z`));
+}
 
 const STEP_LABEL: Record<FunnelStep, TKey> = {
   signedUp: 'app.adminStatsStepSignedUp',
@@ -101,8 +132,11 @@ function weekLabel(locale: string, iso: string): string {
 
 function Tile({ label, value }: TileProps) {
   return (
-    <div className="glass-card flex flex-col gap-1 rounded-card p-4">
-      <span className="font-display tabular text-[26px] leading-none">{value}</span>
+    <div className="glass-card flex min-w-0 flex-col gap-1 rounded-card p-4">
+      {/* A sum in two currencies is longer than a count: it wraps rather than leaving the tile. */}
+      <span className="font-display tabular text-[26px] leading-none [overflow-wrap:anywhere]">
+        {value}
+      </span>
       <span className="text-[12px] leading-tight text-muted">{label}</span>
     </div>
   );
@@ -116,6 +150,9 @@ export default function AdminStatsScreen() {
   const [overview, setOverview] = useState<AdminOverview | null>(null);
   const [weeks, setWeeks] = useState<FunnelWeek[]>([]);
   const [people, setPeople] = useState<ProgressRow[]>([]);
+  const [money, setMoney] = useState<MoneyMonth[] | null>(null);
+  const [members, setMembers] = useState<MemberMonth[]>([]);
+  const [sources, setSources] = useState<SourceTotal[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
 
@@ -134,6 +171,16 @@ export default function AdminStatsScreen() {
       })
       .catch(() => setFailed(true))
       .finally(() => setLoading(false));
+    // Apart from the rest: a database before 0063 hides these blocks and keeps the funnel.
+    Promise.all([listMoneyMonths(MONTHS), listMemberMonths(MONTHS)])
+      .then(([m, mm]) => {
+        setMoney(moneyMonths(m));
+        setMembers(memberMonths(mm));
+      })
+      .catch(() => setMoney(null));
+    listSources(SOURCE_DAYS)
+      .then((r) => setSources(sourceTotals(r)))
+      .catch(() => setSources(null));
   }, []);
 
   useEffect(() => {
@@ -165,6 +212,18 @@ export default function AdminStatsScreen() {
   const closed = closedWeeks(weeks, today);
   const sum = totals(closed);
   const n = (v: number) => formatNumber(locale, v);
+  const pct = (v: number | null) => formatPercent(locale, v);
+  const thisMonth = `${today.slice(0, 7)}-01`;
+  const moneyNow = money?.find((m) => m.month === thisMonth);
+  const membersNow = members.find((m) => m.month === thisMonth);
+  const membersLast = members.find((m) => m.month < thisMonth);
+  const memberOf = (month: string) => members.find((m) => m.month === month);
+  const sourceName = (s: string) =>
+    s === 'unknown'
+      ? t('app.adminStatsSourceUnknown')
+      : s === 'referral'
+        ? t('app.adminStatsSourceReferral')
+        : s;
 
   return (
     <Screen header={<TopBar back title={t('app.adminStatsTitle')} />}>
@@ -220,6 +279,96 @@ export default function AdminStatsScreen() {
                   </span>
                 </Link>
               ) : null}
+            </section>
+          ) : null}
+
+          {/* --- деньги (0063) ------------------------------------------------ */}
+          {money ? (
+            <section className="flex flex-col gap-3">
+              <h2 className="font-display text-xl">{t('app.adminStatsMoney')}</h2>
+              <p className="text-[12px] leading-snug text-muted-2">
+                {t('app.adminStatsMoneyNote')}
+              </p>
+              {money.length === 0 && members.length === 0 ? (
+                <p className="text-[14px] text-muted">{t('app.adminStatsNoMoney')}</p>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+                    <Tile
+                      label={t('app.adminStatsMoneyIn')}
+                      value={formatAmounts(locale, moneyNow?.amounts ?? [])}
+                    />
+                    <Tile
+                      label={t('app.adminStatsMembersNow')}
+                      value={n(membersNow?.members ?? 0)}
+                    />
+                    <Tile
+                      label={t('app.adminStatsMrr')}
+                      value={formatAmounts(locale, membersNow?.mrr ?? [])}
+                    />
+                    <Tile
+                      label={t('app.adminStatsChurnLast')}
+                      value={pct(membersLast?.churn ?? null)}
+                    />
+                  </div>
+                  {/*
+                   * Month by month. Four narrow number columns, as the weekly table: they fit 390px
+                   * without scrolling sideways, and «Ушли» — the column a renewal decision is made
+                   * by — is the last one, where a sideways scroll would have hidden it.
+                   */}
+                  <table className="w-full table-fixed border-collapse text-[13px]">
+                    <thead>
+                      <tr className="text-muted-2">
+                        <th scope="col" className="eyebrow w-[24%] py-2 text-left font-normal">
+                          {t('app.adminStatsColMonth')}
+                        </th>
+                        <th
+                          scope="col"
+                          className="eyebrow w-[34%] py-2 text-right text-[11px] font-normal"
+                        >
+                          {t('app.adminStatsColIn')}
+                        </th>
+                        <th scope="col" className="eyebrow py-2 text-right text-[11px] font-normal">
+                          {t('app.adminStatsColNew')}
+                        </th>
+                        <th scope="col" className="eyebrow py-2 text-right text-[11px] font-normal">
+                          {t('app.adminStatsColMembers')}
+                        </th>
+                        <th scope="col" className="eyebrow py-2 text-right text-[11px] font-normal">
+                          {t('app.adminStatsColChurn')}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[...new Set([...money.map((m) => m.month), ...members.map((m) => m.month)])]
+                        .sort((a, b) => b.localeCompare(a))
+                        .map((month) => {
+                          const m = money.find((x) => x.month === month);
+                          const mm = memberOf(month);
+                          return (
+                            <tr key={month} className="border-t border-border">
+                              <td className="tabular py-2.5 whitespace-nowrap text-muted">
+                                {monthLabel(locale, month)}
+                              </td>
+                              <td className="tabular py-2.5 text-right text-text">
+                                {formatAmounts(locale, m?.amounts ?? [])}
+                              </td>
+                              <td className="tabular py-2.5 text-right text-text">
+                                {n(m?.newPayers ?? 0)}
+                              </td>
+                              <td className="tabular py-2.5 text-right text-text">
+                                {n(mm?.members ?? 0)}
+                              </td>
+                              <td className="tabular py-2.5 text-right text-text">
+                                {pct(mm?.churn ?? null)}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                  </table>
+                </>
+              )}
             </section>
           ) : null}
 
@@ -333,6 +482,55 @@ export default function AdminStatsScreen() {
                   </tbody>
                 </table>
               </div>
+            </section>
+          ) : null}
+
+          {/* --- откуда люди (0063) ----------------------------------------- */}
+          {sources && sources.length > 0 ? (
+            <section className="flex flex-col gap-3">
+              <h2 className="font-display text-xl">{t('app.adminStatsSources')}</h2>
+              <p className="text-[12px] leading-snug text-muted-2">
+                {t('app.adminStatsSourcesNote')}
+              </p>
+              <table className="w-full table-fixed border-collapse text-[13px]">
+                <thead>
+                  <tr className="text-muted-2">
+                    <th scope="col" className="eyebrow w-[34%] py-2 text-left font-normal">
+                      {t('app.adminStatsColSource')}
+                    </th>
+                    <th scope="col" className="eyebrow py-2 text-right text-[11px] font-normal">
+                      {t('app.adminStatsColPeople')}
+                    </th>
+                    <th scope="col" className="eyebrow py-2 text-right text-[11px] font-normal">
+                      {t('app.adminStatsColPaid')}
+                    </th>
+                    <th scope="col" className="eyebrow py-2 text-right text-[11px] font-normal">
+                      {t('app.adminStatsColConv')}
+                    </th>
+                    <th
+                      scope="col"
+                      className="eyebrow w-[26%] py-2 text-right text-[11px] font-normal"
+                    >
+                      {t('app.adminStatsColPaidMoney')}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sources.map((s) => (
+                    <tr key={s.source} className="border-t border-border">
+                      <td className="truncate py-2.5 text-text" title={s.source}>
+                        {sourceName(s.source)}
+                      </td>
+                      <td className="tabular py-2.5 text-right text-text">{n(s.people)}</td>
+                      <td className="tabular py-2.5 text-right text-text">{n(s.paid)}</td>
+                      <td className="tabular py-2.5 text-right text-muted">{pct(s.conversion)}</td>
+                      <td className="tabular py-2.5 text-right text-text">
+                        {formatAmounts(locale, s.amounts)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </section>
           ) : null}
 

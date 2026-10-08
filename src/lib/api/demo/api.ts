@@ -21,6 +21,9 @@ import type {
   ClubWinner,
   MarathonWinner,
   FunnelWeek,
+  MemberMonthRow,
+  MoneyMonthRow,
+  SourceRow,
   ProgressRow,
   ReferralStats,
   CustomWorkoutRow,
@@ -2346,6 +2349,53 @@ export async function listFunnel(weeks = 12): Promise<FunnelWeek[]> {
       byWeek.set(wk, row);
     }
     return [...byWeek.values()].sort((a, b) => b.weekStart.localeCompare(a.weekStart));
+  });
+}
+
+/*
+ * Money reports (0063). The demo takes no money — it has no payments journal (adminPayments.ts) —
+ * so the two money reports are empty, and the channels report has one channel: nothing in the
+ * demo remembers a first touch, so everybody is `unknown`, with no money behind them.
+ */
+export async function listMoneyMonths(_months = 12): Promise<MoneyMonthRow[]> {
+  return run(() => {
+    requireDemoUser();
+    return [];
+  });
+}
+
+export async function listMemberMonths(_months = 12): Promise<MemberMonthRow[]> {
+  return run(() => {
+    requireDemoUser();
+    return [];
+  });
+}
+
+export async function listSources(days = 90): Promise<SourceRow[]> {
+  return run(() => {
+    requireDemoUser();
+    const db = readDb();
+    const from = new Date(Date.now() - Math.max(1, days) * 86_400_000).toISOString();
+    const cohort = db.profiles.filter((p) => p.created_at > from);
+    if (cohort.length === 0) return [];
+    return [
+      {
+        source: 'unknown',
+        people: cohort.length,
+        trained: cohort.filter((p) => doneDays(db, p.id).length > 0).length,
+        paid: cohort.filter((p) => paidEmail(db, p.email)).length,
+        currency: null,
+        amount: 0,
+      },
+    ];
+  });
+}
+
+/** Nothing in the demo reads a first touch, so there is nothing to keep. */
+export async function saveFirstSource(_source: string): Promise<boolean> {
+  return run(() => {
+    requireDemoUser();
+    return false;
   });
 }
 

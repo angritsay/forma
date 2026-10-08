@@ -15,7 +15,7 @@ import { initTelegram, startParam, waitForTelegram } from '@/lib/telegram/webapp
 import { AppProviders } from './components/AppProviders';
 import { AppFrame } from './components/AppShell';
 import { BootScreen } from './components/BootScreen';
-import { applyEntryParams } from './features/entry/params';
+import { applyEntryParams, rememberSource, sourceFromStartParam } from './features/entry/params';
 import { stashStartParam } from './features/marathon/duoInvite';
 import { AppRoutes } from './router';
 import NotConfiguredScreen from './screens/NotConfiguredScreen';
@@ -50,6 +50,9 @@ export default function App() {
        * and the shell takes the person to /duo the same way.
        */
       stashStartParam(startParam());
+      // `src_<slug>`: the channel a Mini App link was placed in (0063), first touch only.
+      const src = sourceFromStartParam(startParam());
+      if (src) rememberSource(src);
       setReady(true);
     });
     return () => {
