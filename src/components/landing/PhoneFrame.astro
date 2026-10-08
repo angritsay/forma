@@ -10,22 +10,108 @@
  * The bezel is the denser glass (`.glass-card-2`, CHANGELOG §16) rather than a solid surface: a
  * phone lying on the page is exactly the kind of discrete object §16 puts on glass. The screen
  * inside stays the ground — it is a picture of the app, and the app's ground is not translucent.
+ *
+ * `device="iphone"` draws a phone rather than a frame: a near-black bezel, the island, a 9:41
+ * status bar and the home indicator — for the creators' pitch, where the picture has to read as
+ * «this is the app on a phone» at a glance.
  */
 interface Props {
   class?: string;
   /** Accessible description of what the screen shows. */
   label?: string;
+  device?: 'frame' | 'iphone';
 }
-const { class: extra = '', label } = Astro.props;
+const { class: extra = '', label, device = 'frame' } = Astro.props;
 ---
 
-<div
-  class={`glass-card-2 relative mx-auto w-[280px] max-w-full rounded-card border border-border-strong p-2 ${extra}`}
-  role={label ? 'img' : undefined}
-  aria-label={label}
->
-  <div class="relative overflow-hidden rounded-inner border border-border bg-bg">
-    <div class="mx-auto mt-2 h-1 w-16 rounded-pill bg-surface-3" aria-hidden="true"></div>
-    <slot />
-  </div>
-</div>
+{
+  device === 'iphone' ? (
+    <div
+      class={`iphone relative mx-auto w-[290px] max-w-full ${extra}`}
+      role={label ? 'img' : undefined}
+      aria-label={label}
+    >
+      <div class="iphone-screen relative overflow-hidden bg-bg">
+        <div
+          class="flex items-center justify-between px-6 pt-3 pb-1 text-[12px] font-semibold"
+          aria-hidden="true"
+        >
+          <span>9:41</span>
+          <span class="iphone-island" />
+          <span class="flex items-center gap-1">
+            <span class="iphone-bars">
+              <i />
+              <i />
+              <i />
+              <i />
+            </span>
+            <span class="iphone-battery" />
+          </span>
+        </div>
+        <slot />
+        <div class="mx-auto mt-2 mb-2 h-1 w-28 rounded-pill bg-text/80" aria-hidden="true" />
+      </div>
+    </div>
+  ) : (
+    <div
+      class={`glass-card-2 relative mx-auto w-[280px] max-w-full rounded-card border border-border-strong p-2 ${extra}`}
+      role={label ? 'img' : undefined}
+      aria-label={label}
+    >
+      <div class="relative overflow-hidden rounded-inner border border-border bg-bg">
+        <div class="mx-auto mt-2 h-1 w-16 rounded-pill bg-surface-3" aria-hidden="true" />
+        <slot />
+      </div>
+    </div>
+  )
+}
+
+<style>
+  .iphone {
+    padding: 9px;
+    border-radius: 48px;
+    background: #050505;
+    box-shadow:
+      0 0 0 1.5px #2b2b2b,
+      0 40px 90px -30px rgba(0, 0, 0, 0.9);
+  }
+  .iphone-screen {
+    border-radius: 39px;
+  }
+  .iphone-island {
+    width: 78px;
+    height: 22px;
+    border-radius: 999px;
+    background: #050505;
+  }
+  .iphone-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 1.5px;
+  }
+  .iphone-bars i {
+    width: 3px;
+    border-radius: 1px;
+    background: currentColor;
+  }
+  .iphone-bars i:nth-child(1) {
+    height: 4px;
+  }
+  .iphone-bars i:nth-child(2) {
+    height: 6px;
+  }
+  .iphone-bars i:nth-child(3) {
+    height: 8px;
+  }
+  .iphone-bars i:nth-child(4) {
+    height: 10px;
+  }
+  .iphone-battery {
+    width: 22px;
+    height: 11px;
+    border-radius: 3px;
+    border: 1.5px solid currentColor;
+    box-shadow: inset 0 0 0 1.5px var(--bg);
+    background: currentColor;
+  }
+</style>

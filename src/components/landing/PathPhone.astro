@@ -10,6 +10,7 @@
 import { COURSE_BY_ID } from '@/content/registry';
 import type { Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
+import { withBase } from '@/lib/util/paths';
 import PhoneFrame from './PhoneFrame.astro';
 import Pill from './Pill.astro';
 import { DEMO_COURSE_ID, firstWorkoutFacts } from './demo';
@@ -17,8 +18,10 @@ import { DEMO_COURSE_ID, firstWorkoutFacts } from './demo';
 interface Props {
   locale: Locale;
   class?: string;
+  /** `iphone` draws a phone and opens the screen with the course's cover, as the app does. */
+  device?: 'frame' | 'iphone';
 }
-const { locale, class: extra = '' } = Astro.props;
+const { locale, class: extra = '', device = 'frame' } = Astro.props;
 
 const course = COURSE_BY_ID.get(DEMO_COURSE_ID);
 const facts = firstWorkoutFacts(locale, course);
@@ -29,7 +32,28 @@ const path = (course?.nodes ?? [])
 
 {
   facts && path.length > 0 && (
-    <PhoneFrame class={extra} label={`${t(locale, 'landing.phonesPath')} — ${facts.nodeTitle}`}>
+    <PhoneFrame
+      class={extra}
+      device={device}
+      label={`${t(locale, 'landing.phonesPath')} — ${facts.nodeTitle}`}
+    >
+      {device === 'iphone' && course?.cover?.startsWith('/') && (
+        <div class="relative mx-3 mt-2 overflow-hidden rounded-tile">
+          <img
+            src={withBase(course.cover)}
+            alt=""
+            width="560"
+            height="320"
+            loading="lazy"
+            decoding="async"
+            class="aspect-[16/10] w-full object-cover"
+          />
+          <span class="photo-scrim" aria-hidden="true" />
+          <span class="absolute inset-x-3 bottom-2.5 font-display text-[15px] leading-tight text-paper">
+            {l(course.name, locale)}
+          </span>
+        </div>
+      )}
       <ol class="flex flex-col gap-3 px-4 pt-4 pb-5">
         {path.map((node, i) => (
           <li class="flex items-center gap-3">
