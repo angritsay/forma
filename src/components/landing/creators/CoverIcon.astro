@@ -1,0 +1,61 @@
+---
+/**
+ * The line icons on `/creators/`'s «Что входит в долю Forma» tiles. The text glyphs those tiles
+ * had (▢ ¤ ♡ …) did not read as what they named, and the app's `Doodle` set has no phone, card or
+ * wrench — so eight plain strokes in the same hand: 24-unit box, round caps and joins, 2-unit
+ * line, `currentColor`. Decorative: the tile's label names the thing.
+ */
+interface Props {
+  name: 'phone' | 'card' | 'send' | 'support' | 'video' | 'wrench' | 'sliders' | 'clapper';
+  class?: string;
+}
+
+const { name, class: extra = '' } = Astro.props;
+
+const PATHS: Record<Props['name'], readonly string[]> = {
+  phone: [
+    'M8 2.5h8a2 2 0 0 1 2 2v15a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-15a2 2 0 0 1 2-2Z',
+    'M10.5 18h3',
+  ],
+  card: [
+    'M4 5.5h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2Z',
+    'M2 10h20',
+    'M6 14.5h4',
+  ],
+  send: ['M21.5 3 2.5 10.5l7.5 3 3 7.5L21.5 3Z', 'M10 13.5 15 8.5'],
+  support: [
+    'M4 15v-3a8 8 0 0 1 16 0v3',
+    'M4 14h2.5v5H5a1 1 0 0 1-1-1v-4Z',
+    'M20 14h-2.5v5H19a1 1 0 0 0 1-1v-4Z',
+    'M18.5 19c0 1.7-1.6 2.5-4 2.5H13',
+  ],
+  video: [
+    'M4 6h10a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z',
+    'm16 10.5 6-3.5v10l-6-3.5',
+  ],
+  wrench: [
+    'M14.7 6.3a4.5 4.5 0 0 0 5.6 5.6l-8.6 8.6a2.1 2.1 0 0 1-3-3l8.6-8.6a4.5 4.5 0 0 0-2.6-2.6Z',
+    'M14.7 6.3 17.5 3.5',
+  ],
+  sliders: ['M4 6h16', 'M4 12h16', 'M4 18h16', 'M9 4v4', 'M15 10v4', 'M7 16v4'],
+  clapper: [
+    'M3 10h18v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-9Z',
+    'm3 10-.6-3.2a1.5 1.5 0 0 1 1.2-1.7L17.4 2.6a1.5 1.5 0 0 1 1.7 1.2L19.6 6',
+    'm8 4.3 2.2 3.4',
+    'm13 3.4 2.2 3.4',
+  ],
+};
+---
+
+<svg
+  class={extra}
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  aria-hidden="true"
+>
+  {PATHS[name].map((d) => <path d={d} />)}
+</svg>
