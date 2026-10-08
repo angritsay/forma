@@ -135,6 +135,49 @@ export interface AdminOverview {
 }
 
 /**
+ * Payments of one Moscow month in one currency for one intent (0063). Currencies are never added
+ * together; `firstPayments` are the payments that were their payer's first ever.
+ */
+export interface MoneyMonthRow {
+  /** First day of the month, `YYYY-MM-DD`. */
+  month: string;
+  /** `RUB`, `USD`, … — or `???` for a row nobody can tell. */
+  currency: string;
+  /** `monthly` | `annual` | `course` | `session`. */
+  intent: string;
+  payments: number;
+  amount: number;
+  firstPayments: number;
+}
+
+/** Paying club members at one month's end in one currency (0063); the current month is «now». */
+export interface MemberMonthRow {
+  month: string;
+  currency: string;
+  members: number;
+  monthly: number;
+  annual: number;
+  /** Monthly recurring revenue: monthly payments in full, annual ones at a twelfth. */
+  mrr: number;
+  /** Paid at the previous month's end, no longer paid at this one. */
+  lost: number;
+}
+
+/**
+ * One channel's people who signed up in the report's window (0063), and their payments in one
+ * currency. A channel nobody paid in yet comes once, with `currency: null`.
+ */
+export interface SourceRow {
+  /** The first touch, `referral` for a friend's link, `unknown` when nothing was remembered. */
+  source: string;
+  people: number;
+  trained: number;
+  paid: number;
+  currency: string | null;
+  amount: number;
+}
+
+/**
  * One week of the funnel, keyed by the week somebody *first signed in* — never by the week a step
  * happened. A purchase made today belongs to the buyer's own sign-up week, which is what makes
  * «из этих десяти купили трое» a sentence about one group of people rather than two.

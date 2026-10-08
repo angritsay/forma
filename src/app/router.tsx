@@ -16,6 +16,8 @@ import { Suspense, useEffect, useRef, type ReactElement } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router';
 import { isNetworkError } from '@/lib/api/errors';
 import { attachReferral } from '@/lib/api/referral';
+import { saveFirstSource } from '@/lib/api/money';
+import { markSourceSaved, sourceToSave } from '@/app/features/entry/params';
 import { AppShell, FocusShell } from './components/AppShell';
 import { BootScreen } from './components/BootScreen';
 import {
@@ -136,10 +138,32 @@ function useAttachPendingReferral(): void {
   }, []);
 }
 
+/**
+ * Send the remembered first touch (`forma.src`) to the profile, once (0063). The database keeps
+ * the first label it is given and answers false for the rest, so either answer ends it; only no
+ * answer at all — a dropped connection — leaves it for the next launch. This is what ties a person
+ * who found Forma through an ad to the money they pay later, wherever they pay it.
+ */
+function useSaveFirstSource(): void {
+  const done = useRef(false);
+  useEffect(() => {
+    if (done.current) return;
+    done.current = true;
+    const src = sourceToSave();
+    if (!src) return;
+    saveFirstSource(src)
+      .then(() => markSourceSaved(src))
+      .catch((e: unknown) => {
+        if (!isNetworkError(e)) markSourceSaved(src);
+      });
+  }, []);
+}
+
 /** The tabbed shell — unless an invite is still set aside, which wins over whatever screen this was. */
 function ShellWithPendingInvite() {
   const { pathname } = useLocation();
   useAttachPendingReferral();
+  useSaveFirstSource();
   if (pathname !== '/duo' && pendingDuoInvite()) return <Navigate to="/duo" replace />;
   return <AppShell />;
 }

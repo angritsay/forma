@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { cleanedUrl, parseEntryParams, rememberSource, SRC_KEY } from './params';
+import {
+  cleanedUrl,
+  markSourceSaved,
+  parseEntryParams,
+  rememberSource,
+  slugSource,
+  sourceFromStartParam,
+  sourceToSave,
+  SRC_KEY,
+} from './params';
 
 describe('parseEntryParams', () => {
   it('reads nothing from an empty query', () => {
@@ -38,6 +47,19 @@ describe('parseEntryParams', () => {
     expect(parseEntryParams('?src=<script>').src).toBeNull();
   });
 
+  it('makes a label of an ad’s utm tags when there is no src', () => {
+    expect(parseEntryParams('?utm_source=TG_Ads&utm_campaign=Oct 1').src).toBe('tg_ads-oct-1');
+    expect(parseEntryParams('?utm_source=vk').src).toBe('vk');
+    expect(parseEntryParams('?src=hero&utm_source=vk').src).toBe('hero');
+  });
+
+  it('takes a channel from a src_ launch parameter', () => {
+    expect(parseEntryParams('?startapp=src_tgads-oct').src).toBe('tgads-oct');
+    expect(parseEntryParams('?startapp=ref_ab12cd34').src).toBeNull();
+    expect(sourceFromStartParam('src_Bad')).toBeNull();
+    expect(sourceFromStartParam(null)).toBeNull();
+  });
+
   it('reads them all together', () => {
     expect(parseEntryParams('?lang=en&ref=ab12cd34&src=hero')).toEqual({
       lang: 'en',
@@ -71,5 +93,35 @@ describe('rememberSource', () => {
     expect(rememberSource('footer', store)).toBe(false);
     expect(map.get(SRC_KEY)).toBe('hero');
     expect(rememberSource('hero', null)).toBe(false);
+  });
+});
+
+describe('slugSource', () => {
+  it('matches the site’s rule', () => {
+    expect(slugSource('  Hello, World!  ')).toBe('hello-world');
+    expect(slugSource('x'.repeat(50))).toBe('x'.repeat(40));
+    expect(slugSource('***')).toBe('');
+  });
+});
+
+describe('sourceToSave', () => {
+  function mem(): Pick<Storage, 'getItem' | 'setItem'> {
+    const m = new Map<string, string>();
+    return { getItem: (k) => m.get(k) ?? null, setItem: (k, v) => void m.set(k, v) };
+  }
+
+  it('offers the remembered label until the profile has answered for it', () => {
+    const store = mem();
+    expect(sourceToSave(store)).toBeNull();
+    rememberSource('tgads-oct', store);
+    expect(sourceToSave(store)).toBe('tgads-oct');
+    markSourceSaved('tgads-oct', store);
+    expect(sourceToSave(store)).toBeNull();
+  });
+
+  it('ignores a stored label that is not in our shape', () => {
+    const store = mem();
+    store.setItem(SRC_KEY, 'Not A Label');
+    expect(sourceToSave(store)).toBeNull();
   });
 });
