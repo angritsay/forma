@@ -1017,6 +1017,25 @@ export interface MyCreator {
   approvedAt: string | null;
   courses: number;
   buyers: number;
+  /**
+   * In the app's «Также в Forma» catalogue (0068). Only a Pro creator can switch it off; a Start
+   * creator is listed whatever this says.
+   */
+  listed: boolean;
+  /** How many of their courses are published — the public page exists from the first one. */
+  published: number;
+}
+
+/**
+ * A creator as anybody may see them (0068, `public_creators()` / `catalogue_creators()`): no
+ * owner address, tier, fee or follower count. `courses` are the published courses' ids, in order.
+ */
+export interface PublicCreator {
+  slug: string;
+  name: string;
+  about: string | null;
+  audienceUrl: string | null;
+  courses: string[];
 }
 
 /** What a person sends to apply (`creator_apply`). */

@@ -1,13 +1,16 @@
 /**
  * /llms.txt — a plain-text map of the site for LLM crawlers (llmstxt.org): what Forma is,
- * the courses, the guides, the exercise library and the legal pages, in English and Russian.
+ * the courses and the creators who sell them, the guides, the exercise library and the legal
+ * pages, in English and Russian.
  * Generated from content and config; nothing here is hand-maintained.
  */
 import type { APIRoute } from 'astro';
 import { getCollection } from 'astro:content';
 import { SITE_COURSES } from '@/content/published';
+import { creatorSitePath, SITE_CREATORS } from '@/content/creators';
 import type { Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
+import { creatorPageDescription } from '@/lib/seo/creators';
 import { guidePath, guidesForLocale } from '@/lib/seo/guides';
 import { canonicalUrl, siteOrigin } from '@/lib/seo/urls';
 import { absoluteUrl } from '@/lib/util/paths';
@@ -29,6 +32,12 @@ export const GET: APIRoute = async ({ site }) => {
     lines.push(
       `- [${t(locale, 'seo.coursesHubTitle')}](${link(locale, '/courses/')}): ${t(locale, 'seo.coursesHubDescription')}`,
     );
+    // Creator pages (0068): only creators with a published course have one.
+    for (const c of SITE_CREATORS) {
+      lines.push(
+        `- [${c.name}](${link(locale, creatorSitePath(c.slug))}): ${creatorPageDescription(c, locale)}`,
+      );
+    }
     lines.push('');
     lines.push(`## ${t(locale, 'seo.llmsGuides')}`);
     const guides = guidesForLocale(all, locale);

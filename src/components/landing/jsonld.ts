@@ -100,11 +100,38 @@ export function personLd(site: string, locale: Locale): Json {
   });
 }
 
+/**
+ * A creator's page (0068): the person behind it, with what they wrote about themselves and the link
+ * to their audience — nothing counted, rated or reviewed. Their courses are the page's ItemList.
+ */
+export function creatorLd(
+  url: string,
+  creator: { name: string; about: string | null; audienceUrl: string | null },
+): Json {
+  return compact({
+    '@type': 'Person',
+    '@id': `${url}#creator`,
+    name: creator.name,
+    description: creator.about ?? undefined,
+    url,
+    sameAs: creator.audienceUrl ? [creator.audienceUrl] : [],
+  });
+}
+
 export function courseLd(
   site: string,
   locale: Locale,
   course: Course,
-  opts: { url: string; image: string },
+  opts: {
+    url: string;
+    image: string;
+    /**
+     * Who teaches it. Omitted: Forma's coach (`#coach`). A creator's course (0068) passes their
+     * name, or `null` when the creator has no public page to name — then no instructor is
+     * claimed at all rather than the wrong one.
+     */
+    instructor?: string | null;
+  },
 ): Json {
   const { amount, currency } = priceForLocale(course.price, locale);
   const workloadMin = course.weeks * course.sessionsPerWeek * course.avgSessionMin;
@@ -132,7 +159,12 @@ export function courseLd(
       '@type': 'CourseInstance',
       courseMode: 'Online',
       courseWorkload: `PT${workloadMin}M`,
-      instructor: { '@id': `${absoluteUrl(site, '/')}#coach` },
+      instructor:
+        opts.instructor === undefined
+          ? { '@id': `${absoluteUrl(site, '/')}#coach` }
+          : opts.instructor === null
+            ? undefined
+            : { '@type': 'Person', name: opts.instructor },
     },
   });
 }

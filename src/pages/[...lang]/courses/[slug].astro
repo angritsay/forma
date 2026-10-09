@@ -51,7 +51,8 @@ import {
 } from '@/components/landing/courseHelpers';
 import { breadcrumbLd, courseLd, faqLd } from '@/components/landing/jsonld';
 import { courseExercises } from '@/content/registry';
-import { SITE_COURSES } from '@/content/published';
+import { isCreatorCourse, SITE_COURSES } from '@/content/published';
+import { SITE_CREATORS } from '@/content/creators';
 import { DEFAULT_LOCALE, LOCALES, type Locale } from '@/content/schema';
 import { l, plural, t } from '@/i18n/index';
 import { publicMediaUrl } from '@/lib/api/storage';
@@ -181,8 +182,15 @@ const tileVars = courseTileStyle(course.tile);
 
 const [firstParagraph, ...moreParagraphs] = course.longDescription;
 
+/*
+ * The instructor in the structured data: Forma's coach for Forma's courses; for a creator's course
+ * (0068) the creator by name, or nobody when the creator has no page (paused, say) — never Sergey.
+ */
+const owner = SITE_CREATORS.find((c) => c.courses.some((x) => x.id === course.id));
+const instructor = owner ? owner.name : isCreatorCourse(course.id) ? null : undefined;
+
 const jsonLd = [
-  courseLd(site, locale, course, { url, image }),
+  courseLd(site, locale, course, { url, image, instructor }),
   breadcrumbLd([
     { name: t(locale, 'landing.breadcrumbHome'), url: canonicalUrl(site, locale, '/') },
     { name: t(locale, 'landing.breadcrumbCourses'), url: canonicalUrl(site, locale, '/courses/') },

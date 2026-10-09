@@ -20,6 +20,10 @@
  * is open, `resumeCard()` says so, and the course it belongs to carries the resume button while
  * every other course offers its path instead of a start. The rule is derived in exactly one place;
  * this screen reads it and never re-decides it.
+ *
+ * Under the deck, «Также в Forma» (0068): other creators' courses as a few quiet rows, grouped by
+ * creator (`features/courses/AlsoOnForma`). It is the network the platform's Start tier promises,
+ * kept a footnote so the screen stays about the member's own progress.
  */
 import { PurchasesUnknown } from '@/app/components/PurchasesUnknown';
 import { useCallback, useMemo, useState } from 'react';
@@ -36,6 +40,7 @@ import { useT } from '@/app/hooks/useT';
 import { ScreenLoader } from '@/app/components/ScreenLoader';
 import { AssessmentBanner } from '@/app/features/assessment/AssessmentBanner';
 import { AssignedWorkoutsCard } from '@/app/features/customWorkout/AssignedWorkoutsCard';
+import { AlsoOnForma } from '@/app/features/courses/AlsoOnForma';
 import { CourseCard } from '@/app/features/courses/CourseCard';
 import { courseTileVars } from '@/lib/ui/tile';
 import { buildDeck } from '@/app/features/courses/deck';
@@ -153,6 +158,7 @@ export default function CoursesScreen() {
       ),
     [courses, entitlements, courseStates, activeCourseId, trained],
   );
+  const onScreen = useMemo(() => new Set(entries.map((e) => e.course.id)), [entries]);
 
   const refresh = useCallback(async () => {
     await Promise.allSettled([
@@ -369,6 +375,7 @@ export default function CoursesScreen() {
             );
           })}
         </ul>
+        <AlsoOnForma courses={courses} onScreen={onScreen} />
       </div>
     );
   }

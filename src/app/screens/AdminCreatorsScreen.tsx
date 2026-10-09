@@ -10,6 +10,9 @@
  * current Moscow month; the months before it keep their plan. Under it, their months and invoices,
  * with «Расчёт проведён» once the money has moved.
  *
+ * The «Также в Forma» listing (0068) is a switch for a Pro creator and a plain line for Start, who
+ * is always listed; an open creator with a published course gets a link to their public page.
+ *
  * Months close by themselves on the 1st (`creator-invoices.yml`); «Закрыть прошлый месяц» does
  * the same by hand and writes nothing twice.
  */
@@ -21,6 +24,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Input } from '@/components/ui/Input';
 import { Screen } from '@/components/ui/Screen';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
+import { Switch } from '@/components/ui/Switch';
 import { Select } from '@/components/ui/Select';
 import { useToast } from '@/components/ui/Toast';
 import { formatNumber, type TKey } from '@/i18n/index';
@@ -52,7 +56,13 @@ import { AdminBoot } from '@/app/features/admin/AdminBoot';
 import { adminErrorTitle } from '@/app/features/admin/adminError';
 import { formatMoney } from '@/app/features/admin/money';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
-import { balanceSide, statementMonths } from '@/app/features/creator/model';
+import {
+  balanceSide,
+  canUnlist,
+  creatorPageLive,
+  statementMonths,
+} from '@/app/features/creator/model';
+import { href } from '@/lib/util/paths';
 
 const STATUS_LABEL: Record<CreatorStatus, TKey> = {
   applied: 'app.creatorsStatusApplied',
@@ -231,6 +241,31 @@ function CreatorCard({ c, courses, coaches, onChanged }: CardProps) {
             onChange={(tier) => void act(() => setCreator(c.id, { tier }))}
             size="sm"
           />
+
+          {canUnlist(c.tier) ? (
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[14px] text-text">{t('app.creatorsListed')}</span>
+              <Switch
+                checked={c.listed}
+                onChange={(listed) => void act(() => setCreator(c.id, { listed }))}
+                label={t('app.creatorsListed')}
+                disabled={busy}
+              />
+            </div>
+          ) : (
+            <p className="text-[13px] text-muted">{t('app.creatorsListedStart')}</p>
+          )}
+
+          {creatorPageLive(c) ? (
+            <a
+              href={href(locale, `/c/${c.slug}/`)}
+              target="_blank"
+              rel="noreferrer"
+              className="text-[13px] text-accent underline-offset-2 hover:underline"
+            >
+              {t('app.creatorsPage')} · /c/{c.slug}/
+            </a>
+          ) : null}
 
           <div className="flex items-end gap-2">
             <Input
