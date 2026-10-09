@@ -746,6 +746,36 @@ export const app = {
   adminStatsColPaidMoney: 'Money',
   adminStatsSourceUnknown: 'unknown',
   adminStatsSourceReferral: 'a friend’s link',
+  courseInReview: 'in review',
+  courseReviewExplain:
+    'Forma publishes the course: it goes out under the platform’s name, so the owner looks at it first. A course sent for review stays as it is until it is published or handed back to you.',
+  courseReviewSend: 'Send for review',
+  courseReviewSent: 'Course sent for review',
+  courseReviewSince: 'In review since {date}. To change something, take it back.',
+  courseReviewWithdraw: 'Take back from review',
+  courseReviewWithdrawn: 'The course is a draft again — edit away',
+  courseReviewError: 'That did not work — try again',
+  courseReviewWaiting: 'The creator sent this course for review on {date}.',
+  courseReturn: 'Hand back to the creator',
+  courseReturned: 'Course handed back to the creator',
+  courseLockPublished:
+    'The course is published and read-only now. To change something, write to the owner.',
+  courseLockReview: 'The course is in review and cannot be changed meanwhile.',
+  courseLockPaused: 'Your area is paused: you can see your courses but not edit them.',
+  courseErrTooShort: 'A course needs at least 4 days',
+  courseErrEmptyDays: 'Every training day needs a workout with exercises in it',
+  courseErrSlugTaken: 'That id is taken — pick another',
+  courseErrPrice: 'The price can be at most 100,000 ₽ and $1,000',
+  creatorCoursesTitle: 'My courses',
+  creatorCoursesOpen: 'My courses',
+  creatorCoursesIntro:
+    'Build a course: the description, the days and workouts from Forma’s exercise library. When it is ready, send it for review; the owner publishes it.',
+  creatorCoursesPaused:
+    'Your area is paused: courses are visible, but none can be created or changed.',
+  creatorCoursesEmptyBody:
+    'Start with an id — a short Latin name for the course. The rest can wait.',
+  creatorCoursesLine: 'Course builder: days, workouts, videos',
+  creatorsInReview: 'in review: {n}',
   creatorTitle: 'Creator area',
   creatorIntroTitle: 'Your own course and club on Forma',
   creatorIntroBody:
@@ -789,7 +819,7 @@ export const app = {
   creatorBuyers: 'Buyers',
   creatorSalesNow: 'Sales this month',
   creatorYoursNow: 'Yours this month',
-  creatorNoCourses: 'No courses yet — Nastia connects your course once it is built.',
+  creatorNoCourses: 'No courses yet — build your first in «My courses» and send it for review.',
   creatorMonths: 'By month',
   creatorMonthsNote:
     'Course sales. Shares are counted after the payment processor’s fee ({fee}). The club and 1:1 sessions appear here once creators have their own.',

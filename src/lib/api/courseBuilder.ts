@@ -2,8 +2,10 @@
  * Courses composed in the admin panel: `admin_courses` + `admin_course_days`, and the publish /
  * unpublish RPCs that make one real.
  *
- * Everything here is admin-only by RLS except {@link listPublishedCourses}, which is what the app
- * uses to show DB courses alongside the compiled ones. The shape returned is deliberately close to
+ * Admins read and write everything. An open creator (0065) reads and writes the same tables, but
+ * RLS limits them to their own courses — an editable draft only — and the days and workouts under
+ * them; they send a draft for review ({@link requestCourseReview}) instead of publishing it.
+ * {@link listPublishedCourses} is what the app uses to show DB courses alongside the compiled ones. The shape returned is deliberately close to
  * the tables; turning a bundle into the `Course` the rest of the product understands is
  * `draftToCourse()` in src/lib/courses/draft.ts, not this module's job.
  */
@@ -26,6 +28,8 @@ interface DbCourse {
   slug_id: string;
   /** Whose course (0064); absent on a database before it. */
   creator_id?: string | null;
+  /** Waiting for the owner's review since (0065); absent on a database before it. */
+  review_requested_at?: string | null;
   status: AdminCourseRow['status'];
   sort_order: number;
   level: number;
@@ -75,6 +79,7 @@ function courseFromDb(r: DbCourse): AdminCourseRow {
     content: parseCourseContent(r.content),
     publishedAt: r.published_at,
     creatorId: r.creator_id ?? null,
+    reviewRequestedAt: r.review_requested_at ?? null,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
   };
@@ -153,6 +158,24 @@ export async function listAdminCourses(): Promise<AdminCourseRow[]> {
   });
 }
 
+/**
+ * A creator's own courses, any state (0065). RLS would also return every published course — the
+ * catalogue is public — so the filter on `creator_id` is what makes this list «mine».
+ */
+export async function listCreatorCourses(creatorId: string): Promise<AdminCourseRow[]> {
+  if (isDemo()) return (await demo()).listCreatorCourses(creatorId);
+  return guard(async () => {
+    const rows = unwrap<DbCourse[]>(
+      await supabase()
+        .from('admin_courses')
+        .select(COURSE_COLS)
+        .eq('creator_id', creatorId)
+        .order('created_at', { ascending: true }),
+    );
+    return rows.map(courseFromDb);
+  });
+}
+
 /** One course with its days and the workouts those days play — everything the editor needs. */
 export async function getAdminCourse(id: string): Promise<AdminCourseBundle> {
   if (isDemo()) return (await demo()).getAdminCourse(id);
@@ -214,18 +237,27 @@ export async function getAdminCourse(id: string): Promise<AdminCourseBundle> {
 /**
  * Start a new course. Only `slugId` is required — everything else has a column default, because a
  * course is written over many sittings and the editor must be able to save an almost-empty one.
+ *
+ * `creatorId` makes it a creator's course (0065): the server accepts only the caller's own open
+ * creator, and refuses a `sortOrder`, which is the owner's to set.
  */
 export async function createAdminCourse(
   slugId: string,
   patch: AdminCoursePatch = {},
+  creatorId: string | null = null,
 ): Promise<AdminCourseRow> {
-  if (isDemo()) return (await demo()).createAdminCourse(slugId, patch);
+  if (isDemo()) return (await demo()).createAdminCourse(slugId, patch, creatorId);
   return guard(async () => {
     const me = await currentUser();
     const row = unwrap<DbCourse>(
       await supabase()
         .from('admin_courses')
-        .insert({ ...coursePatchToDb(patch), slug_id: slugId, author_id: me?.id ?? null })
+        .insert({
+          ...coursePatchToDb(patch),
+          slug_id: slugId,
+          author_id: me?.id ?? null,
+          ...(creatorId ? { creator_id: creatorId } : {}),
+        })
         .select(COURSE_COLS)
         .single(),
     );
@@ -278,6 +310,35 @@ export async function unpublishAdminCourse(id: string): Promise<void> {
   if (isDemo()) return (await demo()).unpublishAdminCourse(id);
   return guard(async () => {
     unwrapVoid(await supabase().rpc('admin_unpublish_course', { p_course: id }));
+  });
+}
+
+// --- review (0065) ----------------------------------------------------------
+
+/**
+ * A creator sends their draft to the owner. Throws `course_too_short` / `course_has_empty_days`
+ * like a publish would; the draft is read-only for them until it is published or handed back.
+ */
+export async function requestCourseReview(id: string): Promise<void> {
+  if (isDemo()) return (await demo()).requestCourseReview(id);
+  return guard(async () => {
+    unwrapVoid(await supabase().rpc('creator_request_review', { p_course: id }));
+  });
+}
+
+/** The creator takes the request back, to edit again. */
+export async function withdrawCourseReview(id: string): Promise<void> {
+  if (isDemo()) return (await demo()).withdrawCourseReview(id);
+  return guard(async () => {
+    unwrapVoid(await supabase().rpc('creator_withdraw_review', { p_course: id }));
+  });
+}
+
+/** The owner hands a creator's draft back without publishing it. */
+export async function returnCourseToCreator(id: string): Promise<void> {
+  if (isDemo()) return (await demo()).returnCourseToCreator(id);
+  return guard(async () => {
+    unwrapVoid(await supabase().rpc('admin_return_course', { p_course: id }));
   });
 }
 

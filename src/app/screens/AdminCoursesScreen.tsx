@@ -1,6 +1,10 @@
 /**
- * The coach's courses (admins only): every course she has written, drafts included, and the button
+ * The coach's courses (admins): every course she has written, drafts included, and the button
  * that starts a new one.
+ *
+ * The same screen is a creator's «Мои курсы» at `/creator/courses` (0065, `CreatorCoursesScreen`):
+ * only their own courses, a new one created as theirs, and no catalogue order to set — that is the
+ * owner's. Courses a creator sent for review carry «Ждёт проверки» on both sides.
  *
  * A course is created with nothing but an id, because writing one takes days and the editor has to
  * be able to save something almost empty. What it may not do is *publish* something almost empty —
@@ -8,7 +12,6 @@
  */
 import { useCallback, useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router';
-import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Glyph } from '@/components/ui/Icon';
@@ -16,7 +19,7 @@ import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Screen } from '@/components/ui/Screen';
 import { useToast } from '@/components/ui/Toast';
-import { createAdminCourse, listAdminCourses } from '@/lib/api/courseBuilder';
+import { createAdminCourse, listAdminCourses, listCreatorCourses } from '@/lib/api/courseBuilder';
 import type { AdminCourseRow } from '@/lib/api/types';
 import { courseTileVars } from '@/lib/ui/tile';
 import { LoadingBlock } from '@/app/components/LoadingBlock';
@@ -25,15 +28,22 @@ import { adminErrorTitle } from '@/app/features/admin/adminError';
 import { useT } from '@/app/hooks/useT';
 import { AdminBoot } from '@/app/features/admin/AdminBoot';
 import { AdminLoadError } from '@/app/features/admin/AdminLoadError';
-import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
+import { builderErrorKey, coursesBase } from '@/app/features/admin/courses/builderScope';
+import { CourseStateBadge } from '@/app/features/admin/courses/CourseStateBadge';
 import { COURSE_ID_RE } from '@/app/features/admin/courses/ids';
+import { useBuilderScope, type BuilderMode } from '@/app/features/admin/courses/useBuilderScope';
 
 export default function AdminCoursesScreen() {
+  return <CourseListScreen mode="admin" />;
+}
+
+export function CourseListScreen({ mode }: { mode: BuilderMode }) {
   const tr = useT();
   const { t } = tr;
   const toast = useToast();
   const navigate = useNavigate();
-  const admin = useIsAdmin();
+  const scope = useBuilderScope(mode);
+  const base = scope ? coursesBase(scope) : '/';
 
   const [rows, setRows] = useState<AdminCourseRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,20 +54,30 @@ export default function AdminCoursesScreen() {
   const [busy, setBusy] = useState(false);
 
   const refresh = useCallback(() => {
+    if (!scope) return;
     setLoading(true);
     setLoadError(null);
-    listAdminCourses()
+    (scope.kind === 'creator' ? listCreatorCourses(scope.creatorId) : listAdminCourses())
       .then(setRows)
       .catch((e: unknown) => setLoadError(e))
       .finally(() => setLoading(false));
-  }, []);
+  }, [scope]);
 
   useEffect(() => {
-    if (admin) refresh();
-  }, [admin, refresh]);
+    refresh();
+  }, [refresh]);
 
-  if (admin === null) return <AdminBoot />;
-  if (admin === false) return <Navigate to="/" replace />;
+  if (scope === undefined) {
+    return mode === 'admin' ? (
+      <AdminBoot />
+    ) : (
+      <Screen header={<TopBar back="/creator" title={t('app.creatorCoursesTitle')} />}>
+        <LoadingBlock />
+      </Screen>
+    );
+  }
+  if (scope === null) return <Navigate to={mode === 'admin' ? '/' : '/creator'} replace />;
+  const creatorPaused = scope.kind === 'creator' && !scope.open;
 
   const idError = newId !== '' && !COURSE_ID_RE.test(newId) ? t('app.courseIdInvalid') : undefined;
 
@@ -65,12 +85,20 @@ export default function AdminCoursesScreen() {
     if (!COURSE_ID_RE.test(newId)) return;
     setBusy(true);
     try {
-      const course = await createAdminCourse(newId, { sortOrder: rows.length + 10 });
+      // The catalogue order is the owner's: a creator's course is created without one (0065).
+      const course =
+        scope.kind === 'creator'
+          ? await createAdminCourse(newId, {}, scope.creatorId)
+          : await createAdminCourse(newId, { sortOrder: rows.length + 10 });
       setCreating(false);
       setNewId('');
-      navigate(`/admin/courses/${course.id}`);
+      navigate(`${base}/${course.id}`);
     } catch (e) {
-      toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.courseCreateError') });
+      const key = builderErrorKey(e);
+      toast.show({
+        kind: 'error',
+        title: key ? t(key) : adminErrorTitle(tr, e, 'app.courseCreateError'),
+      });
     } finally {
       setBusy(false);
     }
@@ -78,31 +106,48 @@ export default function AdminCoursesScreen() {
 
   return (
     <Screen
-      header={<TopBar back title={t('app.courseScreenTitle')} />}
+      header={
+        <TopBar
+          back={scope.kind === 'creator' ? '/creator' : true}
+          title={t(scope.kind === 'creator' ? 'app.creatorCoursesTitle' : 'app.courseScreenTitle')}
+        />
+      }
       footer={
-        <Button
-          size="lg"
-          fullWidth
-          icon={<Glyph size={16}>+</Glyph>}
-          onClick={() => setCreating(true)}
-        >
-          {t('app.courseNew')}
-        </Button>
+        creatorPaused ? undefined : (
+          <Button
+            size="lg"
+            fullWidth
+            icon={<Glyph size={16}>+</Glyph>}
+            onClick={() => setCreating(true)}
+          >
+            {t('app.courseNew')}
+          </Button>
+        )
       }
     >
+      {scope.kind === 'creator' ? (
+        <p className="pt-4 text-[14px] leading-snug text-muted">
+          {t(creatorPaused ? 'app.creatorCoursesPaused' : 'app.creatorCoursesIntro')}
+        </p>
+      ) : null}
       {loading ? (
         <LoadingBlock />
       ) : loadError !== null ? (
         <AdminLoadError error={loadError} onRetry={refresh} title="app.courseLoadError" />
       ) : rows.length === 0 ? (
-        <EmptyState title={t('app.courseEmptyTitle')} description={t('app.courseEmptyBody')} />
+        <EmptyState
+          title={t('app.courseEmptyTitle')}
+          description={t(
+            scope.kind === 'creator' ? 'app.creatorCoursesEmptyBody' : 'app.courseEmptyBody',
+          )}
+        />
       ) : (
         <ul className="flex flex-col py-2">
           {rows.map((c, i) => (
             <li key={c.id}>
               <button
                 type="button"
-                onClick={() => navigate(`/admin/courses/${c.id}`)}
+                onClick={() => navigate(`${base}/${c.id}`)}
                 className="flex w-full items-center gap-3 border-t border-border py-4 text-left transition-colors duration-150 ease-(--ease-out) hover:bg-surface-2 active:bg-surface-3"
               >
                 <span className="numeral tabular w-6 shrink-0 text-[13px] text-muted-2">
@@ -124,10 +169,7 @@ export default function AdminCoursesScreen() {
                       {/* An unnamed draft falls back to its id — it still has to be findable. */}
                       {c.content.name?.ru?.trim() || c.slugId}
                     </span>
-                    {/* Published is the one white stamp; a draft is an outline. */}
-                    <Badge tone={c.status === 'published' ? 'inverse' : 'neutral'} size="sm">
-                      {t(c.status === 'published' ? 'app.coursePublished' : 'app.courseDraft')}
-                    </Badge>
+                    <CourseStateBadge course={c} />
                   </span>
                   <span className="mt-0.5 truncate font-mono text-xs text-muted">{c.slugId}</span>
                 </span>

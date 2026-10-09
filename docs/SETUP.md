@@ -2042,6 +2042,29 @@ Apply **`0064_creators.sql`** after 0063, then deploy the site. What it is and w
 
 Verify on a database: `supabase/tests/99_creators.sql` (§2).
 
+## 7.20 Creators build their own courses (0065)
+
+Apply **`0065_creator_builder.sql`** after 0064, then deploy the site. What a creator can and
+cannot do: docs/PLATFORM.md, phase 2, step 1.
+
+- **An open creator** (opened in «Авторы») finds «Мои курсы» in «Кабинет автора»
+  (`/creator/courses`). It is the same course builder you use, limited to their own courses: they
+  create one, write it, add days, build its workouts from the exercise library, upload a cover,
+  pictures and clips (stored under `creators/<their id>/` in the buckets), and press
+  «Отправить на проверку».
+- **You review.** A course waiting for you says «на проверке» in Admin → **Авторы** (with a count
+  on the creator's card) and in the course list. Open it, look, and press «Опубликовать» as for
+  any course, or «Вернуть автору» to hand it back. While it waits, the creator cannot change it.
+- **After publishing**, the course is read-only for its creator. To change it, edit it yourself,
+  or unpublish it and hand the changes back in conversation — the creator's own edits come with a
+  later phase.
+- **Exercises stay yours.** A creator who needs a movement that is not in the library asks you; you
+  add it in «Упражнения».
+- **Pausing a creator** («Авторы») freezes their courses for them: they still see them, change
+  nothing, and their published courses keep selling.
+
+Verify on a database: `supabase/tests/99_creator_builder.sql` (§2).
+
 ## 7.10 What is still only in Russian
 
 Everything written ahead of time is bilingual and the build says so: the interface dictionaries are

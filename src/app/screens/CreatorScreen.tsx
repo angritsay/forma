@@ -14,13 +14,18 @@
  *   the sessions are one shared club and Forma's coaches until creators have their own (phase 2),
  *   and the screen says so rather than show a zero that looks like a result.
  *
+ * «Мои курсы» (0065) opens the course builder in the creator's scope (`/creator/courses`): their
+ * own drafts, built and sent for review; the owner publishes.
+ *
  * The page address is shown, not linked: public creator pages arrive with phase 2, and a link that
  * opens the 404 would be the first thing a new creator shares.
  */
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { Link } from 'react-router';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { Glyph } from '@/components/ui/Icon';
 import { Input } from '@/components/ui/Input';
 import { Screen } from '@/components/ui/Screen';
 import { Textarea } from '@/components/ui/Textarea';
@@ -294,6 +299,23 @@ function Dashboard({ me }: { me: MyCreator }) {
           }
         />
       </div>
+
+      {/*
+       * The builder for their own courses (0065): one row, the way the account sheet links its
+       * screens — a title, a quiet line under it, the arrow. Paused creators still open it to read.
+       */}
+      <Link
+        to="/creator/courses"
+        className="glass-card flex items-center gap-3 rounded-card p-4 transition-colors duration-150 ease-(--ease-out) hover:bg-surface-2"
+      >
+        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span className="font-display text-lg">{t('app.creatorCoursesOpen')}</span>
+          <span className="text-[13px] leading-snug text-muted">{t('app.creatorCoursesLine')}</span>
+        </span>
+        <Glyph size={16} className="shrink-0 text-muted-2">
+          ›
+        </Glyph>
+      </Link>
 
       {me.courses === 0 ? (
         <p className="text-[14px] leading-snug text-muted">{t('app.creatorNoCourses')}</p>

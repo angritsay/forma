@@ -30,6 +30,9 @@ export const SCREEN_NAMES = [
   'ClubInviteScreen',
   // «Кабинет автора»: applying as a creator, then their sales and settlement (0064).
   'CreatorScreen',
+  // «Мои курсы»: the course builder for a creator's own courses (0065).
+  'CreatorCoursesScreen',
+  'CreatorCourseScreen',
   'BookScreen',
   'AdminScreen',
   'AdminWorkoutsScreen',

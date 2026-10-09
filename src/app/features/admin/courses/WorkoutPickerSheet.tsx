@@ -21,9 +21,17 @@ export interface WorkoutPickerSheetProps {
   onPick: (workout: CustomWorkoutSummary) => void;
   /** The sheet's heading; the course-day wording by default. */
   title?: string;
+  /** A creator's id to offer only their own workouts (0065); Forma's library when absent. */
+  owner?: string | null;
 }
 
-export function WorkoutPickerSheet({ open, onClose, onPick, title }: WorkoutPickerSheetProps) {
+export function WorkoutPickerSheet({
+  open,
+  onClose,
+  onPick,
+  title,
+  owner = null,
+}: WorkoutPickerSheetProps) {
   const { t } = useT();
   const [rows, setRows] = useState<CustomWorkoutSummary[]>([]);
   const [loading, setLoading] = useState(false);
@@ -38,7 +46,7 @@ export function WorkoutPickerSheet({ open, onClose, onPick, title }: WorkoutPick
     if (!open) return;
     let alive = true;
     setLoading(true);
-    listCustomWorkouts()
+    listCustomWorkouts(owner)
       .then((r) => {
         if (alive) setRows(r);
       })
@@ -49,7 +57,7 @@ export function WorkoutPickerSheet({ open, onClose, onPick, title }: WorkoutPick
     return () => {
       alive = false;
     };
-  }, [open]);
+  }, [open, owner]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();

@@ -42,6 +42,11 @@ export interface WorkoutEditorProps {
   /** Чей это труд. Пусто у новой — тогда подставляется первый из списка. */
   initialAuthorSlug?: string | null;
   initialStructure?: CustomWorkoutStructure;
+  /**
+   * Offer «Автор» (`authors.ts`, Forma's coaches). Off for a creator's workout (0065): it is
+   * credited to the creator, and the server refuses an author slug from them.
+   */
+  withAuthor?: boolean;
   saving: boolean;
   onSave: (input: CustomWorkoutInput) => void;
   onCancel: () => void;
@@ -76,6 +81,7 @@ export function WorkoutEditor({
   initialDescriptionEn = '',
   initialAuthorSlug,
   initialStructure,
+  withAuthor = true,
   saving,
   onSave,
   onCancel,
@@ -92,7 +98,9 @@ export function WorkoutEditor({
    * аккаунта, и «чей труд» из «кто сохранил» не выводится. У новой тренировки предлагается первый
    * из списка (Сергей), потому что так оно и есть почти всегда, но это предложение, а не факт.
    */
-  const [authorSlug, setAuthorSlug] = useState(initialAuthorSlug ?? AUTHORS[0]?.id ?? '');
+  const [authorSlug, setAuthorSlug] = useState(
+    withAuthor ? (initialAuthorSlug ?? AUTHORS[0]?.id ?? '') : '',
+  );
   const [description, setDescription] = useState(initialDescription ?? '');
   const [descriptionEn, setDescriptionEn] = useState(initialDescriptionEn ?? '');
   const [sections, setSections] = useState<DraftSection[]>(() => emptySections(initialStructure));
@@ -245,7 +253,7 @@ export function WorkoutEditor({
           Рисуется, только когда авторов больше одного: выбор из одного варианта — это не выбор,
           а лишнее поле в форме, которую и так заполняют каждый день.
         */}
-        {AUTHORS.length > 1 ? (
+        {withAuthor && AUTHORS.length > 1 ? (
           <Select
             wrapperClassName="lg:flex-1"
             label={t('app.builderAuthor')}

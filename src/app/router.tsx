@@ -262,6 +262,15 @@ export function AppRoutes() {
                 <Route path="/invite" element={<LazyScreen name="ClubInviteScreen" />} />
                 {/* «Кабинет автора» (0064): apply, wait, then sales and settlement. */}
                 <Route path="/creator" element={<LazyScreen name="CreatorScreen" />} />
+                {/* The builder for the creator's own courses (0065): review, not publish. */}
+                <Route
+                  path="/creator/courses"
+                  element={<LazyScreen name="CreatorCoursesScreen" />}
+                />
+                <Route
+                  path="/creator/courses/:id"
+                  element={<LazyScreen name="CreatorCourseScreen" />}
+                />
                 {/* Booking switched off (`BOOKING.enabled`): the address stays, the offer does not. */}
                 <Route
                   path="/book"

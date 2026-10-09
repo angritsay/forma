@@ -45,6 +45,11 @@ const HEX_RE = /^#[0-9a-f]{6}$/i;
 export interface CourseMetaEditorProps {
   course: AdminCourseRow;
   onPatch: (patch: AdminCoursePatch) => void;
+  /**
+   * The storage folder every upload goes under: empty for the owner, `creators/<id>/` for a
+   * creator, who may write nowhere else (0065, `builderScope.ts`).
+   */
+  mediaPrefix?: string;
 }
 
 /** A single-line field of the content blob, in whichever language the admin is writing. */
@@ -59,7 +64,7 @@ function useContentField(course: AdminCourseRow, onPatch: (p: AdminCoursePatch) 
   };
 }
 
-export function CourseMetaEditor({ course, onPatch }: CourseMetaEditorProps) {
+export function CourseMetaEditor({ course, onPatch, mediaPrefix = '' }: CourseMetaEditorProps) {
   const { t } = useT();
   const editing = useAdminLocale((s) => s.editing);
   const setText = useContentField(course, onPatch);
@@ -313,7 +318,7 @@ export function CourseMetaEditor({ course, onPatch }: CourseMetaEditorProps) {
           value={c.coverImage ?? null}
           onChange={(coverImage) => onPatch({ content: { ...c, coverImage } })}
           bucket={PUBLIC_BUCKET}
-          pathBase={`courses/${course.slugId}/cover`}
+          pathBase={`${mediaPrefix}courses/${course.slugId}/cover`}
           accept="image/*"
           maxBytes={8 * 1024 * 1024}
         />
@@ -325,7 +330,7 @@ export function CourseMetaEditor({ course, onPatch }: CourseMetaEditorProps) {
             onPatch({ content: { ...c, introVideo: ref ? { ru: ref } : undefined } })
           }
           bucket={PRIVATE_BUCKET}
-          pathBase={`${course.slugId}/intro.ru`}
+          pathBase={`${mediaPrefix}${course.slugId}/intro.ru`}
           accept="video/*"
         />
       </div>

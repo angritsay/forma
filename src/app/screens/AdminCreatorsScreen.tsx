@@ -11,7 +11,7 @@
  * the same by hand and writes nothing twice.
  */
 import { useCallback, useEffect, useState } from 'react';
-import { Navigate } from 'react-router';
+import { Link, Navigate } from 'react-router';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -46,6 +46,8 @@ import { AdminBoot } from '@/app/features/admin/AdminBoot';
 import { adminErrorTitle } from '@/app/features/admin/adminError';
 import { formatMoney } from '@/app/features/admin/money';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
+import { inReview } from '@/app/features/admin/courses/builderScope';
+import { CourseStateBadge } from '@/app/features/admin/courses/CourseStateBadge';
 import { balanceSide, statementMonths } from '@/app/features/creator/model';
 
 const STATUS_LABEL: Record<CreatorStatus, TKey> = {
@@ -130,6 +132,8 @@ function CreatorCard({ c, courses, onChanged }: CardProps) {
   }, [open, loadMoney]);
 
   const theirs = courses.filter((x) => x.creatorId === c.id);
+  // Drafts the creator sent for review (0065): the owner's to publish or hand back.
+  const waiting = theirs.filter((x) => inReview(x) && x.status !== 'published').length;
   const free = courses.filter((x) => !x.creatorId);
   const courseName = (x: AdminCourseRow) =>
     (locale === 'en' ? x.content.name?.en : x.content.name?.ru) || x.slugId;
@@ -144,9 +148,16 @@ function CreatorCard({ c, courses, onChanged }: CardProps) {
             {c.ownerEmail ? ` · ${c.ownerEmail}` : ''}
           </span>
         </div>
-        <Badge tone={STATUS_TONE[c.status]} size="sm">
-          {t(STATUS_LABEL[c.status])}
-        </Badge>
+        <span className="flex flex-wrap items-center gap-2">
+          {waiting > 0 ? (
+            <Badge tone="warning" size="sm">
+              {t('app.creatorsInReview', { n: formatNumber(locale, waiting) })}
+            </Badge>
+          ) : null}
+          <Badge tone={STATUS_TONE[c.status]} size="sm">
+            {t(STATUS_LABEL[c.status])}
+          </Badge>
+        </span>
       </div>
 
       {c.about ? <p className="text-[14px] leading-snug text-text">{c.about}</p> : null}
@@ -245,7 +256,13 @@ function CreatorCard({ c, courses, onChanged }: CardProps) {
               <ul className="flex flex-col gap-1">
                 {theirs.map((x) => (
                   <li key={x.id} className="flex items-center justify-between gap-2 text-[14px]">
-                    <span className="truncate">{courseName(x)}</span>
+                    <Link
+                      to={`/admin/courses/${x.id}`}
+                      className="flex min-w-0 items-center gap-2 underline-offset-2 hover:underline"
+                    >
+                      <span className="truncate">{courseName(x)}</span>
+                      <CourseStateBadge course={x} />
+                    </Link>
                     <Button
                       size="sm"
                       variant="ghost"

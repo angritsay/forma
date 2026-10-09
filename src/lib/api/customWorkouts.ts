@@ -35,6 +35,12 @@ export interface CustomWorkoutInput {
    */
   authorSlug?: string | null;
   structure: CustomWorkoutStructure;
+  /**
+   * The creator this workout is built for (0065), set on create only. The server accepts only the
+   * caller's own open creator, and then `authorSlug` must be empty: `authors.ts` names Forma's
+   * own coaches.
+   */
+  creatorId?: string | null;
 }
 
 interface DbCustomWorkout {
@@ -49,6 +55,8 @@ interface DbCustomWorkout {
   points: number | null;
   author_slug: string | null;
   share_token: string | null;
+  /** 0065; absent on a database before it. */
+  creator_id?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -85,6 +93,7 @@ function summaryFromDb(r: DbCustomWorkout): CustomWorkoutSummary {
     estSec: r.est_sec,
     points: r.points,
     shareToken: r.share_token,
+    creatorId: r.creator_id ?? null,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
   };
@@ -102,18 +111,26 @@ function derived(structure: CustomWorkoutStructure): { est_sec: number; points: 
 
 // --- admin ------------------------------------------------------------------
 
-/** All coach-built workouts, newest first (admin). */
-export async function listCustomWorkouts(): Promise<CustomWorkoutSummary[]> {
-  if (isDemo()) return (await demo()).listCustomWorkouts();
+/**
+ * The workout library, newest first.
+ *
+ * Without `creatorId` it is Forma's library (admin): creators' workouts are left out, so they never
+ * end up in Forma's courses or in a person's assignments by accident. With it, that creator's own
+ * (0065) — RLS would also hand a creator any workout they were assigned or bought, which are not
+ * theirs to build with. The filter on Forma's side is applied here rather than in the query, so
+ * it holds on a database without the column too.
+ */
+export async function listCustomWorkouts(
+  creatorId: string | null = null,
+): Promise<CustomWorkoutSummary[]> {
+  if (isDemo()) return (await demo()).listCustomWorkouts(creatorId);
   return guard(async () => {
-    const rows = unwrap<DbCustomWorkout[]>(
-      await supabase()
-        .from('custom_workouts')
-        .select('*')
-        .eq('is_archived', false)
-        .order('created_at', { ascending: false }),
-    );
-    return rows.map(summaryFromDb);
+    let query = supabase().from('custom_workouts').select('*').eq('is_archived', false);
+    if (creatorId) query = query.eq('creator_id', creatorId);
+    const rows = unwrap<DbCustomWorkout[]>(await query.order('created_at', { ascending: false }));
+    return rows
+      .filter((r) => (creatorId ? r.creator_id === creatorId : !r.creator_id))
+      .map(summaryFromDb);
   });
 }
 
@@ -144,6 +161,7 @@ export async function createCustomWorkout(input: CustomWorkoutInput): Promise<Cu
       structure: input.structure,
       est_sec,
       points,
+      ...(input.creatorId ? { creator_id: input.creatorId } : {}),
     };
     for (let attempt = 0; attempt < 2; attempt += 1) {
       const res = await supabase()

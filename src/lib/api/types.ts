@@ -426,6 +426,8 @@ export interface CustomWorkoutSummary {
   estSec: number | null;
   points: number | null;
   shareToken: string | null;
+  /** The creator whose workout this is (0065); null or absent for Forma's own. */
+  creatorId?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -482,6 +484,11 @@ export interface AdminCourseRow {
   publishedAt: string | null;
   /** The creator whose course this is (0064); null or absent for Forma's own. */
   creatorId?: string | null;
+  /**
+   * When its creator sent the draft to the owner for review (0065); null or absent when it is not
+   * waiting. The creator cannot edit it meanwhile; publishing or handing it back clears it.
+   */
+  reviewRequestedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }
