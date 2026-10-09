@@ -50,6 +50,8 @@ export interface CourseMetaEditorProps {
    * creator, who may write nowhere else (0065, `builderScope.ts`).
    */
   mediaPrefix?: string;
+  /** Show the payment link; off for a creator, whose course the owner links to a till (0065). */
+  withPaymentUrl?: boolean;
 }
 
 /** A single-line field of the content blob, in whichever language the admin is writing. */
@@ -64,7 +66,12 @@ function useContentField(course: AdminCourseRow, onPatch: (p: AdminCoursePatch) 
   };
 }
 
-export function CourseMetaEditor({ course, onPatch, mediaPrefix = '' }: CourseMetaEditorProps) {
+export function CourseMetaEditor({
+  course,
+  onPatch,
+  mediaPrefix = '',
+  withPaymentUrl = true,
+}: CourseMetaEditorProps) {
   const { t } = useT();
   const editing = useAdminLocale((s) => s.editing);
   const setText = useContentField(course, onPatch);
@@ -335,19 +342,25 @@ export function CourseMetaEditor({ course, onPatch, mediaPrefix = '' }: CourseMe
         />
       </div>
 
-      <Input
-        label={t('app.coursePaymentUrl')}
-        hint={t('app.coursePaymentUrlHint')}
-        type="url"
-        inputMode="url"
-        placeholder="https://…"
-        value={c.paymentUrl?.ru ?? ''}
-        onChange={(e) =>
-          onPatch({
-            content: { ...c, paymentUrl: e.target.value ? { ru: e.target.value } : undefined },
-          })
-        }
-      />
+      {/*
+       * The payment link decides whose till a sale lands in, so it is the owner's to set (0065):
+       * a creator's builder does not show it, and the server refuses it from them.
+       */}
+      {withPaymentUrl ? (
+        <Input
+          label={t('app.coursePaymentUrl')}
+          hint={t('app.coursePaymentUrlHint')}
+          type="url"
+          inputMode="url"
+          placeholder="https://…"
+          value={c.paymentUrl?.ru ?? ''}
+          onChange={(e) =>
+            onPatch({
+              content: { ...c, paymentUrl: e.target.value ? { ru: e.target.value } : undefined },
+            })
+          }
+        />
+      ) : null}
 
       <div className="flex flex-col gap-3">
         <FieldLabel label={t('app.courseFaq')} hint={t('app.courseFaqHint')} />

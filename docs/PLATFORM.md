@@ -76,8 +76,10 @@ Order matters, because each step needs the one before it.
      draft: never published and not waiting for review. They cannot set `status`,
      `published_at`, `sort_order` (the catalogue order is the owner's), `creator_id` or
      `review_requested_at` by writing the row, cannot price a course above 100 000 ₽ / $1 000,
-     and cannot take a course id that already exists in `public.courses` (the compiled courses
-     and everything ever published) or a path word (`custom`, `shared`, `creators`, …). They
+     cannot set the payment link (`content.paymentUrl`, whose till a sale lands in — the owner
+     sets it at review), and cannot take a course id that already exists in `public.courses` (the
+     compiled courses and everything ever published) or a path word (`custom`, `shared`,
+     `creators`, …). They
      delete a draft of theirs; never anything else.
    - **Days** only in their own editable course, and a training day only plays a workout of their
      own — never Forma's or another creator's.
@@ -87,8 +89,12 @@ Order matters, because each step needs the one before it.
      cannot be changed or deleted by the creator.
    - **Exercises stay admin-curated.** The library is readable by everyone signed in and written
      by admins only. A creator who needs a movement that is not there asks the owner.
-   - **Media** go under `creators/<creator_id>/…` in the `images`, `videos` and `audio` buckets,
-     and the creator writes, overwrites and deletes only there. Paid clips live at
+   - **Media** go under `creators/<creator_id>/…` in the `images`, `videos` and `audio` buckets
+     (`images/creators/<id>/courses/<course id>/…`, `videos|audio/creators/<id>/<course id>/…`).
+     The creator writes, overwrites and deletes only there, only in the folder of a course they
+     can still edit (media freeze with the course in review and once published), and only image,
+     video or audio files by extension (images: jpg, jpeg, png, webp, avif; videos: mp4, webm,
+     mov, m4v; audio: mp3, m4a, aac, ogg, wav). Paid clips live at
      `videos/creators/<creator_id>/<course id>/…`: the creator reads their own folder, and a buyer
      reads a clip when they hold that course and the course belongs to that creator.
    - **Review, not publish.** «Отправить на проверку» (`creator_request_review`) needs the four

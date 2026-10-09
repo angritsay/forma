@@ -22248,7 +22248,8 @@ grant execute on function public.admin_close_creator_month(date) to authenticate
 --      catalogue fields, prose and days while it is an editable draft: `status = 'draft'`, never
 --      published (`published_at is null`), and not waiting for review. A creator can never set
 --      `status`, `published_at`, `sort_order`, `creator_id`, `author_id` or
---      `review_requested_at` by writing the row (`admin_courses_creator_guard`), never price a
+--      `review_requested_at` by writing the row (`admin_courses_creator_guard`), nor
+--      `content.paymentUrl` (the till a sale goes to — the owner sets it), never price a
 --      course above 100 000 ₽ / $1 000, and never take a `slug_id` that is already a course id
 --      (`public.courses`: the compiled courses and everything ever published) or one of the
 --      words the storage and session paths use (`custom`, `shared`, `creators`, …).
@@ -22261,7 +22262,11 @@ grant execute on function public.admin_close_creator_month(date) to authenticate
 --      null), and cannot change one that a published, once-published or in-review course plays
 --      (`creator_can_edit_workout`) — that would change content after the review.
 --   4. **Media.** Uploads go under `creators/<creator_id>/…` in `images`, `videos` and `audio`,
---      and a creator may insert, overwrite or delete only there. The paid clips of a creator's
+--      and a creator may insert, overwrite or delete only there, only in the folder of a course
+--      they may still edit (`creator_media_course`: `images/creators/<id>/courses/<slug>/…`,
+--      `videos|audio/creators/<id>/<slug>/…`), and only files of the bucket's kind (an extension
+--      allowlist — `images` is public and must not become a file host). Media of a course in
+--      review or published is frozen with it. The paid clips of a creator's
 --      course live at `videos/creators/<creator_id>/<slug_id>/…` (and `audio/…`): the creator
 --      reads their own prefix, and a buyer reads a clip when they hold the course `<slug_id>`
 --      **and** that course belongs to `<creator_id>` (`creator_media_readable`) — a path cannot
@@ -22523,6 +22528,13 @@ begin
     end if;
   end if;
 
+  -- The payment link decides whose till a sale lands in: the owner sets it, at review.
+  if (tg_op = 'INSERT' and new.content ? 'paymentUrl')
+     or (tg_op = 'UPDATE'
+         and (new.content -> 'paymentUrl') is distinct from (old.content -> 'paymentUrl')) then
+    raise exception 'forbidden_field' using errcode = '42501';
+  end if;
+
   if tg_op = 'INSERT' or new.slug_id is distinct from old.slug_id then
     if public.creator_course_slug_reserved(new.slug_id)
        or exists (select 1 from public.courses k where k.id = new.slug_id) then
@@ -22664,7 +22676,8 @@ as $$
 declare
   v_parts text[] := storage.foldername(p_name);
 begin
-  if coalesce(v_parts[1], '') <> 'creators' or v_parts[2] is null then
+  if coalesce(v_parts[1], '') <> 'creators' or v_parts[2] is null
+     or position('..' in p_name) > 0 then
     return false;
   end if;
   if v_parts[2] = public.my_creator_id()::text then
@@ -22679,9 +22692,13 @@ begin
 end;
 $$;
 
--- May the open caller write this object? Only strictly inside their own prefix.
-create or replace function public.creator_media_writable(p_name text)
-returns boolean
+-- The course a creator's object belongs to, by the layouts the builder writes:
+--   images  creators/<creator_id>/courses/<slug_id>/<file>   (cover, day pictures)
+--   videos  creators/<creator_id>/<slug_id>/<file>           (intro and clips)
+--   audio   creators/<creator_id>/<slug_id>/<file>
+-- Null for any other shape, and for a slug that is not a course of that creator.
+create or replace function public.creator_media_course(p_bucket text, p_name text)
+returns uuid
 language plpgsql
 stable
 security definer
@@ -22689,19 +22706,69 @@ set search_path = pg_catalog, public, extensions
 as $$
 declare
   v_parts text[] := storage.foldername(p_name);
-  v_me    uuid   := public.my_open_creator_id();
+  v_slug  text;
+  v_id    uuid;
 begin
-  return v_me is not null
-     and coalesce(v_parts[1], '') = 'creators'
-     and v_parts[2] = v_me::text
-     and position('..' in p_name) = 0;
+  if coalesce(v_parts[1], '') <> 'creators' or v_parts[2] is null
+     or position('..' in p_name) > 0 then
+    return null;
+  end if;
+  if p_bucket = 'images' then
+    if coalesce(array_length(v_parts, 1), 0) <> 4 or v_parts[3] <> 'courses' then
+      return null;
+    end if;
+    v_slug := v_parts[4];
+  elsif p_bucket in ('videos', 'audio') then
+    if coalesce(array_length(v_parts, 1), 0) <> 3 then
+      return null;
+    end if;
+    v_slug := v_parts[3];
+  else
+    return null;
+  end if;
+  select c.id into v_id from public.admin_courses c
+  where c.slug_id = v_slug and c.creator_id::text = v_parts[2];
+  return v_id;
+end;
+$$;
+
+-- May the open caller write this object? Only inside their own prefix, only into a course of
+-- theirs that they may still edit (a draft never published and not in review), and only a file
+-- of the kind the bucket is for — `images` is public, so it must not become a file host.
+create or replace function public.creator_media_writable(p_bucket text, p_name text)
+returns boolean
+language plpgsql
+stable
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_parts  text[] := storage.foldername(p_name);
+  v_me     uuid   := public.my_open_creator_id();
+  v_ext    text   := lower(substring(p_name from '\.([A-Za-z0-9]{1,8})$'));
+  v_course uuid;
+begin
+  if v_me is null or coalesce(v_parts[2], '') <> v_me::text then
+    return false;
+  end if;
+  if v_ext is null or not (
+    (p_bucket = 'images' and v_ext = any (array['jpg', 'jpeg', 'png', 'webp', 'avif']))
+    or (p_bucket = 'videos' and v_ext = any (array['mp4', 'webm', 'mov', 'm4v']))
+    or (p_bucket = 'audio' and v_ext = any (array['mp3', 'm4a', 'aac', 'ogg', 'wav']))
+  ) then
+    return false;
+  end if;
+  v_course := public.creator_media_course(p_bucket, p_name);
+  return v_course is not null and public.creator_can_edit_course(v_course);
 end;
 $$;
 
 revoke execute on function public.creator_media_readable(text) from public, anon;
 grant execute on function public.creator_media_readable(text) to authenticated;
-revoke execute on function public.creator_media_writable(text) from public, anon;
-grant execute on function public.creator_media_writable(text) to authenticated;
+revoke execute on function public.creator_media_course(text, text) from public, anon;
+grant execute on function public.creator_media_course(text, text) to authenticated;
+revoke execute on function public.creator_media_writable(text, text) from public, anon;
+grant execute on function public.creator_media_writable(text, text) to authenticated;
 
 -- `images` is already readable by everyone (0008); the private buckets need the read rule.
 drop policy if exists "creator media: select" on storage.objects;
@@ -22714,20 +22781,35 @@ drop policy if exists "creator media: insert" on storage.objects;
 create policy "creator media: insert"
   on storage.objects for insert
   to authenticated
-  with check (bucket_id in ('images', 'videos', 'audio') and public.creator_media_writable(name));
+  with check (
+    bucket_id in ('images', 'videos', 'audio')
+    and public.creator_media_writable(bucket_id, name)
+  );
 
 drop policy if exists "creator media: update" on storage.objects;
 create policy "creator media: update"
   on storage.objects for update
   to authenticated
-  using (bucket_id in ('images', 'videos', 'audio') and public.creator_media_writable(name))
-  with check (bucket_id in ('images', 'videos', 'audio') and public.creator_media_writable(name));
+  using (
+    bucket_id in ('images', 'videos', 'audio')
+    and public.creator_media_writable(bucket_id, name)
+  )
+  with check (
+    bucket_id in ('images', 'videos', 'audio')
+    and public.creator_media_writable(bucket_id, name)
+  );
 
 drop policy if exists "creator media: delete" on storage.objects;
 create policy "creator media: delete"
   on storage.objects for delete
   to authenticated
-  using (bucket_id in ('images', 'videos', 'audio') and public.creator_media_writable(name));
+  using (
+    bucket_id in ('images', 'videos', 'audio')
+    and public.creator_media_writable(bucket_id, name)
+  );
+
+-- An earlier draft of this migration had a one-argument version; nothing uses it now.
+drop function if exists public.creator_media_writable(text);
 
 -- -----------------------------------------------------------------------------
 -- 7. Review: the creator asks, the owner publishes (admin_publish_course) or hands it back.

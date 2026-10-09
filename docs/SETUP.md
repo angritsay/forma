@@ -2057,6 +2057,8 @@ cannot do: docs/PLATFORM.md, phase 2, step 1.
 - **You review.** A course waiting for you says «на проверке» in Admin → **Авторы** (with a count
   on the creator's card) and in the course list. Open it, look, and press «Опубликовать» as for
   any course, or «Вернуть автору» to hand it back. While it waits, the creator cannot change it.
+  **Set the payment link yourself** before publishing («О курсе» → «Ссылка на оплату»): a creator cannot
+  set or change it, so a sale cannot be routed to a till you did not choose.
 - **After publishing**, the course is read-only for its creator. To change it, edit it yourself,
   or unpublish it and hand the changes back in conversation — the creator's own edits come with a
   later phase.

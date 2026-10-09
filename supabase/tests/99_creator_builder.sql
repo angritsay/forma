@@ -169,6 +169,30 @@ select pg_temp.expect_error($$update public.admin_courses set review_requested_a
   where id = '00000000-0000-0000-0000-00000065a0a1'$$, '42501');
 select pg_temp.expect_error($$update public.admin_courses set published_at = now()
   where id = '00000000-0000-0000-0000-00000065a0a1'$$, '42501');
+-- The payment link decides whose till a sale lands in: the owner's to set, never the creator's.
+select pg_temp.expect_error($$insert into public.admin_courses (slug_id, creator_id, content)
+  values ('cb_x8', '00000000-0000-0000-0000-00000065c0a1',
+          '{"paymentUrl":{"ru":"https://pay.example/ann"}}')$$, '42501');
+select pg_temp.expect_error($$update public.admin_courses
+  set content = content || '{"paymentUrl":{"ru":"https://pay.example/ann"}}'
+  where id = '00000000-0000-0000-0000-00000065a0a1'$$, '42501');
+select pg_temp.as_user('00000000-0000-0000-0000-000000065000', 'cb-admin@example.com');
+update public.admin_courses
+  set content = content || '{"paymentUrl":{"ru":"https://pay.example/forma"}}'
+  where id = '00000000-0000-0000-0000-00000065a0a1';
+select pg_temp.as_user('00000000-0000-0000-0000-0000000650a1', 'cb-ann@example.com');
+do $$ begin
+  -- The editor writes the whole blob back: an unchanged link passes.
+  assert pg_temp.touched($q$update public.admin_courses
+    set content = content || '{"tagline":{"ru":"Йога","en":"Yoga"}}'
+    where id = '00000000-0000-0000-0000-00000065a0a1'$q$) = 1, 'unchanged link passes';
+end $$;
+select pg_temp.expect_error($$update public.admin_courses
+  set content = content || '{"paymentUrl":{"ru":"https://pay.example/ann"}}'
+  where id = '00000000-0000-0000-0000-00000065a0a1'$$, '42501');
+select pg_temp.expect_error($$update public.admin_courses set content = content - 'paymentUrl'
+  where id = '00000000-0000-0000-0000-00000065a0a1'$$, '42501');
+
 -- Publishing is the owner's.
 select pg_temp.expect_error($$select public.admin_publish_course('00000000-0000-0000-0000-00000065a0a1')$$, 'forbidden');
 select pg_temp.expect_error($$select public.admin_return_course('00000000-0000-0000-0000-00000065a0a1')$$, 'forbidden');
@@ -266,6 +290,76 @@ end $$;
 select pg_temp.expect_error($$insert into public.admin_course_days (course_id, node_id, week, day, kind, custom_workout_id)
   values ('00000000-0000-0000-0000-00000065b001', 'd1', 1, 1, 'workout', '00000000-0000-0000-0000-00000065f0a1')$$, '42501');
 select pg_temp.expect_error($$select public.creator_request_review('00000000-0000-0000-0000-00000065a0a1')$$, 'course_not_found');
+-- Nor upload into her course's folder from his own prefix, or into hers.
+select pg_temp.expect_error($$insert into storage.objects (bucket_id, name)
+  values ('videos', 'creators/00000000-0000-0000-0000-00000065c0b2/cb_ann1/fake.mp4')$$, '42501');
+select pg_temp.expect_error($$insert into storage.objects (bucket_id, name)
+  values ('videos', 'creators/00000000-0000-0000-0000-00000065c0a1/cb_ann1/fake.mp4')$$, '42501');
+
+-- -----------------------------------------------------------------------------
+-- 2b. Media of an editable draft: her folders, her course, the bucket's kind of file.
+-- -----------------------------------------------------------------------------
+select pg_temp.as_user('00000000-0000-0000-0000-0000000650a1', 'cb-ann@example.com');
+insert into storage.objects (bucket_id, name) values
+  ('images', 'creators/00000000-0000-0000-0000-00000065c0a1/courses/cb_ann1/cover.jpg'),
+  ('images', 'creators/00000000-0000-0000-0000-00000065c0a1/courses/cb_ann1/d1.webp'),
+  ('videos', 'creators/00000000-0000-0000-0000-00000065c0a1/cb_ann1/intro.ru.mp4'),
+  ('videos', 'creators/00000000-0000-0000-0000-00000065c0a1/cb_ann1/spare.mov'),
+  ('audio',  'creators/00000000-0000-0000-0000-00000065c0a1/cb_ann1/name.ru.m4a');
+do $$ begin
+  assert pg_temp.touched($q$update storage.objects set owner = null
+    where name = 'creators/00000000-0000-0000-0000-00000065c0a1/cb_ann1/intro.ru.mp4'$q$) = 1,
+    'she overwrites her own clip';
+  assert pg_temp.touched($q$delete from storage.objects
+    where name = 'creators/00000000-0000-0000-0000-00000065c0a1/cb_ann1/spare.mov'$q$) = 1,
+    'and deletes one';
+  assert (select count(*) from storage.objects
+          where bucket_id = 'videos' and name like 'creators/%') = 1, 'and reads hers';
+end $$;
+-- Outside her prefix, outside any course of hers, or the wrong kind of file.
+select pg_temp.expect_error($$insert into storage.objects (bucket_id, name)
+  values ('images', 'creators/00000000-0000-0000-0000-00000065c0b2/courses/cb_ben1/x.jpg')$$, '42501');
+select pg_temp.expect_error($$insert into storage.objects (bucket_id, name)
+  values ('images', 'creators/00000000-0000-0000-0000-00000065c0a1/x.jpg')$$, '42501');
+select pg_temp.expect_error($$insert into storage.objects (bucket_id, name)
+  values ('images', 'creators/00000000-0000-0000-0000-00000065c0a1/courses/cb_ben1/x.jpg')$$, '42501');
+select pg_temp.expect_error($$insert into storage.objects (bucket_id, name)
+  values ('videos', 'creators/00000000-0000-0000-0000-00000065c0a1/cb_none/x.mp4')$$, '42501');
+select pg_temp.expect_error($$insert into storage.objects (bucket_id, name)
+  values ('videos', 'creators/00000000-0000-0000-0000-00000065c0a1/cb_ann1/deep/x.mp4')$$, '42501');
+select pg_temp.expect_error($$insert into storage.objects (bucket_id, name)
+  values ('images', 'creators/00000000-0000-0000-0000-00000065c0a1/courses/cb_ann1/page.html')$$, '42501');
+select pg_temp.expect_error($$insert into storage.objects (bucket_id, name)
+  values ('images', 'creators/00000000-0000-0000-0000-00000065c0a1/courses/cb_ann1/x.svg')$$, '42501');
+select pg_temp.expect_error($$insert into storage.objects (bucket_id, name)
+  values ('images', 'creators/00000000-0000-0000-0000-00000065c0a1/courses/cb_ann1/noext')$$, '42501');
+select pg_temp.expect_error($$insert into storage.objects (bucket_id, name)
+  values ('videos', 'creators/00000000-0000-0000-0000-00000065c0a1/cb_ann1/x.jpg')$$, '42501');
+select pg_temp.expect_error($$insert into storage.objects (bucket_id, name)
+  values ('audio', 'creators/00000000-0000-0000-0000-00000065c0a1/cb_ann1/x.exe')$$, '42501');
+select pg_temp.expect_error($$insert into storage.objects (bucket_id, name)
+  values ('videos', 'cb_ann1/intro.ru.mp4')$$, '42501');
+select pg_temp.expect_error($$insert into storage.objects (bucket_id, name)
+  values ('images', 'courses/cb_ann1/cover.jpg')$$, '42501');
+select pg_temp.expect_error($$insert into storage.objects (bucket_id, name)
+  values ('images', 'creators/00000000-0000-0000-0000-00000065c0a1/courses/cb_ann1/../../../x.jpg')$$, '42501');
+select pg_temp.expect_error($$insert into storage.objects (bucket_id, name)
+  values ('proofs', 'creators/00000000-0000-0000-0000-00000065c0a1/cb_ann1/x.jpg')$$, '42501');
+-- A rename that would carry her file out of her course is refused (update WITH CHECK).
+select pg_temp.expect_error($$update storage.objects
+  set name = 'creators/00000000-0000-0000-0000-00000065c0b2/cb_ben1/stolen.mp4'
+  where name = 'creators/00000000-0000-0000-0000-00000065c0a1/cb_ann1/intro.ru.mp4'$$, '42501');
+select pg_temp.expect_error($$update storage.objects
+  set name = 'creators/00000000-0000-0000-0000-00000065c0a1/cb_ann1/intro.ru.html'
+  where name = 'creators/00000000-0000-0000-0000-00000065c0a1/cb_ann1/intro.ru.mp4'$$, '42501');
+do $$ begin
+  assert pg_temp.touched($q$update storage.objects set name = name || '.x'
+    where name in ('start/cb_forma_clip.mp4', 'creators/00000000-0000-0000-0000-00000065c0b2/ben.jpg')$q$) = 0,
+    'ann cannot overwrite outside her prefix';
+  assert pg_temp.touched($q$delete from storage.objects
+    where name in ('start/cb_forma_clip.mp4', 'creators/00000000-0000-0000-0000-00000065c0b2/ben.jpg')$q$) = 0,
+    'nor delete outside it';
+end $$;
 
 -- -----------------------------------------------------------------------------
 -- 3. Review: the draft freezes, can be withdrawn, handed back, and only the owner publishes.
@@ -286,6 +380,17 @@ do $$ begin
 end $$;
 select pg_temp.expect_error($$insert into public.admin_course_days (course_id, node_id, week, day, kind)
   values ('00000000-0000-0000-0000-00000065a0a1', 'd5', 1, 5, 'rest')$$, '42501');
+-- Its media freeze with it.
+select pg_temp.expect_error($$insert into storage.objects (bucket_id, name)
+  values ('videos', 'creators/00000000-0000-0000-0000-00000065c0a1/cb_ann1/late.mp4')$$, '42501');
+do $$ begin
+  assert pg_temp.touched($q$update storage.objects set owner = null
+    where name like 'creators/00000000-0000-0000-0000-00000065c0a1/%'$q$) = 0,
+    'in review: media cannot be overwritten';
+  assert pg_temp.touched($q$delete from storage.objects
+    where name like 'creators/00000000-0000-0000-0000-00000065c0a1/%'$q$) = 0,
+    'in review: media cannot be deleted';
+end $$;
 
 -- Withdrawn: editable again; sent again.
 select public.creator_withdraw_review('00000000-0000-0000-0000-00000065a0a1');
@@ -393,41 +498,28 @@ select pg_temp.expect_error($$select public.my_creator_id()$$, '42501');
 -- -----------------------------------------------------------------------------
 -- 5. Storage: writes only under creators/<own id>/; clips read by the right buyers.
 -- -----------------------------------------------------------------------------
+-- Published: her course's media are frozen with it — no insert, overwrite or delete.
 select pg_temp.as_user('00000000-0000-0000-0000-0000000650a1', 'cb-ann@example.com');
-insert into storage.objects (bucket_id, name) values
-  ('images', 'creators/00000000-0000-0000-0000-00000065c0a1/courses/cb_ann1/cover.jpg'),
-  ('videos', 'creators/00000000-0000-0000-0000-00000065c0a1/cb_ann1/intro.ru.mp4'),
-  ('audio',  'creators/00000000-0000-0000-0000-00000065c0a1/cb_ann1/name.ru.m4a');
 select pg_temp.expect_error($$insert into storage.objects (bucket_id, name)
-  values ('images', 'creators/00000000-0000-0000-0000-00000065c0b2/x.jpg')$$, '42501');
+  values ('videos', 'creators/00000000-0000-0000-0000-00000065c0a1/cb_ann1/clip2.mp4')$$, '42501');
 select pg_temp.expect_error($$insert into storage.objects (bucket_id, name)
-  values ('videos', 'cb_ann1/intro.ru.mp4')$$, '42501');
-select pg_temp.expect_error($$insert into storage.objects (bucket_id, name)
-  values ('images', 'courses/cb_ann1/cover.jpg')$$, '42501');
-select pg_temp.expect_error($$insert into storage.objects (bucket_id, name)
-  values ('images', 'creators/00000000-0000-0000-0000-00000065c0a1/../../exercises/x.jpg')$$, '42501');
-select pg_temp.expect_error($$insert into storage.objects (bucket_id, name)
-  values ('proofs', 'creators/00000000-0000-0000-0000-00000065c0a1/x.jpg')$$, '42501');
+  values ('images', 'creators/00000000-0000-0000-0000-00000065c0a1/courses/cb_ann1/new.png')$$, '42501');
 do $$ begin
-  assert pg_temp.touched($q$update storage.objects set name = name || '.x'
-    where name in ('start/cb_forma_clip.mp4', 'creators/00000000-0000-0000-0000-00000065c0b2/ben.jpg')$q$) = 0,
-    'ann cannot overwrite outside her prefix';
+  assert pg_temp.touched($q$update storage.objects set name = name
+    where name = 'creators/00000000-0000-0000-0000-00000065c0a1/cb_ann1/intro.ru.mp4'$q$) = 0,
+    'published: media cannot be overwritten';
   assert pg_temp.touched($q$delete from storage.objects
-    where name in ('start/cb_forma_clip.mp4', 'creators/00000000-0000-0000-0000-00000065c0b2/ben.jpg')$q$) = 0,
-    'nor delete outside it';
-  assert pg_temp.touched($q$update storage.objects set owner = null
-    where name = 'creators/00000000-0000-0000-0000-00000065c0a1/cb_ann1/intro.ru.mp4'$q$) = 1,
-    'she overwrites her own clip';
+    where name like 'creators/00000000-0000-0000-0000-00000065c0a1/%'$q$) = 0,
+    'published: media cannot be deleted';
   assert (select count(*) from storage.objects
-          where bucket_id = 'videos' and name like 'creators/%') = 1, 'and reads it';
+          where bucket_id = 'videos' and name like 'creators/%') = 1, 'she still reads her clip';
 end $$;
-select pg_temp.expect_error($$update storage.objects set name = 'creators/00000000-0000-0000-0000-00000065c0b2/stolen.mp4'
-  where name = 'creators/00000000-0000-0000-0000-00000065c0a1/cb_ann1/intro.ru.mp4'$$, '42501');
 
--- Ben files a clip under Ann's course id, in his own prefix.
-select pg_temp.as_user('00000000-0000-0000-0000-0000000650b2', 'cb-ben@example.com');
+-- A file filed under Ann's course id in Ben's prefix (the owner could put one there; Ben cannot).
+select pg_temp.as_super();
 insert into storage.objects (bucket_id, name) values
   ('videos', 'creators/00000000-0000-0000-0000-00000065c0b2/cb_ann1/fake.mp4');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000650b2', 'cb-ben@example.com');
 do $$ begin
   assert (select count(*) from storage.objects
           where name = 'creators/00000000-0000-0000-0000-00000065c0a1/cb_ann1/intro.ru.mp4') = 0,
@@ -438,6 +530,14 @@ end $$;
 select pg_temp.as_super();
 insert into public.purchases (email, course_id, status, activated_at)
 values ('cb-buyer@example.com', 'cb_ann1', 'active', now());
+-- A path with `..` in it is read by nobody through the creator rule.
+insert into storage.objects (bucket_id, name) values
+  ('videos', 'creators/00000000-0000-0000-0000-00000065c0a1/cb_ann1/../cb_ann1/dots.mp4');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000650a1', 'cb-ann@example.com');
+do $$ begin
+  assert (select count(*) from storage.objects where name like '%/../%') = 0,
+    'the creator does not read a dotted path';
+end $$;
 select pg_temp.as_user('00000000-0000-0000-0000-0000000650e5', 'cb-buyer@example.com');
 do $$ begin
   assert (select count(*) from storage.objects

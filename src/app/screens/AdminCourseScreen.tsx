@@ -523,7 +523,12 @@ export function CourseEditorScreen({ mode }: { mode: BuilderMode }) {
        */}
       {tab === 'meta' ? (
         <fieldset disabled={readOnly} className="min-w-0">
-          <CourseMetaEditor course={course} mediaPrefix={prefix} onPatch={patchCourse} />
+          <CourseMetaEditor
+            course={course}
+            mediaPrefix={prefix}
+            withPaymentUrl={scope.kind === 'admin'}
+            onPatch={patchCourse}
+          />
         </fieldset>
       ) : null}
 
