@@ -1,10 +1,13 @@
 /**
- * «Авторы» (admin, 0064): applications, open creators, their courses and what is owed.
+ * «Авторы» (admin, 0064, 0067): applications, open creators, their courses and coaches, and what
+ * is owed.
  *
  * The owner's part of a creator's start is one tap — open or decline — instead of «write to
  * Nastia → call → we build» (docs/PLATFORM.md). Per creator: who they are and their audience, the
  * status, the plan (Start / Pro), the processor's fee shares are counted after, which courses are
- * theirs, and the rouble balance of their unsettled invoices. Under it, their months and invoices,
+ * theirs, which coaches work for them (their paid 1:1 sessions count at the plan's sessions
+ * share, 0067), and the rouble balance of their unsettled invoices. A plan change applies from the
+ * current Moscow month; the months before it keep their plan. Under it, their months and invoices,
  * with «Расчёт проведён» once the money has moved.
  *
  * Months close by themselves on the 1st (`creator-invoices.yml`); «Закрыть прошлый месяц» does
@@ -23,8 +26,10 @@ import { useToast } from '@/components/ui/Toast';
 import { formatNumber, type TKey } from '@/i18n/index';
 import { listAdminCourses } from '@/lib/api/courseBuilder';
 import {
+  assignCoach,
   assignCourse,
   closeCreatorMonth,
+  listCreatorCoaches,
   listCreatorInvoices,
   listCreators,
   listCreatorStatement,
@@ -34,6 +39,7 @@ import {
 import type {
   AdminCourseRow,
   AdminCreator,
+  CreatorCoach,
   CreatorInvoice,
   CreatorStatementRow,
   CreatorStatus,
@@ -77,6 +83,12 @@ function Money({ rows }: { rows: CreatorStatementRow[] }) {
           <li key={`${m.month}-${r.currency}`} className="tabular text-[13px] text-muted">
             {m.month.slice(0, 7)} · {formatNumber(locale, r.sales)} ·{' '}
             {formatMoney(locale, r.gross, r.currency)} ·{' '}
+            {r.sessionSales > 0
+              ? `${t('app.creatorSessionsLine', {
+                  n: formatNumber(locale, r.sessionSales),
+                  gross: formatMoney(locale, r.sessionGross, r.currency),
+                })} · `
+              : ''}
             {balanceSide(r.balance) === 'creatorOwes'
               ? t('app.creatorsOwesUs', { sum: formatMoney(locale, r.balance, r.currency) })
               : balanceSide(r.balance) === 'formaOwes'
@@ -92,10 +104,11 @@ function Money({ rows }: { rows: CreatorStatementRow[] }) {
 interface CardProps {
   c: AdminCreator;
   courses: AdminCourseRow[];
+  coaches: CreatorCoach[];
   onChanged: () => void;
 }
 
-function CreatorCard({ c, courses, onChanged }: CardProps) {
+function CreatorCard({ c, courses, coaches, onChanged }: CardProps) {
   const tr = useT();
   const { t, locale } = tr;
   const toast = useToast();
@@ -137,6 +150,9 @@ function CreatorCard({ c, courses, onChanged }: CardProps) {
   const free = courses.filter((x) => !x.creatorId);
   const courseName = (x: AdminCourseRow) =>
     (locale === 'en' ? x.content.name?.en : x.content.name?.ru) || x.slugId;
+  const myCoaches = coaches.filter((x) => x.creatorId === c.id);
+  const freeCoaches = coaches.filter((x) => !x.creatorId);
+  const coachName = (x: CreatorCoach) => (locale === 'en' && x.nameEn) || x.name;
 
   return (
     <li className="glass-card flex flex-col gap-4 rounded-card p-4">
@@ -290,6 +306,45 @@ function CreatorCard({ c, courses, onChanged }: CardProps) {
             ) : null}
           </div>
 
+          <div className="flex flex-col gap-2">
+            <span className="text-[13px] font-semibold text-muted">{t('app.creatorsCoaches')}</span>
+            <span className="text-[12px] leading-snug text-muted-2">
+              {t('app.creatorsCoachesHint')}
+            </span>
+            {myCoaches.length === 0 ? (
+              <span className="text-[13px] text-muted-2">{t('app.creatorsNoCoaches')}</span>
+            ) : (
+              <ul className="flex flex-col gap-1">
+                {myCoaches.map((x) => (
+                  <li key={x.id} className="flex items-center justify-between gap-2 text-[14px]">
+                    <span className="truncate">{coachName(x)}</span>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={busy}
+                      onClick={() => void act(() => assignCoach(x.id, null))}
+                    >
+                      {t('app.creatorsUnassign')}
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {freeCoaches.length > 0 ? (
+              <Select<string>
+                aria-label={t('app.creatorsAssignCoach')}
+                options={[
+                  { value: '', label: t('app.creatorsAssignCoach') },
+                  ...freeCoaches.map((x) => ({ value: x.id, label: coachName(x) })),
+                ]}
+                value=""
+                onChange={(id) => {
+                  if (id) void act(() => assignCoach(id, c.id));
+                }}
+              />
+            ) : null}
+          </div>
+
           <div className="flex items-center justify-between gap-3">
             <span className="tabular text-[13px] text-muted">
               {balanceSide(c.openBalance) === 'creatorOwes'
@@ -349,15 +404,22 @@ export default function AdminCreatorsScreen() {
   const admin = useIsAdmin();
   const [creators, setCreators] = useState<AdminCreator[] | null>(null);
   const [courses, setCourses] = useState<AdminCourseRow[]>([]);
+  const [coaches, setCoaches] = useState<CreatorCoach[]>([]);
   const [failed, setFailed] = useState(false);
   const [closing, setClosing] = useState(false);
 
   const load = useCallback(() => {
     setFailed(false);
-    Promise.all([listCreators(), listAdminCourses()])
-      .then(([c, x]) => {
+    Promise.all([
+      listCreators(),
+      listAdminCourses(),
+      // Without the coaches (0067 not applied yet) the rest of the screen still works.
+      listCreatorCoaches().catch((): CreatorCoach[] => []),
+    ])
+      .then(([c, x, k]) => {
         setCreators(c);
         setCourses(x);
+        setCoaches(k);
       })
       .catch(() => setFailed(true));
   }, []);
@@ -401,7 +463,7 @@ export default function AdminCreatorsScreen() {
           ) : null}
           <ul className="flex flex-col gap-3">
             {creators.map((c) => (
-              <CreatorCard key={c.id} c={c} courses={courses} onChanged={load} />
+              <CreatorCard key={c.id} c={c} courses={courses} coaches={coaches} onChanged={load} />
             ))}
           </ul>
         </div>

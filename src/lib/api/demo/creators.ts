@@ -1,18 +1,21 @@
 /**
- * Demo double of creators (0064).
+ * Demo double of creators (0064, 0067).
  *
  * The demo account is the coach and an admin, so it sees both sides: it can apply as a creator in
  * «Кабинет автора» and open itself in «Авторы». The rows live in their own browser-local key next
  * to the demo database rather than inside it, so the demo's stored shape does not change. The demo
  * takes no money (it has no payments journal, `adminPayments.ts`), so statements and invoices are
- * empty, exactly as the server would answer for a creator with no sales yet.
+ * empty, exactly as the server would answer for a creator with no sales yet. Which coach works for
+ * which creator (0067) is a map of its own key; the coaches themselves are the demo calendar's.
  */
 import { AppError } from '../errors';
 import type { CreatorChange } from '../creators';
 import { guard } from '../internal';
+import { listCoaches } from './booking';
 import type {
   AdminCreator,
   CreatorApplication,
+  CreatorCoach,
   CreatorInvoice,
   CreatorStatementRow,
   MyCreator,
@@ -21,6 +24,7 @@ import { delay } from './latency';
 import { currentDemoUser, defaultStorage } from './store';
 
 const KEY = 'forma.demo.creators';
+const COACHES_KEY = 'forma.demo.creatorCoaches';
 const SLUG_RE = /^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/;
 const RESERVED = new Set(['forma', 'admin', 'app', 'api', 'www', 'creators', 'creator', 'club']);
 
@@ -60,6 +64,24 @@ function read(): Row[] {
 function write(rows: Row[]): void {
   try {
     defaultStorage().setItem(KEY, JSON.stringify(rows));
+  } catch {
+    /* Storage refused: the change lasts as long as this screen. */
+  }
+}
+
+/** coach id → creator id. */
+function readCoachLinks(): Record<string, string> {
+  try {
+    const raw = defaultStorage().getItem(COACHES_KEY);
+    return raw ? (JSON.parse(raw) as Record<string, string>) : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeCoachLinks(links: Record<string, string>): void {
+  try {
+    defaultStorage().setItem(COACHES_KEY, JSON.stringify(links));
   } catch {
     /* Storage refused: the change lasts as long as this screen. */
   }
@@ -180,6 +202,32 @@ export async function assignCourse(courseId: string, creatorId: string | null): 
       r.courses.push(courseId);
     }
     write(rows);
+  });
+}
+
+export async function listCreatorCoaches(): Promise<CreatorCoach[]> {
+  const coaches = await listCoaches();
+  return run(() => {
+    const links = readCoachLinks();
+    return coaches.map((c) => ({
+      id: c.id,
+      name: c.name,
+      nameEn: c.nameEn,
+      active: c.active,
+      creatorId: links[c.id] ?? null,
+    }));
+  });
+}
+
+export async function assignCoach(coachId: string, creatorId: string | null): Promise<void> {
+  return run(() => {
+    if (creatorId && !read().some((x) => x.id === creatorId && !x.house)) {
+      throw new AppError('not_found', 'not_found');
+    }
+    const links = readCoachLinks();
+    if (creatorId) links[coachId] = creatorId;
+    else delete links[coachId];
+    writeCoachLinks(links);
   });
 }
 
