@@ -1,5 +1,5 @@
 /**
- * Creators (0064): applying, the creator's own row, statement and invoices, and the owner's
+ * Creators (0064, 0067): applying, the creator's own row, statement and invoices, and the owner's
  * «Авторы». Every call is an RPC; the tables are closed to clients. Admin calls are re-checked by
  * `is_admin()` on the server.
  */
@@ -10,6 +10,7 @@ import { isDemo } from './mode';
 import type {
   AdminCreator,
   CreatorApplication,
+  CreatorCoach,
   CreatorInvoice,
   CreatorStatementRow,
   CreatorStatus,
@@ -61,6 +62,8 @@ interface DbStatement {
   fee_pct: number | string;
   sales: number;
   gross: number | string;
+  session_sales: number | null;
+  session_gross: number | string | null;
   forma_share: number | string;
   creator_share: number | string;
   monthly_fee: number | string;
@@ -75,6 +78,8 @@ function statementFromDb(r: DbStatement): CreatorStatementRow {
     feePct: num(r.fee_pct),
     sales: num(r.sales),
     gross: num(r.gross),
+    sessionSales: num(r.session_sales),
+    sessionGross: num(r.session_gross),
     formaShare: num(r.forma_share),
     creatorShare: num(r.creator_share),
     monthlyFee: num(r.monthly_fee),
@@ -97,6 +102,8 @@ function invoiceFromDb(r: DbInvoice): CreatorInvoice {
     tier: r.tier,
     sales: num(r.sales),
     gross: num(r.gross),
+    sessionSales: num(r.session_sales),
+    sessionGross: num(r.session_gross),
     formaShare: num(r.forma_share),
     creatorShare: num(r.creator_share),
     monthlyFee: num(r.monthly_fee),
@@ -183,6 +190,11 @@ export interface CreatorChange {
   status?: CreatorStatus;
   tier?: CreatorTier;
   feePct?: number;
+  /**
+   * The first month (`YYYY-MM-01`) a plan change applies to (0067). Omitted: the current Moscow
+   * month. Months before it keep the plan they were on.
+   */
+  fromMonth?: string;
 }
 
 /** Open, pause or decline; move between tiers; set the processor's fee. */
@@ -195,6 +207,7 @@ export async function setCreator(id: string, change: CreatorChange): Promise<voi
         p_status: change.status ?? null,
         p_tier: change.tier ?? null,
         p_fee_pct: change.feePct ?? null,
+        p_from_month: change.fromMonth ?? null,
       }),
     );
   });
@@ -206,6 +219,42 @@ export async function assignCourse(courseId: string, creatorId: string | null): 
   return guard(async () => {
     unwrapVoid(
       await supabase().rpc('admin_assign_course', { p_course: courseId, p_creator: creatorId }),
+    );
+  });
+}
+
+interface DbCreatorCoach {
+  id: string;
+  name: string;
+  name_en: string | null;
+  active: boolean;
+  creator_id: string | null;
+}
+
+/** Every coach and whose they are (0067). */
+export async function listCreatorCoaches(): Promise<CreatorCoach[]> {
+  if (isDemo()) return (await demo()).listCreatorCoaches();
+  return guard(async () => {
+    const rows = unwrap<DbCreatorCoach[]>(await supabase().rpc('admin_creator_coaches'));
+    return rows.map((r) => ({
+      id: r.id,
+      name: r.name,
+      nameEn: r.name_en,
+      active: r.active,
+      creatorId: r.creator_id,
+    }));
+  });
+}
+
+/**
+ * A coach to a creator, or back to Forma with `null` (0067). Their paid sessions then count in
+ * the creator's statement at the plan's sessions share.
+ */
+export async function assignCoach(coachId: string, creatorId: string | null): Promise<void> {
+  if (isDemo()) return (await demo()).assignCoach(coachId, creatorId);
+  return guard(async () => {
+    unwrapVoid(
+      await supabase().rpc('admin_assign_coach', { p_coach: coachId, p_creator: creatorId }),
     );
   });
 }

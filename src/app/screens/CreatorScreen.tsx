@@ -10,9 +10,11 @@
  *   their audience, the follower count.
  * - **Applied / declined** — what happens next, and the same form to change the application.
  * - **Open** — the plan, the address, courses and buyers, this month's sales and «what is yours»,
- *   who owes whom, the months, and the closed (numbered) months. Course sales only: the club and
- *   the sessions are one shared club and Forma's coaches until creators have their own (phase 2),
- *   and the screen says so rather than show a zero that looks like a result.
+ *   who owes whom, the months, and the closed (numbered) months. Course sales and, since 0067,
+ *   paid 1:1 sessions with the creator's coaches (a line of their own when there are any); each
+ *   month on the plan it was on, named when it differs from today's. The club is still one shared
+ *   club until creators have their own (phase 2), and the screen says so rather than show a zero
+ *   that looks like a result.
  *
  * The page address is shown, not linked: public creator pages arrive with phase 2, and a link that
  * opens the 404 would be the first thing a new creator shares.
@@ -319,6 +321,9 @@ function Dashboard({ me }: { me: MyCreator }) {
               >
                 <span className="text-[14px] text-text first-letter:uppercase">
                   {monthLabel(locale, m.month)}
+                  {m.rows[0] && m.rows[0].tier !== me.tier
+                    ? ` · ${t(m.rows[0].tier === 'pro' ? 'app.creatorTierPro' : 'app.creatorTierStart')}`
+                    : ''}
                 </span>
                 {m.rows.map((r) => (
                   <div key={r.currency} className="flex flex-col gap-0.5">
@@ -332,6 +337,14 @@ function Dashboard({ me }: { me: MyCreator }) {
                         ? ` · ${t('app.creatorFeeLine', { fee: formatMoney(locale, r.monthlyFee, r.currency) })}`
                         : ''}
                     </span>
+                    {r.sessionSales > 0 ? (
+                      <span className="tabular text-[13px] text-muted">
+                        {t('app.creatorSessionsLine', {
+                          n: n(r.sessionSales),
+                          gross: formatMoney(locale, r.sessionGross, r.currency),
+                        })}
+                      </span>
+                    ) : null}
                     <BalanceLine row={r} />
                   </div>
                 ))}

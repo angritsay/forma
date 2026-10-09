@@ -77,8 +77,13 @@ Order matters, because each step needs the one before it.
 3. **A club per creator.** The club is one shared club today (0016). Each creator should get a
    club of their own, priced by them, so that club money can be credited to them. Until then
    statements count course sales only, and both screens say so.
-4. **Sessions per creator.** Link `coaches` (0055) to `creators`, so that a creator's 1:1 hours
-   count to them at their sessions share.
+4. **Sessions per creator — done (`0067_creator_sessions.sql`).** `coaches.creator_id` links a
+   coach to a creator (null is Forma's own; the owner sets it in «Авторы», `admin_assign_coach`).
+   A session payment reaches its coach through the booking it paid for
+   (`coach_bookings.payment_id`, written when the webhook or the owner confirms a hold, unique per
+   payment), so `creator_statement` counts it as `session_sales` / `session_gross` and folds it
+   into the shares at the plan's `sessions_share` (Start 10%, Pro 5%). Invoices carry the same
+   two columns.
 5. **Payouts on Start.** The money arrives in Forma's till, so Forma must pay creators their share.
    That takes an **agency agreement**, so that only Forma's share is Forma's income; without one,
    tax falls on the full amount. An accountant has to confirm this before Start opens, and it is
@@ -87,9 +92,11 @@ Order matters, because each step needs the one before it.
 6. **The «also on Forma» catalogue.** Inside the app, list other open creators' courses next to
    the member's own. A Pro creator can switch their listing off, since the point of Pro is their
    own brand.
-7. **Tier history.** Record the date of each plan change, so that a month that straddles a change
-   is billed half and half. Today a statement uses the current plan, and an invoice keeps the plan
-   it was closed under.
+7. **Tier history — done (`0067_creator_sessions.sql`).** `creator_tier_changes(creator_id, tier,
+from_month)` records each plan change; `admin_set_creator` dates it from the current Moscow
+   month unless the owner passes another (`p_from_month`, never in the future). The statement
+   bills each month by the plan in force from its 1st, and charges Pro's fee only in Pro months.
+   A change is per whole month, not split by day inside a month.
 
 ## Metrics this gives an investor
 
