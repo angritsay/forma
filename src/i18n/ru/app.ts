@@ -852,7 +852,7 @@ export const app = {
   creatorErrGeneric: 'Не получилось отправить. Попробуй ещё раз.',
   creatorLoadError: 'Не удалось загрузить кабинет',
   creatorPaused: 'на паузе',
-  creatorAddress: 'Адрес страницы: {address} — откроется вместе со страницами авторов',
+  creatorAddress: 'Адрес страницы: {address} — появится, когда опубликуем первый курс',
   creatorCourses: 'Курсов',
   creatorBuyers: 'Покупателей',
   creatorSalesNow: 'Продаж в этом месяце',
@@ -871,6 +871,17 @@ export const app = {
   creatorNoInvoices: 'Месяц закрывается первого числа — здесь появится счёт с номером.',
   creatorOpen: 'не проведён',
   creatorSettled: 'проведён {date}',
+  // Creator pages and «Также в Forma» (0068).
+  creatorPage: 'Твоя страница',
+  creatorListed: 'В каталоге «Также в Forma»',
+  creatorListedPro:
+    'Ученики других авторов видят твои курсы в приложении. На Pro каталог можно выключить — твоя страница при этом остаётся.',
+  creatorListedStart: 'Твои курсы видны в каталоге «Также в Forma» — на Старте всегда.',
+  creatorsListed: 'В каталоге «Также в Forma»',
+  creatorsListedStart: 'На Старте автор всегда в каталоге.',
+  creatorsPage: 'Страница автора',
+  alsoTitle: 'Также в Forma',
+  alsoNote: 'Курсы других авторов. Первая тренировка каждого — бесплатно.',
   creatorsNav: 'Авторы',
   creatorsNote:
     'Заявки сверху. Открыть — одна кнопка; курс и тренера автору — выбором ниже. Смена тарифа действует с текущего месяца. Месяцы закрываются сами первого числа.',

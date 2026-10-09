@@ -565,6 +565,8 @@ Landing (Astro, static, RU default / EN under `/en/`):
 /                          home
 /courses/                  courses hub
 /courses/<slug>/           course page + order form (5 pages per locale)
+/c/<slug>/                 a creator's page: name, about, audience link, their published courses
+                           (0068; built only for open creators with a published course)
 /exercises/                exercise library hub (programmatic; filmed movements only)
 /exercises/<slug>/         exercise page: clip, how-to, cues, mistakes, scaling, related
 /guides/                   guides hub (clusters)
@@ -582,7 +584,8 @@ was ever linked or bookmarked broke:
 ```
 /auth  /onboarding  /assessment   (outside the tabbed shell — the test is full-screen)
 /intro                     the onboarding stories replayed (also outside the shell: a fixed player)
-/                          «Курсы» — the main screen: progress across every course there is
+/                          «Курсы» — the main screen: progress across every course there is,
+                           and under it «Также в Forma», other creators' courses (0068)
 /courses                   → redirect to `/` (the path this screen had while it was the second tab)
 /courses/:id               the course's path
 /courses/:id/nodes/:nodeId preview + difficulty

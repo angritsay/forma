@@ -79,8 +79,7 @@ Order matters, because each step needs the one before it.
      cannot set the payment link (`content.paymentUrl`, whose till a sale lands in — the owner
      sets it at review), and cannot take a course id that already exists in `public.courses` (the
      compiled courses and everything ever published) or a path word (`custom`, `shared`,
-     `creators`, …). They
-     delete a draft of theirs; never anything else.
+     `creators`, …). They delete a draft of theirs; never anything else.
    - **Days** only in their own editable course, and a training day only plays a workout of their
      own — never Forma's or another creator's.
    - **Workouts** are theirs by `custom_workouts.creator_id`. They are built from the shared
@@ -108,9 +107,12 @@ Order matters, because each step needs the one before it.
    - **A paused creator** keeps reading their courses, days, workouts and clips and changes
      nothing. Applied and declined creators have no access at all.
    - **Admins keep full access**, exactly as before.
-2. **Public creator pages.** `forma-app.co/c/<slug>` should show the creator's courses with the
-   free first workout and a buy button. The address is already reserved by the slug, and the app
-   shows it without a link until this exists.
+2. **Public creator pages.** _Done in `0068_creator_pages.sql`._ `forma-app.co/c/<slug>/` shows
+   the creator's name, their line about themselves, a link to their audience and their published
+   courses, each with the free first workout and a buy button. Pages are built at build time from
+   the anon-callable `public_creators()` (five safe fields), only for open creators other than
+   Forma with at least one published course, and only those enter the sitemap. «Кабинет автора»
+   links the address once the page exists.
 3. **A club per creator.** The club is one shared club today (0016). Each creator should get a
    club of their own, priced by them, so that club money can be credited to them. Until then
    statements count course sales only, and both screens say so.
@@ -126,9 +128,11 @@ Order matters, because each step needs the one before it.
    tax falls on the full amount. An accountant has to confirm this before Start opens, and it is
    the reason `creatorTerms.ts` keeps `start.open = false`. Prodamus split payments, if the
    account supports them, would make the payout automatic at checkout.
-6. **The «also on Forma» catalogue.** Inside the app, list other open creators' courses next to
-   the member's own. A Pro creator can switch their listing off, since the point of Pro is their
-   own brand.
+6. **The «also on Forma» catalogue.** _Done in `0068_creator_pages.sql`._ «Также в Forma» on
+   «Курсы» lists other open creators' published courses under the member's own, grouped by
+   creator (`catalogue_creators()`). A Pro creator can switch their listing off
+   (`creators.listed`, in «Кабинет автора» or by the owner in «Авторы»), since the point of Pro
+   is their own brand; their page stays. Start creators are always listed.
 7. **Tier history — done (`0067_creator_sessions.sql`).** `creator_tier_changes(creator_id, tier,
 from_month)` records each plan change; `admin_set_creator` dates it from the current Moscow
    month unless the owner passes another (`p_from_month`, never in the future). The statement

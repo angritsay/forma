@@ -677,4 +677,11 @@ export const landing = {
     'Можно не трогать. Запусти в Forma что-то новое — например, клуб — и посмотри на цифры. Переезд обсуждаем отдельно.',
   creatorsFinalTitle: 'Давай соберём твой курс',
   creatorsFinalText: 'Напиши мне в Telegram — с этого всё начинается.',
+  // A creator's public page, /c/<slug>/ (0068). Built only for creators with a published course.
+  creatorPageEyebrow: 'Автор в Forma',
+  creatorPageAudience: 'Где читать: {host}',
+  creatorPageCoursesTitle: 'Курсы',
+  creatorPageCoursesLabel: 'Курсы автора',
+  creatorPageFree:
+    'Первая тренировка каждого курса — бесплатно, в приложении. Понравится — купишь курс целиком.',
 } as const;

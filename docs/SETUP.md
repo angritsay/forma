@@ -305,7 +305,8 @@ a late confirmation, who has Telegram), and `99_money_reports.sql` for 0063 (the
 per month, paying members and churn, money per channel), and `99_creators.sql` for 0064
 (applying, opening, a creator's statement on Start and on Pro, closing a month), and
 `99_creator_sessions.sql` for 0067 (a creator's coach's sessions at the sessions share, a plan
-change billing each month by its own plan, invoices with sessions).
+change billing each month by its own plan, invoices with sessions), and `99_creator_pages.sql`
+for 0068 (what anon reads about a creator, who gets a page, the catalogue listing switch).
 Each ends with a "PASSED" line. The test files are **not** idempotent — they insert fixtures — so
 rebuild the database for each run.
 
@@ -2057,8 +2058,8 @@ cannot do: docs/PLATFORM.md, phase 2, step 1.
 - **You review.** A course waiting for you says «на проверке» in Admin → **Авторы** (with a count
   on the creator's card) and in the course list. Open it, look, and press «Опубликовать» as for
   any course, or «Вернуть автору» to hand it back. While it waits, the creator cannot change it.
-  **Set the payment link yourself** before publishing («О курсе» → «Ссылка на оплату»): a creator cannot
-  set or change it, so a sale cannot be routed to a till you did not choose.
+  **Set the payment link yourself** before publishing («О курсе» → «Ссылка на оплату»): a creator
+  cannot set or change it, so a sale cannot be routed to a till you did not choose.
 - **After publishing**, the course is read-only for its creator. To change it, edit it yourself,
   or unpublish it and hand the changes back in conversation — the creator's own edits come with a
   later phase.
@@ -2068,6 +2069,29 @@ cannot do: docs/PLATFORM.md, phase 2, step 1.
   nothing, and their published courses keep selling.
 
 Verify on a database: `supabase/tests/99_creator_builder.sql` (§2).
+
+## 7.21 Creator pages and the catalogue (0068)
+
+Apply **`0068_creator_pages.sql`** after 0067, then deploy the site. What it is and why:
+docs/PLATFORM.md, phase 2, steps 2 and 6.
+
+- **A creator's page** is `forma-app.co/c/<slug>/` (and `/en/c/<slug>/`): their name, the line
+  about them, the link to their audience, and their published courses with «Тренировка 1 —
+  бесплатно» and the buy button. The site is static, so the pages are made at **build time** from
+  `public_creators()` with the anon key (`src/content/creators.ts`, like `published.ts` for the
+  courses). Only an **open** creator other than Forma with **at least one published course** gets
+  a page and a sitemap entry; a course published or given to a creator reaches the site with the
+  next deploy. Without `PUBLIC_SUPABASE_URL` / `PUBLIC_SUPABASE_ANON_KEY` at build time, or before
+  0068 is applied, the site builds with no creator pages and says so in the build log.
+- **What anybody can read** is exactly five fields: slug, name, about, audience link and the ids
+  of the published courses. Never the owner's address, the plan, the fee, followers or money.
+- **«Также в Forma»** on «Курсы» lists other creators' published courses, grouped by creator
+  (`catalogue_creators()`). A **Pro** creator can switch the listing off — in «Кабинет автора», or
+  you in «Авторы»; their page stays. A **Start** creator is always listed.
+- **«Кабинет автора»** links the page address once the creator is open and has a published
+  course; until then it says the page appears with the first published course.
+
+Verify on a database: `supabase/tests/99_creator_pages.sql` (§2).
 
 ## 7.22 Sessions and plan changes for creators (0067)
 

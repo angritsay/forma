@@ -814,7 +814,7 @@ export const app = {
   creatorErrGeneric: 'Could not send it. Try again.',
   creatorLoadError: 'Could not load the creator area',
   creatorPaused: 'paused',
-  creatorAddress: 'Page address: {address} — opens together with creator pages',
+  creatorAddress: 'Page address: {address} — goes live when your first course is published',
   creatorCourses: 'Courses',
   creatorBuyers: 'Buyers',
   creatorSalesNow: 'Sales this month',
@@ -833,6 +833,17 @@ export const app = {
   creatorNoInvoices: 'A month closes on the 1st — a numbered invoice appears here.',
   creatorOpen: 'open',
   creatorSettled: 'settled {date}',
+  // Creator pages and “Also on Forma” (0068).
+  creatorPage: 'Your page',
+  creatorListed: 'Listed in “Also on Forma”',
+  creatorListedPro:
+    'Members of other creators see your courses in the app. On Pro you can switch the listing off — your page stays.',
+  creatorListedStart: 'Your courses are listed in “Also on Forma” — always, on Start.',
+  creatorsListed: 'Listed in “Also on Forma”',
+  creatorsListedStart: 'Start creators are always listed.',
+  creatorsPage: 'Creator page',
+  alsoTitle: 'Also on Forma',
+  alsoNote: 'Courses by other creators. Workout 1 of each is free.',
   creatorsNav: 'Creators',
   creatorsNote:
     'Applications first. Opening is one button; give a course or a coach with the pickers below. A plan change applies from the current month. Months close by themselves on the 1st.',

@@ -24,6 +24,8 @@ const me = (status: MyCreator['status']): MyCreator => ({
   approvedAt: '2026-10-01T00:00:00Z',
   courses: 0,
   buyers: 0,
+  listed: true,
+  published: 0,
 });
 
 const draft = {

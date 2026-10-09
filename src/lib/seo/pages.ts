@@ -7,11 +7,13 @@ import type { Locale } from '@/content/schema';
 import { LOCALES } from '@/content/schema';
 import { FILMED_EXERCISES } from '@/content/registry';
 import { SITE_COURSES } from '@/content/published';
+import { creatorSitePath, SITE_CREATORS, type SiteCreator } from '@/content/creators';
 import { l, t } from '@/i18n/index';
 import { localePath } from '@/lib/util/paths';
 import { BRAND } from '@content/site/brand';
 import { PLANS_ENABLED } from '@content/site/plans';
 import { type GuideCluster } from './clusters';
+import { creatorPageDescription, creatorPageTitle } from './creators';
 import {
   clusterPath,
   clustersWithGuides,
@@ -24,7 +26,8 @@ import {
 import { exerciseDescription, exerciseTitle } from './meta';
 
 export type Changefreq = 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never';
-export type PageKind = 'home' | 'hub' | 'course' | 'exercise' | 'guide' | 'legal' | 'other';
+export type PageKind =
+  'home' | 'hub' | 'course' | 'creator' | 'exercise' | 'guide' | 'legal' | 'other';
 
 export interface SeoPage {
   /** Locale-agnostic key, e.g. "/courses/start/" (RU slug) or "/about/". */
@@ -167,8 +170,14 @@ function sameForAll(sitePath: string): Partial<Record<Locale, string>> {
   return out;
 }
 
-/** Build the registry from the (already loaded) guides collection. */
-export function buildPages(guides: readonly GuideLike[]): SeoPage[] {
+/**
+ * Build the registry from the (already loaded) guides collection. `creators` defaults to the ones
+ * read at build time (`src/content/creators.ts`); a test passes its own.
+ */
+export function buildPages(
+  guides: readonly GuideLike[],
+  creators: readonly SiteCreator[] = SITE_CREATORS,
+): SeoPage[] {
   const pages: SeoPage[] = [];
 
   for (const def of STATIC_PAGES) {
@@ -203,6 +212,28 @@ export function buildPages(guides: readonly GuideLike[]): SeoPage[] {
         lastmod: BUILD_LASTMOD,
         alternates,
         kind: 'course',
+      });
+    }
+  }
+
+  /*
+   * Creator pages (0068). `SITE_CREATORS` already holds only creators with at least one course
+   * that has a page, so a creator enters the sitemap exactly when their page has something on it.
+   */
+  for (const c of creators) {
+    const sitePath = creatorSitePath(c.slug);
+    for (const locale of LOCALES) {
+      pages.push({
+        sitePath,
+        locale,
+        path: localePath(locale, sitePath),
+        title: creatorPageTitle(c, locale),
+        description: creatorPageDescription(c, locale),
+        changefreq: 'weekly',
+        priority: 0.7,
+        lastmod: BUILD_LASTMOD,
+        alternates: sameForAll(sitePath),
+        kind: 'creator',
       });
     }
   }
