@@ -560,6 +560,8 @@ export const app = {
   profileSubscriptionPending: 'Waiting for payment · pay',
   profileSubscriptionRenewSoon: 'until {date} · renew',
   profileSubscriptionCharge: 'One payment: {price} for a year',
+  // A monthly subscription that renews itself (RENEWAL = 'auto') — a draft, not shown until then.
+  profileSubscriptionAutoRenews: 'renews {date} · {price}',
   planMonthly: 'Monthly',
   planAnnual: 'Annual',
 
@@ -2021,6 +2023,12 @@ export const app = {
   clubRenewTitle: 'Club open until {date}',
   clubRenewNote: 'There is no auto-renewal — renew ahead and your days will not break.',
   clubRenewCta: 'Renew',
+  // Auto renewal (RENEWAL = 'auto', content/site/plans.ts) — draft for the lawyer, not shown
+  // until then. A monthly subscription that charges itself gets no «Renew» button: it would pay
+  // twice. It gets the date and how to cancel instead.
+  clubRenewAutoTitle: 'Renews on {date}',
+  clubRenewAutoNote:
+    'That day we charge {price} for the next 30 days, to the same card. You can cancel before then — through the link in your payment receipt email or by writing to {email}; the days you paid for stay.',
   // --- Club, the selling screen's demo chat and features (stream: club-pitch-chat) ---
   clubDemoEyebrow: 'A day in the club',
   clubDemoCoachRole: 'coach',

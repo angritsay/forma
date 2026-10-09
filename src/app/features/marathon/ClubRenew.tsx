@@ -7,13 +7,25 @@
  * inside the last week (`RENEW_AHEAD_MS`) the top of the screen says until when, and links to the
  * same annual checkout as «Вступить», with the same one-charge line under it.
  *
+ * With automatic monthly renewal switched on (`RENEWAL = 'auto'`, plans.ts — off today), a live
+ * monthly subscription that has not been cancelled is charged by itself, and a «Продлить» button
+ * would take a second payment for the same days. Such a member sees the date of the next charge,
+ * its amount and how to cancel instead — no button (`subscriptionAutoChargeSoon`).
+ *
  * Renders nothing otherwise — a member with months left is not sold anything.
  */
 import { useT } from '@/app/hooks/useT';
 import { useSession } from '@/app/store/session';
 import { isDemo } from '@/lib/api/mode';
 import { LinkButton } from '@/app/features/courses/LinkButton';
-import { subscriptionDate, subscriptionRenewDue } from '@/app/features/profile/subscription';
+import {
+  autoChargeLabel,
+  subscriptionAutoChargeSoon,
+  subscriptionDate,
+  subscriptionRenewDue,
+} from '@/app/features/profile/subscription';
+import { BRAND } from '@content/site/brand';
+import { LINKS } from '@content/site/links';
 import { clubChargeLabel, clubJoinHref } from './clubPlan';
 
 export function ClubRenew() {
@@ -22,6 +34,22 @@ export function ClubRenew() {
   const profile = useSession((s) => s.profile);
   const user = useSession((s) => s.user);
   const now = Date.now();
+  if (subscriptionAutoChargeSoon(subscription, now) && subscription?.expiresAt) {
+    const date = subscriptionDate(locale, subscription.expiresAt, now);
+    return (
+      <section className="mb-6 flex flex-col gap-2.5 rounded-tile border border-accent/55 p-4">
+        <p className="text-[15px] font-semibold text-text">
+          {t('app.clubRenewAutoTitle', { date })}
+        </p>
+        <p className="text-[13px] leading-snug text-muted">
+          {t('app.clubRenewAutoNote', {
+            price: autoChargeLabel(locale, subscription) ?? '',
+            email: LINKS.supportEmail || BRAND.contactEmail,
+          })}
+        </p>
+      </section>
+    );
+  }
   if (!subscriptionRenewDue(subscription, now) || !subscription?.expiresAt) return null;
   const charge = clubChargeLabel(locale);
   const email = profile?.email || user?.email || '';

@@ -175,6 +175,12 @@ begin
   assert (v_row.params ->> 'expires_at')::timestamptz
          = (select s.expires_at from public.subscriptions s where s.email = 'ending-sub@example.com'),
     'the message carries the end of the period';
+  assert v_row.params ->> 'plan' = 'monthly' and v_row.params ->> 'status' = 'active',
+    'the message says which plan and status it is about (0069)';
+  assert (select o.params ->> 'status' from public.telegram_outbox o
+          where o.kind = 'subscription_ending' and o.email = 'ending-cancelled@example.com')
+         = 'cancelled',
+    'a cancelled subscription is warned as cancelled: it will not renew by itself (0069)';
   assert v_row.send_after <= now(), 'sent right away';
   assert v_row.expires_at <= now() + interval '2 days 1 minute', 'the row lives two days';
   assert v_row.expires_at <= (v_row.params ->> 'expires_at')::timestamptz,

@@ -23,6 +23,7 @@ import {
 import { formatPrice } from '@content/site/pricing';
 import type { Locale } from '@/content/schema';
 import { t } from '@/i18n/index';
+import { renewalKey } from '@/lib/renewal';
 
 export interface ClubPriceLabels {
   /** The big figure: «666 ₽ / мес» on RU, «$79 a year» on EN. */
@@ -58,7 +59,7 @@ export function clubPriceLabels(locale: Locale): ClubPriceLabels | null {
       : t(locale, 'app.marathonJoinCta', { price: perMonth }),
     charge: t(locale, 'app.clubChargeNote', { price: year }),
     chargeShort: leadsWithYear
-      ? t(locale, 'landing.clubNoAutoRenew')
+      ? t(locale, renewalKey('clubNoAutoRenew'))
       : t(locale, 'landing.clubChargeShort', { price: year }),
     monthly: thirty
       ? t(locale, 'landing.clubOr30', { price: formatPrice(locale, thirty.price) })

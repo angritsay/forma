@@ -30,6 +30,7 @@
 import { COURSE_BY_ID } from '@/content/registry';
 import type { Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
+import { renewalKey } from '@/lib/renewal';
 import { appHref, href } from '@/lib/util/paths';
 import { BOOKING } from '@content/site/booking';
 import { formatPrice, PRICING } from '@content/site/pricing';
@@ -152,7 +153,7 @@ const figure = 'numeral text-5xl leading-none';
   </ol>
   <p class="text-[13px] leading-snug text-muted">
     {
-      t(locale, 'landing.ladderFootnoteShort', {
+      t(locale, renewalKey('ladderFootnoteShort'), {
         days: PRICING.refundDays,
         n: PRICING.refundMaxCompletedWorkouts,
       })

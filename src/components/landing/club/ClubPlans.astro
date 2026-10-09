@@ -20,6 +20,7 @@
  */
 import type { Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
+import { renewalKey } from '@/lib/renewal';
 import { CLUB_PLAN_ID, PLAN_BY_ID, PLANS } from '@content/site/plans';
 import { formatPrice } from '@content/site/pricing';
 import Button from '../Button.astro';
@@ -52,7 +53,9 @@ const card = 'relative flex flex-col gap-4 overflow-hidden rounded-card border p
         <p class="numeral text-5xl leading-none md:text-6xl">{club.headline}</p>
         <div class="flex flex-col gap-1">
           <p class="text-[14px] leading-snug text-text">{club.charge}</p>
-          <p class="text-[13px] leading-snug text-muted">{t(locale, 'landing.clubNoAutoRenew')}</p>
+          <p class="text-[13px] leading-snug text-muted">
+            {t(locale, renewalKey('clubNoAutoRenew'))}
+          </p>
         </div>
         <Button
           href={`#order-${year.id}`}

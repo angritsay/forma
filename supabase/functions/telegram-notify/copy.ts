@@ -58,6 +58,21 @@ export type Locale = 'ru' | 'en';
 
 export const DEFAULT_LOCALE: Locale = 'ru';
 
+/**
+ * Mirror of `RENEWAL` in content/site/plans.ts — the switch for automatic monthly renewal (off
+ * today; docs/SETUP.md §7.18). The edge function cannot import the site's content, so the value is
+ * repeated here and `content/site/renewal.test.ts` fails the build while the two differ: flip both
+ * in the same commit, then redeploy this function.
+ *
+ * It changes one message: `subscription_ending` for a live, not-cancelled monthly subscription
+ * becomes «we charge on …, cancel like this» instead of «renew by hand» (`renewsByItself`).
+ */
+export type RenewalMode = 'manual' | 'auto';
+export const RENEWAL: RenewalMode = 'manual';
+
+/** Mirror of `LINKS.supportEmail` (content/site/links.ts), held equal by the same test. */
+export const SUPPORT_EMAIL = 'hello@forma-app.co';
+
 export interface OutboxRow {
   kind: string;
   params: Record<string, unknown> | null;
@@ -146,6 +161,14 @@ interface Copy {
    */
   subscriptionEnding: string;
   subscriptionEndingDo: string;
+  /**
+   * The same moment for a subscription that renews by itself (`RENEWAL = 'auto'`): `{date}` is
+   * the day of the charge, `{email}` the support address. Draft for the lawyer — not sent until
+   * the switch is on. No amount: the person may have paid in roubles or in dollars, and the queue
+   * row does not say which; «the same amount as last time» is true either way.
+   */
+  subscriptionRenewing: string;
+  subscriptionRenewingDo: string;
   /** The free club week after a course ends tomorrow (0054). */
   trialTomorrow: string;
   trialTomorrowDo: string;
@@ -231,6 +254,9 @@ const COPY: Record<Locale, Copy> = {
     subscriptionEnding: 'Клуб открыт до {date}',
     subscriptionEndingDo:
       'Автопродления нет: чтобы остаться в клубе, продли подписку в приложении.',
+    subscriptionRenewing: 'Клуб продлится {date}',
+    subscriptionRenewingDo:
+      'В этот день спишем оплату за следующие 30 дней — столько же, сколько в прошлый раз, с той же карты. Не хочешь продлевать — отмени до этого дня: по ссылке в письме с чеком или написав на {email}. Оплаченные дни останутся.',
     trialTomorrow: 'Завтра заканчивается пробная неделя клуба',
     trialTomorrowDo: 'Чтобы остаться в клубе, оформи подписку в приложении.',
     sessionConfirmed: 'Встреча с тренером подтверждена',
@@ -287,6 +313,9 @@ const COPY: Record<Locale, Copy> = {
     subscriptionEnding: 'The club is open until {date}',
     subscriptionEndingDo:
       'There is no auto-renewal: to stay in the club, renew your subscription in the app.',
+    subscriptionRenewing: 'Your club renews on {date}',
+    subscriptionRenewingDo:
+      'That day we charge for the next 30 days — the same amount as last time, to the same card. If you would rather not renew, cancel before then: through the link in your payment receipt email or by writing to {email}. The days you paid for stay.',
     trialTomorrow: 'Your free week in the club ends tomorrow',
     trialTomorrowDo: 'To stay in the club, subscribe in the app.',
     sessionConfirmed: 'Your session with the coach is confirmed',
@@ -341,6 +370,7 @@ export function messageFor(
   row: OutboxRow,
   locale: Locale = DEFAULT_LOCALE,
   now?: number,
+  renewal: RenewalMode = RENEWAL,
 ): Message | null {
   const params = row.params ?? {};
   const c = COPY[locale] ?? COPY[DEFAULT_LOCALE];
@@ -461,6 +491,12 @@ export function messageFor(
     case 'subscription_ending': {
       const date = dayOf(params.expires_at, locale);
       if (!date) return null;
+      if (renewsByItself(params, renewal)) {
+        return {
+          text: `<b>${c.subscriptionRenewing.replace('{date}', date)}</b>\n\n${c.subscriptionRenewingDo.replace('{email}', SUPPORT_EMAIL)}`,
+          buttonText: c.openApp,
+        };
+      }
       return {
         text: `<b>${c.subscriptionEnding.replace('{date}', date)}</b>\n\n${c.subscriptionEndingDo}`,
         buttonText: c.openApp,
@@ -479,6 +515,16 @@ export function messageFor(
     default:
       return null;
   }
+}
+
+/**
+ * Will the subscription a `subscription_ending` row warns about be charged again by itself? Only
+ * with the switch on, and only a monthly subscription that is active — not cancelled. `plan` and
+ * `status` arrive in the row since 0069; a row without them (queued before it) is treated as
+ * manual, which is what every subscription was then.
+ */
+export function renewsByItself(params: Record<string, unknown>, renewal: RenewalMode): boolean {
+  return renewal === 'auto' && params.plan === 'monthly' && params.status === 'active';
 }
 
 /** Целое неотрицательное число из очереди, или `null`: строку «12» тоже принимает. */
