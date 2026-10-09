@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import type { CreatorStatementRow } from '@/lib/api/types';
-import { balanceSide, creatorAddress, creatorStage, salesCount, statementMonths } from './model';
+import {
+  balanceSide,
+  canUnlist,
+  creatorAddress,
+  creatorPageLive,
+  creatorStage,
+  salesCount,
+  statementMonths,
+} from './model';
 
 const row = (
   month: string,
@@ -66,5 +74,22 @@ describe('creatorStage', () => {
 describe('creatorAddress', () => {
   it('builds the page address', () => {
     expect(creatorAddress('forma-app.co/', 'alla-yoga')).toBe('forma-app.co/c/alla-yoga');
+  });
+});
+
+describe('creatorPageLive', () => {
+  it('links the page only for an open creator with a published course', () => {
+    expect(creatorPageLive({ status: 'active', published: 1 })).toBe(true);
+    expect(creatorPageLive({ status: 'active', published: 0 })).toBe(false);
+    expect(creatorPageLive({ status: 'paused', published: 2 })).toBe(false);
+    expect(creatorPageLive({ status: 'applied', published: 1 })).toBe(false);
+    expect(creatorPageLive(null)).toBe(false);
+  });
+});
+
+describe('canUnlist', () => {
+  it('lets only Pro leave the catalogue', () => {
+    expect(canUnlist('pro')).toBe(true);
+    expect(canUnlist('start')).toBe(false);
   });
 });

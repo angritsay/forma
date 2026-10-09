@@ -672,4 +672,10 @@ export const landing = {
     'Leave it. Launch something new on Forma — a club, say — and look at the numbers. Moving over is discussed separately.',
   creatorsFinalTitle: 'Let’s build your course',
   creatorsFinalText: 'Message me on Telegram — that’s where it starts.',
+  // A creator's public page, /c/<slug>/ (0068). Built only for creators with a published course.
+  creatorPageEyebrow: 'Creator on Forma',
+  creatorPageAudience: 'Follow: {host}',
+  creatorPageCoursesTitle: 'Courses',
+  creatorPageCoursesLabel: 'Courses by this creator',
+  creatorPageFree: 'Workout 1 of every course is free, in the app. Like it — buy the whole course.',
 } as const;

@@ -305,8 +305,10 @@ a late confirmation, who has Telegram), and `99_money_reports.sql` for 0063 (the
 per month, paying members and churn, money per channel), and `99_creators.sql` for 0064
 (applying, opening, a creator's statement on Start and on Pro, closing a month), and
 `99_creator_sessions.sql` for 0067 (a creator's coach's sessions at the sessions share, a plan
-change billing each month by its own plan, invoices with sessions). `93_outbox_kinds.sql` also
-covers 0069 (the renewal reminder carries the subscription's `plan` and `status`, §7.18).
+change billing each month by its own plan, invoices with sessions), and `99_creator_pages.sql`
+for 0068 (what anon reads about a creator, who gets a page, the catalogue listing switch).
+`93_outbox_kinds.sql` also covers 0069 (the renewal reminder carries the subscription's `plan` and
+`status`, §7.18).
 Each ends with a "PASSED" line. The test files are **not** idempotent — they insert fixtures — so
 rebuild the database for each run.
 
@@ -2093,6 +2095,29 @@ Apply **`0064_creators.sql`** after 0063, then deploy the site. What it is and w
   Pro is open.
 
 Verify on a database: `supabase/tests/99_creators.sql` (§2).
+
+## 7.21 Creator pages and the catalogue (0068)
+
+Apply **`0068_creator_pages.sql`** after 0067, then deploy the site. What it is and why:
+docs/PLATFORM.md, phase 2, steps 2 and 6.
+
+- **A creator's page** is `forma-app.co/c/<slug>/` (and `/en/c/<slug>/`): their name, the line
+  about them, the link to their audience, and their published courses with «Тренировка 1 —
+  бесплатно» and the buy button. The site is static, so the pages are made at **build time** from
+  `public_creators()` with the anon key (`src/content/creators.ts`, like `published.ts` for the
+  courses). Only an **open** creator other than Forma with **at least one published course** gets
+  a page and a sitemap entry; a course published or given to a creator reaches the site with the
+  next deploy. Without `PUBLIC_SUPABASE_URL` / `PUBLIC_SUPABASE_ANON_KEY` at build time, or before
+  0068 is applied, the site builds with no creator pages and says so in the build log.
+- **What anybody can read** is exactly five fields: slug, name, about, audience link and the ids
+  of the published courses. Never the owner's address, the plan, the fee, followers or money.
+- **«Также в Forma»** on «Курсы» lists other creators' published courses, grouped by creator
+  (`catalogue_creators()`). A **Pro** creator can switch the listing off — in «Кабинет автора», or
+  you in «Авторы»; their page stays. A **Start** creator is always listed.
+- **«Кабинет автора»** links the page address once the creator is open and has a published
+  course; until then it says the page appears with the first published course.
+
+Verify on a database: `supabase/tests/99_creator_pages.sql` (§2).
 
 ## 7.22 Sessions and plan changes for creators (0067)
 

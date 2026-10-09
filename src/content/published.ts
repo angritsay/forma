@@ -36,6 +36,8 @@ interface DbCourse {
   price_rub: number | string;
   price_usd: number | string;
   content: unknown;
+  /** Whose course it is (0064); null is Forma's own. */
+  creator_id?: string | null;
 }
 
 interface DbDay {
@@ -59,6 +61,13 @@ async function get<T>(base: string, key: string, path: string): Promise<T> {
   return (await res.json()) as T;
 }
 
+/**
+ * Ids of published courses that belong to a creator rather than to Forma (0064's
+ * `admin_courses.creator_id`). The course page uses it so its structured data never names Forma's
+ * coach as the instructor of somebody else's course.
+ */
+const creatorCourseIds = new Set<string>();
+
 async function load(): Promise<Course[]> {
   const base = import.meta.env.PUBLIC_SUPABASE_URL;
   const key = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
@@ -80,6 +89,7 @@ async function load(): Promise<Course[]> {
 
   const out: Course[] = [];
   for (const row of courses) {
+    if (row.creator_id) creatorCourseIds.add(row.slug_id);
     /*
      * No workouts: `custom_workouts` is not readable without an entitlement, and that is the point
      * (0010). `draftToCourse` will report the course as incomplete for it; the page renders the
@@ -131,6 +141,11 @@ export const PUBLISHED_COURSES: readonly Course[] = await load().catch((e: unkno
   );
   return [];
 });
+
+/** Whether a published course is a creator's, not Forma's (see `creatorCourseIds`). */
+export function isCreatorCourse(id: string): boolean {
+  return creatorCourseIds.has(id);
+}
 
 /**
  * Every course the **site** should have a page for: the compiled ones that are on sale, plus the
