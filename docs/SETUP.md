@@ -2042,6 +2042,29 @@ Apply **`0064_creators.sql`** after 0063, then deploy the site. What it is and w
 
 Verify on a database: `supabase/tests/99_creators.sql` (§2).
 
+## 7.21 Creator pages and the catalogue (0066)
+
+Apply **`0066_creator_pages.sql`** after 0064, then deploy the site. What it is and why:
+docs/PLATFORM.md, phase 2, steps 2 and 6.
+
+- **A creator's page** is `forma-app.co/c/<slug>/` (and `/en/c/<slug>/`): their name, the line
+  about them, the link to their audience, and their published courses with «Тренировка 1 —
+  бесплатно» and the buy button. The site is static, so the pages are made at **build time** from
+  `public_creators()` with the anon key (`src/content/creators.ts`, like `published.ts` for the
+  courses). Only an **open** creator other than Forma with **at least one published course** gets
+  a page and a sitemap entry; a course published or given to a creator reaches the site with the
+  next deploy. Without `PUBLIC_SUPABASE_URL` / `PUBLIC_SUPABASE_ANON_KEY` at build time, or before
+  0066 is applied, the site builds with no creator pages and says so in the build log.
+- **What anybody can read** is exactly five fields: slug, name, about, audience link and the ids
+  of the published courses. Never the owner's address, the plan, the fee, followers or money.
+- **«Также в Forma»** on «Курсы» lists other creators' published courses, grouped by creator
+  (`catalogue_creators()`). A **Pro** creator can switch the listing off — in «Кабинет автора», or
+  you in «Авторы»; their page stays. A **Start** creator is always listed.
+- **«Кабинет автора»** links the page address once the creator is open and has a published
+  course; until then it says the page appears with the first published course.
+
+Verify on a database: `supabase/tests/99_creator_pages.sql` (§2).
+
 ## 7.10 What is still only in Russian
 
 Everything written ahead of time is bilingual and the build says so: the interface dictionaries are

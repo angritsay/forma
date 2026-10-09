@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { PLANS_ENABLED } from '@content/site/plans';
+import { SITE_COURSES } from '@/content/published';
+import type { SiteCreator } from '@/content/creators';
 import type { GuideData, GuideLike } from './guides';
 import { buildPages } from './pages';
 
@@ -125,5 +127,30 @@ describe('buildPages', () => {
     expect(formats?.lastmod).toBe('2026-09-05');
     const beginners = hubs.find((p) => p.path === '/guides/beginners/');
     expect(beginners?.alternates).toEqual({ ru: '/guides/beginners/', en: '/guides/beginners/' });
+  });
+
+  /*
+   * Creator pages (0066) enter the sitemap only through `SITE_CREATORS`, which holds creators with
+   * at least one course that has a page. With none — the build with no backend — there are none.
+   */
+  it('lists a creator page in both languages, and none without creators', () => {
+    expect(pages.some((p) => p.kind === 'creator')).toBe(false);
+    const course = SITE_COURSES[0]!;
+    const alla: SiteCreator = {
+      slug: 'alla-yoga',
+      name: 'Alla',
+      about: 'Yoga for people who sit all day.',
+      audienceUrl: 'https://t.me/alla',
+      courses: [course],
+    };
+    const withCreator = buildPages(guides, [alla]);
+    const mine = withCreator.filter((p) => p.kind === 'creator');
+    expect(mine.map((p) => p.path).sort()).toEqual(['/c/alla-yoga/', '/en/c/alla-yoga/']);
+    for (const p of mine) {
+      expect(p.alternates).toEqual({ ru: '/c/alla-yoga/', en: '/c/alla-yoga/' });
+      expect(p.title.startsWith('Alla')).toBe(true);
+      expect(p.description.length).toBeLessThanOrEqual(160);
+      expect(p.description).toContain('Yoga for people who sit all day.');
+    }
   });
 });

@@ -100,6 +100,24 @@ export function personLd(site: string, locale: Locale): Json {
   });
 }
 
+/**
+ * A creator's page (0066): the person behind it, with what they wrote about themselves and the link
+ * to their audience — nothing counted, rated or reviewed. Their courses are the page's ItemList.
+ */
+export function creatorLd(
+  url: string,
+  creator: { name: string; about: string | null; audienceUrl: string | null },
+): Json {
+  return compact({
+    '@type': 'Person',
+    '@id': `${url}#creator`,
+    name: creator.name,
+    description: creator.about ?? undefined,
+    url,
+    sameAs: creator.audienceUrl ? [creator.audienceUrl] : [],
+  });
+}
+
 export function courseLd(
   site: string,
   locale: Locale,

@@ -15,6 +15,7 @@ import type {
   CreatorStatus,
   CreatorTier,
   MyCreator,
+  PublicCreator,
 } from './types';
 
 /** The page address a creator chooses — the same check as `creators.slug` (0064). */
@@ -35,6 +36,8 @@ interface DbCreator {
   created_at: string;
   approved_at: string | null;
   courses: number;
+  listed: boolean | null;
+  published: number | null;
 }
 
 function creatorBase(r: DbCreator) {
@@ -51,6 +54,8 @@ function creatorBase(r: DbCreator) {
     createdAt: r.created_at,
     approvedAt: r.approved_at,
     courses: num(r.courses),
+    listed: r.listed !== false,
+    published: num(r.published),
   };
 }
 
@@ -137,6 +142,49 @@ export async function applyAsCreator(input: CreatorApplication): Promise<string>
   });
 }
 
+/**
+ * A Pro creator switches their «Также в Forma» listing on or off (0066). A Start creator gets
+ * `start_always_listed` back: on Start the listing is part of the deal.
+ */
+export async function setMyListing(listed: boolean): Promise<void> {
+  if (isDemo()) return (await demo()).setMyListing(listed);
+  return guard(async () => {
+    await requireUser();
+    unwrapVoid(await supabase().rpc('creator_set_listed', { p_listed: listed }));
+  });
+}
+
+interface DbPublicCreator {
+  slug: string;
+  name: string;
+  about: string | null;
+  audience_url: string | null;
+  courses: string[] | null;
+}
+
+/** The anon-safe shape (0066): five fields, nothing private. */
+export function publicCreatorFromDb(r: DbPublicCreator): PublicCreator {
+  return {
+    slug: r.slug,
+    name: r.name,
+    about: r.about,
+    audienceUrl: r.audience_url,
+    courses: r.courses ?? [],
+  };
+}
+
+/**
+ * The creators «Также в Forma» lists (0066, `catalogue_creators()`): open, not Forma itself, at
+ * least one published course, and not a Pro creator who switched the listing off.
+ */
+export async function listCatalogueCreators(): Promise<PublicCreator[]> {
+  if (isDemo()) return (await demo()).listCatalogueCreators();
+  return guard(async () => {
+    const rows = unwrap<DbPublicCreator[]>(await supabase().rpc('catalogue_creators'));
+    return rows.map(publicCreatorFromDb);
+  });
+}
+
 /** The creator's own statement: per month and currency, newest first. */
 export async function listMyStatement(months = 12): Promise<CreatorStatementRow[]> {
   if (isDemo()) return (await demo()).listMyStatement(months);
@@ -183,9 +231,11 @@ export interface CreatorChange {
   status?: CreatorStatus;
   tier?: CreatorTier;
   feePct?: number;
+  /** The catalogue listing; switching it off is refused for Start (`start_always_listed`). */
+  listed?: boolean;
 }
 
-/** Open, pause or decline; move between tiers; set the processor's fee. */
+/** Open, pause or decline; move between tiers; set the processor's fee; list or unlist. */
 export async function setCreator(id: string, change: CreatorChange): Promise<void> {
   if (isDemo()) return (await demo()).setCreator(id, change);
   return guard(async () => {
@@ -195,6 +245,7 @@ export async function setCreator(id: string, change: CreatorChange): Promise<voi
         p_status: change.status ?? null,
         p_tier: change.tier ?? null,
         p_fee_pct: change.feePct ?? null,
+        p_listed: change.listed ?? null,
       }),
     );
   });

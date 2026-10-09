@@ -18,6 +18,10 @@ export const seo = {
   creatorsTitle: 'Стань автором Forma: курс, клуб и занятия',
   creatorsDescription:
     'Твой метод в приложении Forma: курс, клуб и занятия один на один. Тебе 80% с курса и клуба и 90% с занятий после комиссии платёжки. Инструменты и монтаж — наши.',
+  // A creator's public page, /c/<slug>/ (0066, src/lib/seo/creators.ts).
+  creatorPageTitle: '{name} — курсы и тренировки',
+  creatorPageCourses: 'Курсы автора в Forma: {courses}.',
+  creatorPageCta: 'Первая тренировка каждого курса — бесплатно.',
   aboutPage: 'О тренере',
   contactPage: 'Контакты',
   privacyPage: 'Политика конфиденциальности',

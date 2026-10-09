@@ -18,6 +18,10 @@ export const seo = {
   creatorsTitle: 'Become a Forma creator: course, club, sessions',
   creatorsDescription:
     'Your method in the Forma app: a course, a club and 1:1 sessions. You keep 80% of course and club, 90% of sessions, after fees. Tools and editing are on us.',
+  // A creator's public page, /c/<slug>/ (0066, src/lib/seo/creators.ts).
+  creatorPageTitle: '{name} — courses and workouts',
+  creatorPageCourses: 'Courses by {name} on Forma: {courses}.',
+  creatorPageCta: 'Workout 1 of every course is free.',
   aboutPage: 'About the coach',
   contactPage: 'Contact',
   privacyPage: 'Privacy policy',

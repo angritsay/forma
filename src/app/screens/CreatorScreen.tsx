@@ -14,8 +14,10 @@
  *   the sessions are one shared club and Forma's coaches until creators have their own (phase 2),
  *   and the screen says so rather than show a zero that looks like a result.
  *
- * The page address is shown, not linked: public creator pages arrive with phase 2, and a link that
- * opens the 404 would be the first thing a new creator shares.
+ * The page address (0066) is a link once the page exists — an open creator with a published course
+ * (`creatorPageLive`); before that it is text saying when it will appear, because a link that opens
+ * the 404 would be the first thing a new creator shares. Under it, the «Также в Forma» listing: a
+ * switch on Pro, a plain line on Start, where the listing is part of the deal.
  */
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { Badge } from '@/components/ui/Badge';
@@ -23,6 +25,7 @@ import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Input } from '@/components/ui/Input';
 import { Screen } from '@/components/ui/Screen';
+import { Switch } from '@/components/ui/Switch';
 import { Textarea } from '@/components/ui/Textarea';
 import { useToast } from '@/components/ui/Toast';
 import { formatDate, formatNumber, type TKey } from '@/i18n/index';
@@ -33,16 +36,21 @@ import {
   getMyCreator,
   listMyInvoices,
   listMyStatement,
+  setMyListing,
 } from '@/lib/api/creators';
 import type { CreatorInvoice, CreatorStatementRow, MyCreator } from '@/lib/api/types';
 import { toLocalDateIso } from '@/lib/util/dates';
+import { href } from '@/lib/util/paths';
+import { externalLinkProps } from '@/app/hooks/useExternalLink';
 import { LoadingBlock } from '@/app/components/LoadingBlock';
 import { TopBar } from '@/app/components/TopBar';
 import { useT } from '@/app/hooks/useT';
 import { formatMoney } from '@/app/features/admin/money';
 import {
   balanceSide,
+  canUnlist,
   creatorAddress,
+  creatorPageLive,
   creatorStage,
   salesCount,
   statementMonths,
@@ -233,6 +241,46 @@ function BalanceLine({ row }: { row: CreatorStatementRow }) {
   );
 }
 
+/** The «Также в Forma» listing: a switch on Pro, a line on Start (0066). */
+function Listing({ me }: { me: MyCreator }) {
+  const { t } = useT();
+  const toast = useToast();
+  const [listed, setListed] = useState(me.listed);
+  const [busy, setBusy] = useState(false);
+
+  if (!canUnlist(me.tier)) {
+    return <p className="text-[13px] leading-snug text-muted">{t('app.creatorListedStart')}</p>;
+  }
+
+  const change = (next: boolean) => {
+    setBusy(true);
+    setListed(next);
+    setMyListing(next)
+      .then(() => toast.show({ kind: 'success', title: t('app.creatorsSaved') }))
+      .catch(() => {
+        setListed(!next);
+        toast.show({ kind: 'error', title: t('app.creatorsSaveError') });
+      })
+      .finally(() => setBusy(false));
+  };
+
+  return (
+    <section className="flex items-start justify-between gap-4">
+      <span className="flex min-w-0 flex-col gap-1">
+        <span className="text-[15px] text-text">{t('app.creatorListed')}</span>
+        <span className="text-[13px] leading-snug text-muted">{t('app.creatorListedPro')}</span>
+      </span>
+      <Switch
+        checked={listed}
+        onChange={change}
+        label={t('app.creatorListed')}
+        disabled={busy}
+        className="shrink-0"
+      />
+    </section>
+  );
+}
+
 function Dashboard({ me }: { me: MyCreator }) {
   const { t, locale } = useT();
   const [rows, setRows] = useState<CreatorStatementRow[] | null>(null);
@@ -273,10 +321,24 @@ function Dashboard({ me }: { me: MyCreator }) {
             </Badge>
           ) : null}
         </div>
-        <p className="text-[13px] text-muted">
-          {t('app.creatorAddress', { address: creatorAddress(BRAND.domain, me.slug) })}
-        </p>
+        {creatorPageLive(me) ? (
+          <p className="text-[13px] text-muted">
+            {t('app.creatorPage')}:{' '}
+            <a
+              {...externalLinkProps(href(locale, `/c/${me.slug}/`))}
+              className="text-accent underline-offset-2 hover:underline"
+            >
+              {creatorAddress(BRAND.domain, me.slug)}
+            </a>
+          </p>
+        ) : (
+          <p className="text-[13px] text-muted">
+            {t('app.creatorAddress', { address: creatorAddress(BRAND.domain, me.slug) })}
+          </p>
+        )}
       </section>
+
+      <Listing me={me} />
 
       <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
         <Tile label={t('app.creatorCourses')} value={n(me.courses)} />

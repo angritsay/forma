@@ -4,7 +4,7 @@
  * The database answers per month × currency; the screens want «this month», «who owes whom», and
  * a line per month. Currencies stay apart here as everywhere in the money reports (0063).
  */
-import type { CreatorStatementRow, CreatorStatus } from '@/lib/api/types';
+import type { CreatorStatementRow, CreatorStatus, CreatorTier } from '@/lib/api/types';
 import { HOME_CURRENCY } from '@/app/features/admin/money';
 
 export interface MonthLine {
@@ -58,7 +58,24 @@ export function creatorStage(status: CreatorStatus | null | undefined): CreatorS
   return 'open';
 }
 
-/** The page address a slug would take, for showing; not a link while public pages do not exist. */
+/** The page address a slug would take, for showing (`forma-app.co/c/<slug>`). */
 export function creatorAddress(domain: string, slug: string): string {
   return `${domain.replace(/\/+$/, '')}/c/${slug}`;
+}
+
+/**
+ * Whether the creator's public page exists (0066): it is built for open creators with at least one
+ * published course, so the cabinet links the address only then — a link to a 404 would be the
+ * first thing a new creator shares. A course published a moment ago reaches the site with the
+ * deploy its publishing asks for.
+ */
+export function creatorPageLive(
+  me: { status: CreatorStatus; published: number } | null | undefined,
+): boolean {
+  return !!me && me.status === 'active' && me.published > 0;
+}
+
+/** Only a Pro creator can switch the «Также в Forma» listing off; Start is always listed. */
+export function canUnlist(tier: CreatorTier): boolean {
+  return tier === 'pro';
 }

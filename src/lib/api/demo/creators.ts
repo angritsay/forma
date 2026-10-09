@@ -6,6 +6,9 @@
  * to the demo database rather than inside it, so the demo's stored shape does not change. The demo
  * takes no money (it has no payments journal, `adminPayments.ts`), so statements and invoices are
  * empty, exactly as the server would answer for a creator with no sales yet.
+ *
+ * The «Также в Forma» catalogue (0066) is empty here: the demo has no other creators, and its own
+ * creator's courses are assignments without a published course behind them.
  */
 import { AppError } from '../errors';
 import type { CreatorChange } from '../creators';
@@ -16,6 +19,7 @@ import type {
   CreatorInvoice,
   CreatorStatementRow,
   MyCreator,
+  PublicCreator,
 } from '../types';
 import { delay } from './latency';
 import { currentDemoUser, defaultStorage } from './store';
@@ -24,8 +28,10 @@ const KEY = 'forma.demo.creators';
 const SLUG_RE = /^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/;
 const RESERVED = new Set(['forma', 'admin', 'app', 'api', 'www', 'creators', 'creator', 'club']);
 
-interface Row extends Omit<AdminCreator, 'courses' | 'openBalance'> {
+interface Row extends Omit<AdminCreator, 'courses' | 'openBalance' | 'listed' | 'published'> {
   courses: string[];
+  /** Absent on rows stored before 0066: listed. */
+  listed?: boolean;
 }
 
 function house(): Row {
@@ -82,8 +88,8 @@ export async function getMyCreator(): Promise<MyCreator | null> {
   return run((email) => {
     const r = mine(read(), email);
     if (!r) return null;
-    const { ownerEmail: _o, house: _h, courses, ...rest } = r;
-    return { ...rest, courses: courses.length, buyers: 0 };
+    const { ownerEmail: _o, house: _h, courses, listed, ...rest } = r;
+    return { ...rest, courses: courses.length, buyers: 0, listed: listed !== false, published: 0 };
   });
 }
 
@@ -132,6 +138,22 @@ export async function applyAsCreator(input: CreatorApplication): Promise<string>
   });
 }
 
+export async function setMyListing(listed: boolean): Promise<void> {
+  return run((email) => {
+    const rows = read();
+    const own = mine(rows, email);
+    if (!own) throw new AppError('validation', 'not_creator');
+    if (!listed && own.tier !== 'pro') throw new AppError('validation', 'start_always_listed');
+    own.listed = listed;
+    write(rows);
+  });
+}
+
+export async function listCatalogueCreators(): Promise<PublicCreator[]> {
+  await delay();
+  return [];
+}
+
 export async function listMyStatement(_months = 12): Promise<CreatorStatementRow[]> {
   return run((email) => {
     if (!mine(read(), email)) throw new AppError('validation', 'not_creator');
@@ -146,7 +168,13 @@ export async function listMyInvoices(): Promise<CreatorInvoice[]> {
 export async function listCreators(): Promise<AdminCreator[]> {
   return run(() =>
     read()
-      .map(({ courses, ...r }) => ({ ...r, courses: courses.length, openBalance: 0 }))
+      .map(({ courses, listed, ...r }) => ({
+        ...r,
+        courses: courses.length,
+        openBalance: 0,
+        listed: listed !== false,
+        published: 0,
+      }))
       .sort(
         (a, b) =>
           Number(b.status === 'applied') - Number(a.status === 'applied') ||
@@ -165,6 +193,10 @@ export async function setCreator(id: string, change: CreatorChange): Promise<voi
     if (change.status) r.status = change.status;
     if (change.tier) r.tier = change.tier;
     if (change.feePct !== undefined) r.feePct = change.feePct;
+    if (change.listed === false && r.tier !== 'pro') {
+      throw new AppError('validation', 'start_always_listed');
+    }
+    if (change.listed !== undefined) r.listed = change.listed;
     if (r.status === 'active' && !r.approvedAt) r.approvedAt = new Date().toISOString();
     write(rows);
   });

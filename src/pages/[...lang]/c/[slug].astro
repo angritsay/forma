@@ -1,0 +1,146 @@
+---
+/**
+ * `/c/<slug>/` — a creator's public page (docs/PLATFORM.md phase 2, step 2; 0066).
+ *
+ * Built at build time from `SITE_CREATORS` (`src/content/creators.ts`): open creators other than
+ * Forma itself with at least one published course that has a page here. No backend at build time,
+ * or no such creator, means no pages at all — never an empty one.
+ *
+ *   hero     the blue field: «Автор в Forma», the name as the H1, their own line about
+ *            themselves, and the link to where their audience reads them
+ *   courses  their courses as the same tickets the courses hub shows (`CourseCard`), each with
+ *            the neon «Тренировка 1 — бесплатно» into the app and the white buy button to the
+ *            course page's order form; sideways when there is one
+ *
+ * Everything printed is what the creator wrote or sells — no follower count, no ratings, no
+ * reviews. JSON-LD: Person (the creator), ItemList (their courses), BreadcrumbList.
+ *
+ * The audience link is the creator's own, so it carries `nofollow ugc` and opens in a new tab.
+ */
+import Landing from '@/layouts/Landing.astro';
+import HeroField from '@/components/landing/HeroField.astro';
+import KeyTitle from '@/components/landing/KeyTitle.astro';
+import Breadcrumbs from '@/components/landing/Breadcrumbs.astro';
+import CourseCard from '@/components/landing/CourseCard.astro';
+import { coursePath } from '@/components/landing/courseHelpers';
+import { breadcrumbLd, creatorLd, itemListLd } from '@/components/landing/jsonld';
+import { creatorSitePath, SITE_CREATORS } from '@/content/creators';
+import { DEFAULT_LOCALE, LOCALES, type Locale } from '@/content/schema';
+import { l, t } from '@/i18n/index';
+import { creatorPageDescription, creatorPageTitle } from '@/lib/seo/creators';
+import { canonicalUrl } from '@/lib/seo/urls';
+import { appHref, href } from '@/lib/util/paths';
+
+export function getStaticPaths() {
+  return SITE_CREATORS.flatMap((c) =>
+    LOCALES.map((locale) => ({
+      params: { lang: locale === DEFAULT_LOCALE ? undefined : locale, slug: c.slug },
+      props: { slug: c.slug },
+    })),
+  );
+}
+
+const { slug } = Astro.props as { slug: string };
+const locale: Locale = Astro.params.lang === 'en' ? 'en' : 'ru';
+const site = (Astro.site?.toString() ?? 'http://localhost:4321').replace(/\/$/, '');
+
+const creator = SITE_CREATORS.find((c) => c.slug === slug)!;
+const sitePath = creatorSitePath(creator.slug);
+const url = canonicalUrl(site, locale, sitePath);
+const single = creator.courses.length === 1;
+const audienceHost = creator.audienceUrl
+  ? creator.audienceUrl.replace(/^https:\/\//, '').replace(/\/$/, '')
+  : null;
+
+/* Workout 1 of the beginner course goes through `#/start`; any other course through its path. */
+const startHref = (id: string) => appHref(id === 'start' ? '/start' : `/courses/${id}`, { locale });
+
+const jsonLd = [
+  creatorLd(url, creator),
+  breadcrumbLd([
+    { name: t(locale, 'landing.breadcrumbHome'), url: canonicalUrl(site, locale, '/') },
+    { name: creator.name, url },
+  ]),
+  itemListLd(
+    creator.courses.map((c) => ({
+      name: l(c.name, locale),
+      url: canonicalUrl(site, locale, coursePath(locale, c)),
+    })),
+    t(locale, 'landing.creatorPageCoursesLabel'),
+  ),
+];
+---
+
+<Landing
+  locale={locale}
+  title={creatorPageTitle(creator, locale)}
+  description={creatorPageDescription(creator, locale)}
+  sitePath={sitePath}
+  jsonLd={jsonLd}
+>
+  <div class="mx-auto max-w-6xl px-5 pt-8 md:pt-12">
+    <Breadcrumbs
+      ariaLabel={t(locale, 'landing.breadcrumbHome')}
+      items={[
+        { label: t(locale, 'landing.breadcrumbHome'), href: href(locale, '/') },
+        { label: creator.name },
+      ]}
+    />
+    <HeroField class="mt-6">
+      <p class="eyebrow">{t(locale, 'landing.creatorPageEyebrow')}</p>
+      <KeyTitle text={creator.name} class="display mt-3 text-5xl md:text-6xl" />
+      {
+        creator.about && (
+          <p class="field-lead mt-5 max-w-xl text-base leading-relaxed md:text-lg">
+            {creator.about}
+          </p>
+        )
+      }
+      {
+        creator.audienceUrl && audienceHost && (
+          <p class="mt-5">
+            <a
+              href={creator.audienceUrl}
+              target="_blank"
+              rel="noopener nofollow ugc"
+              class="control-label inline-flex min-h-11 items-center text-[15px] text-on-field underline underline-offset-4 [overflow-wrap:anywhere]"
+            >
+              {t(locale, 'landing.creatorPageAudience', { host: audienceHost })}
+            </a>
+          </p>
+        )
+      }
+    </HeroField>
+
+    <section class="mt-10 md:mt-14" aria-labelledby="creator-courses">
+      <h2 id="creator-courses" class="font-display text-2xl md:text-3xl">
+        {t(locale, 'landing.creatorPageCoursesTitle')}
+      </h2>
+      <p class="mt-2 max-w-xl text-[15px] leading-relaxed text-muted">
+        {t(locale, 'landing.creatorPageFree')}
+      </p>
+      <ul
+        class:list={[
+          'mt-6 grid gap-5',
+          creator.courses.length >= 2 && 'sm:grid-cols-2',
+          creator.courses.length >= 3 && 'lg:grid-cols-3',
+        ]}
+        aria-label={t(locale, 'landing.creatorPageCoursesLabel')}
+      >
+        {
+          creator.courses.map((c) => (
+            <li>
+              <CourseCard
+                course={c}
+                locale={locale}
+                headingLevel="h3"
+                wide={single}
+                startHref={startHref(c.id)}
+              />
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+  </div>
+</Landing>

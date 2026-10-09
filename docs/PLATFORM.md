@@ -71,9 +71,12 @@ Order matters, because each step needs the one before it.
    the creator, limited to `admin_courses.creator_id = my creator` (and the days, workouts and
    exercises under those courses). Publishing a creator's course stays a review step for the
    owner, one tap, because health content goes out under the platform's name.
-2. **Public creator pages.** `forma-app.co/c/<slug>` should show the creator's courses with the
-   free first workout and a buy button. The address is already reserved by the slug, and the app
-   shows it without a link until this exists.
+2. **Public creator pages.** _Done in `0066_creator_pages.sql`._ `forma-app.co/c/<slug>/` shows
+   the creator's name, their line about themselves, a link to their audience and their published
+   courses, each with the free first workout and a buy button. Pages are built at build time from
+   the anon-callable `public_creators()` (five safe fields), only for open creators other than
+   Forma with at least one published course, and only those enter the sitemap. «Кабинет автора»
+   links the address once the page exists.
 3. **A club per creator.** The club is one shared club today (0016). Each creator should get a
    club of their own, priced by them, so that club money can be credited to them. Until then
    statements count course sales only, and both screens say so.
@@ -84,9 +87,11 @@ Order matters, because each step needs the one before it.
    tax falls on the full amount. An accountant has to confirm this before Start opens, and it is
    the reason `creatorTerms.ts` keeps `start.open = false`. Prodamus split payments, if the
    account supports them, would make the payout automatic at checkout.
-6. **The «also on Forma» catalogue.** Inside the app, list other open creators' courses next to
-   the member's own. A Pro creator can switch their listing off, since the point of Pro is their
-   own brand.
+6. **The «also on Forma» catalogue.** _Done in `0066_creator_pages.sql`._ «Также в Forma» on
+   «Курсы» lists other open creators' published courses under the member's own, grouped by
+   creator (`catalogue_creators()`). A Pro creator can switch their listing off
+   (`creators.listed`, in «Кабинет автора» or by the owner in «Авторы»), since the point of Pro
+   is their own brand; their page stays. Start creators are always listed.
 7. **Tier history.** Record the date of each plan change, so that a month that straddles a change
    is billed half and half. Today a statement uses the current plan, and an invoice keeps the plan
    it was closed under.
