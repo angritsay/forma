@@ -594,6 +594,8 @@ was ever linked or bookmarked broke:
 /marathon  /marathon/board «Клуб»
 /book                      «Тренер» — one-to-one session with the coach
 /creator                   «Кабинет автора» — apply as a creator, then sales and settlement (0064)
+/creator/courses[/:id]     «Мои курсы» — the course builder for the creator's own courses: drafts,
+                           days, workouts, uploads under creators/<id>/, «Отправить на проверку» (0065)
 /leaderboard
 /assigned/:id  /shared/:token
 /admin  /admin/workouts  /admin/exercises  /admin/courses[/:id]  /admin/marathons[/:id]

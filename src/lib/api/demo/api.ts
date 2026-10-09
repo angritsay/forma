@@ -994,9 +994,13 @@ export async function deleteExercise(id: string): Promise<void> {
 
 // --- custom workouts --------------------------------------------------------
 
-export async function listCustomWorkouts(): Promise<CustomWorkoutSummary[]> {
+/** Forma's library without `creatorId`, that creator's own with it — as the server filters (0065). */
+export async function listCustomWorkouts(
+  creatorId: string | null = null,
+): Promise<CustomWorkoutSummary[]> {
   return run(() =>
     [...readDb().customWorkouts]
+      .filter((w) => (creatorId ? w.creatorId === creatorId : !w.creatorId))
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
       .map(({ structure: _structure, ...summary }) => summary),
   );
@@ -1034,9 +1038,12 @@ export async function createCustomWorkout(input: CustomWorkoutInput): Promise<Cu
       estSec,
       points,
       shareToken: null,
+      ...(input.creatorId ? { creatorId: input.creatorId } : {}),
       createdAt: now,
       updatedAt: now,
     };
+    // A creator's workout is credited to the creator, not to one of Forma's authors (0065).
+    if (input.creatorId) row.authorSlug = null;
     const db = readDb();
     db.customWorkouts = [...db.customWorkouts, row];
     writeDb(db);
@@ -1216,6 +1223,14 @@ export async function listAdminCourses(): Promise<AdminCourseRow[]> {
   );
 }
 
+export async function listCreatorCourses(creatorId: string): Promise<AdminCourseRow[]> {
+  return run(() =>
+    readDb()
+      .adminCourses.filter((c) => c.creatorId === creatorId)
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt)),
+  );
+}
+
 export async function getAdminCourse(id: string): Promise<AdminCourseBundle> {
   return run(() => {
     const db = readDb();
@@ -1226,6 +1241,7 @@ export async function getAdminCourse(id: string): Promise<AdminCourseBundle> {
 export async function createAdminCourse(
   slugId: string,
   patch: AdminCoursePatch,
+  creatorId: string | null = null,
 ): Promise<AdminCourseRow> {
   return run(() => {
     requireDemoUser();
@@ -1253,6 +1269,7 @@ export async function createAdminCourse(
       createdAt: now,
       updatedAt: now,
       ...patch,
+      ...(creatorId ? { creatorId, reviewRequestedAt: null } : {}),
     };
     db.adminCourses = [...db.adminCourses, row];
     writeDb(db);
@@ -1307,7 +1324,14 @@ export async function publishAdminCourse(id: string): Promise<void> {
     if (empty) throw new AppError('validation', 'course_has_empty_days');
     db.adminCourses = db.adminCourses.map((c) =>
       c.id === id
-        ? { ...c, status: 'published', publishedAt: c.publishedAt ?? nowIso(), updatedAt: nowIso() }
+        ? {
+            ...c,
+            status: 'published',
+            publishedAt: c.publishedAt ?? nowIso(),
+            // Publishing ends a creator's review, as on the server (0065).
+            reviewRequestedAt: null,
+            updatedAt: nowIso(),
+          }
         : c,
     );
     writeDb(db);
@@ -1324,6 +1348,41 @@ export async function unpublishAdminCourse(id: string): Promise<void> {
     );
     writeDb(db);
   });
+}
+
+/** The same floor `creator_request_review()` holds; the demo has one person, so no ownership check. */
+export async function requestCourseReview(id: string): Promise<void> {
+  return run(() => {
+    requireDemoUser();
+    const db = readDb();
+    const course = courseOr404(db, id);
+    if (course.status !== 'draft' || course.publishedAt) {
+      throw new AppError('validation', 'already_published');
+    }
+    if (bundleFor(db, course).days.length < 4) {
+      throw new AppError('validation', 'course_too_short');
+    }
+    db.adminCourses = db.adminCourses.map((c) =>
+      c.id === id ? { ...c, reviewRequestedAt: c.reviewRequestedAt ?? nowIso() } : c,
+    );
+    writeDb(db);
+  });
+}
+
+export async function withdrawCourseReview(id: string): Promise<void> {
+  return run(() => {
+    requireDemoUser();
+    const db = readDb();
+    courseOr404(db, id);
+    db.adminCourses = db.adminCourses.map((c) =>
+      c.id === id ? { ...c, reviewRequestedAt: null } : c,
+    );
+    writeDb(db);
+  });
+}
+
+export async function returnCourseToCreator(id: string): Promise<void> {
+  return withdrawCourseReview(id);
 }
 
 export async function createCourseDay(

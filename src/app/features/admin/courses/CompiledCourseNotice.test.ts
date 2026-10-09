@@ -40,14 +40,22 @@ describe('AdminCourseScreen on a compiled course', () => {
     'utf8',
   );
 
+  /*
+   * `readOnly` is `compiled` or a creator's course they may not edit (0065): the compiled case
+   * stays the first half of it.
+   */
+  it('makes a compiled course read-only', () => {
+    expect(src).toMatch(/const readOnly = compiled \|\|/);
+  });
+
   it('disables both editors', () => {
-    expect(src.match(/<fieldset disabled=\{compiled\}/g)).toHaveLength(2);
+    expect(src.match(/<fieldset disabled=\{readOnly\}/g)).toHaveLength(2);
   });
 
   it('refuses every write before it reaches the autosave', () => {
     for (const fn of ['patchCourse', 'patchDay']) {
       expect(src, fn).toMatch(
-        new RegExp(`const ${fn} = \\([^)]*\\) => \\{\\s*if \\(compiled\\) return;`),
+        new RegExp(`const ${fn} = \\([^)]*\\) => \\{\\s*if \\(readOnly\\) return;`),
       );
     }
   });

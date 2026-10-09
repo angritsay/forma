@@ -1,6 +1,10 @@
 /**
- * One course, end to end (admins only): what it is, what its days are, and whether it is ready to
- * publish.
+ * One course, end to end: what it is, what its days are, and whether it is ready to publish.
+ *
+ * Two scopes (`builderScope.ts`, 0065). The owner at `/admin/courses/:id` edits any course and
+ * publishes. A creator at `/creator/courses/:id` (`CreatorCourseScreen`) edits only an editable
+ * draft of their own, uploads under `creators/<id>/`, builds workouts that are theirs, and sends
+ * the draft for review instead of publishing; the server holds every one of those lines again.
  *
  * The three tabs are the three questions in order — describe it, build it, ship it. The publish tab
  * is not a button on its own: it runs the same `CourseSchema` the compiled courses are validated
@@ -10,7 +14,6 @@
 import { clsx } from 'clsx';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router';
-import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Glyph } from '@/components/ui/Icon';
@@ -24,7 +27,10 @@ import {
   deleteCourseDay,
   getAdminCourse,
   publishAdminCourse,
+  requestCourseReview,
+  returnCourseToCreator,
   unpublishAdminCourse,
+  withdrawCourseReview,
   updateAdminCourse,
   updateCourseDay,
 } from '@/lib/api/courseBuilder';
@@ -42,6 +48,7 @@ import type {
   CustomWorkoutRow,
 } from '@/lib/api/types';
 import { isCompiledCourse } from '@/content/catalogue';
+import { formatDate } from '@/i18n/index';
 import { draftToCourse } from '@/lib/courses/draft';
 import type { CustomWorkoutStructure } from '@/lib/training/customWorkout';
 import { LoadingBlock } from '@/app/components/LoadingBlock';
@@ -49,7 +56,16 @@ import { TopBar } from '@/app/components/TopBar';
 import { adminErrorTitle } from '@/app/features/admin/adminError';
 import { useT } from '@/app/hooks/useT';
 import { AdminBoot } from '@/app/features/admin/AdminBoot';
-import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
+import {
+  canEditCourse,
+  builderErrorKey,
+  coursesBase,
+  creatorLock,
+  inReview,
+  mediaPrefix,
+} from '@/app/features/admin/courses/builderScope';
+import { CourseStateBadge } from '@/app/features/admin/courses/CourseStateBadge';
+import { useBuilderScope, type BuilderMode } from '@/app/features/admin/courses/useBuilderScope';
 import { LangTabs } from '@/app/features/admin/LangTabs';
 import { CompiledCourseNotice } from '@/app/features/admin/courses/CompiledCourseNotice';
 import { CourseMetaEditor } from '@/app/features/admin/courses/CourseMetaEditor';
@@ -70,12 +86,21 @@ type Confirm =
   { kind: 'unpublish' } | { kind: 'deleteCourse' } | { kind: 'deleteDay'; dayId: string };
 
 export default function AdminCourseScreen() {
+  return <CourseEditorScreen mode="admin" />;
+}
+
+export function CourseEditorScreen({ mode }: { mode: BuilderMode }) {
   const { id = '' } = useParams();
   const tr = useT();
-  const { t } = tr;
+  const { t, locale } = tr;
   const toast = useToast();
-  const admin = useIsAdmin();
+  const scope = useBuilderScope(mode);
   const navigate = useNavigate();
+  const base = scope
+    ? coursesBase(scope)
+    : mode === 'admin'
+      ? '/admin/courses'
+      : '/creator/courses';
 
   const [confirm, setConfirm] = useState<Confirm | null>(null);
   const [bundle, setBundle] = useState<AdminCourseBundle | null>(null);
@@ -98,8 +123,8 @@ export default function AdminCourseScreen() {
   }, [id]);
 
   useEffect(() => {
-    if (admin) load();
-  }, [admin, load]);
+    if (scope) load();
+  }, [scope, load]);
 
   const saveCourse = useCallback((patch: AdminCoursePatch) => updateAdminCourse(id, patch), [id]);
   const courseSave = useAutosave<AdminCoursePatch>(saveCourse);
@@ -138,12 +163,12 @@ export default function AdminCourseScreen() {
     );
   }, [bundle]);
 
-  if (admin === null) return <AdminBoot />;
-  if (admin === false) return <Navigate to="/" replace />;
+  if (scope === undefined && mode === 'admin') return <AdminBoot />;
+  if (scope === null) return <Navigate to={mode === 'admin' ? '/' : '/creator'} replace />;
 
-  if (loading || !bundle) {
+  if (!scope || loading || !bundle) {
     return (
-      <Screen header={<TopBar back="/admin/courses" />}>
+      <Screen header={<TopBar back={base} />}>
         {!loading && loadError !== null ? (
           <AdminLoadError
             error={loadError}
@@ -152,7 +177,7 @@ export default function AdminCourseScreen() {
             notFound={{
               title: 'app.courseNotFoundTitle',
               body: 'app.courseNotFoundBody',
-              back: '/admin/courses',
+              back: base,
             }}
           />
         ) : (
@@ -171,16 +196,25 @@ export default function AdminCourseScreen() {
    * added or removed, and nothing is autosaved. The notice stays and says why.
    */
   const compiled = isCompiledCourse(course.slugId);
+  /*
+   * A creator's course is read-only to them unless it is an editable draft of theirs: once sent
+   * for review, once ever published, or while they are paused (0065). Same mechanism as a
+   * compiled course — disabled fieldsets, no autosave — and a line on the screen says why.
+   */
+  const readOnly = compiled || !canEditCourse(scope, course);
+  const lock = creatorLock(scope, course);
+  const creatorId = scope.kind === 'creator' ? scope.creatorId : null;
+  const prefix = mediaPrefix(scope);
 
   /** Apply a patch locally at once, and schedule the write. */
   const patchCourse = (patch: AdminCoursePatch) => {
-    if (compiled) return;
+    if (readOnly) return;
     setBundle((b) => (b ? { ...b, course: { ...b.course, ...patch } } : b));
     courseSave.push(patch);
   };
 
   const patchDay = (dayId: string, patch: AdminCourseDayPatch) => {
-    if (compiled) return;
+    if (readOnly) return;
     setBundle((b) =>
       b ? { ...b, days: b.days.map((d) => (d.id === dayId ? { ...d, ...patch } : d)) } : b,
     );
@@ -222,7 +256,7 @@ export default function AdminCourseScreen() {
     try {
       const saved = workoutFor.existing
         ? await updateCustomWorkout(workoutFor.existing.id, input)
-        : await createCustomWorkout(input);
+        : await createCustomWorkout({ ...input, creatorId });
       // A brand-new workout has to be attached to the day that asked for it.
       if (!workoutFor.existing) {
         await updateCourseDay(workoutFor.dayId, { customWorkoutId: saved.id });
@@ -273,7 +307,20 @@ export default function AdminCourseScreen() {
     }
     try {
       await publishAdminCourse(course.id);
-      setBundle((b) => (b ? { ...b, course: { ...b.course, status: 'published' } } : b));
+      // Publishing ends a creator's review too (0065).
+      setBundle((b) =>
+        b
+          ? {
+              ...b,
+              course: {
+                ...b.course,
+                status: 'published',
+                publishedAt: b.course.publishedAt ?? new Date().toISOString(),
+                reviewRequestedAt: null,
+              },
+            }
+          : b,
+      );
       toast.show({ kind: 'success', title: t('app.coursePublishedToast') });
     } catch (e) {
       toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.coursePublishError') });
@@ -299,9 +346,56 @@ export default function AdminCourseScreen() {
     try {
       await deleteAdminCourse(course.id);
       toast.show({ kind: 'success', title: t('app.courseDeleted') });
-      navigate('/admin/courses', { replace: true });
+      navigate(base, { replace: true });
     } catch (e) {
       toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.courseDeleteError') });
+    }
+  };
+
+  /*
+   * The creator's «Отправить на проверку»: what is saved goes, as with a publish, and then the
+   * course waits for the owner — read-only to its creator until she publishes it or hands it back.
+   */
+  const sendForReview = async () => {
+    setPublishing(true);
+    const [courseSaved, daySaved] = await Promise.all([courseSave.flush(), daySave.flush()]);
+    if (!courseSaved || !daySaved) {
+      toast.show({ kind: 'error', title: t('app.courseSaveBeforePublish') });
+      setPublishing(false);
+      return;
+    }
+    try {
+      await requestCourseReview(course.id);
+      setBundle((b) =>
+        b ? { ...b, course: { ...b.course, reviewRequestedAt: new Date().toISOString() } } : b,
+      );
+      toast.show({ kind: 'success', title: t('app.courseReviewSent') });
+    } catch (e) {
+      const key = builderErrorKey(e);
+      toast.show({
+        kind: 'error',
+        title: key ? t(key) : adminErrorTitle(tr, e, 'app.courseReviewError'),
+      });
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  /** The creator takes it back to edit, or the owner hands it back: either way, not waiting. */
+  const endReview = async () => {
+    setPublishing(true);
+    try {
+      if (scope.kind === 'creator') await withdrawCourseReview(course.id);
+      else await returnCourseToCreator(course.id);
+      setBundle((b) => (b ? { ...b, course: { ...b.course, reviewRequestedAt: null } } : b));
+      toast.show({
+        kind: 'success',
+        title: t(scope.kind === 'creator' ? 'app.courseReviewWithdrawn' : 'app.courseReturned'),
+      });
+    } catch (e) {
+      toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.courseReviewError') });
+    } finally {
+      setPublishing(false);
     }
   };
 
@@ -338,6 +432,7 @@ export default function AdminCourseScreen() {
                 }) as CustomWorkoutStructure,
               }
             : {})}
+          withAuthor={scope.kind === 'admin'}
           saving={savingWorkout}
           onSave={(input) => void saveWorkout(input)}
           onCancel={() => setWorkoutFor(null)}
@@ -354,18 +449,13 @@ export default function AdminCourseScreen() {
     <Screen
       header={
         <TopBar
-          back="/admin/courses"
+          back={base}
           title={course.content.name?.ru || course.slugId}
-          right={
-            /* Published is the one white stamp; a draft is an outline. */
-            <Badge tone={published ? 'inverse' : 'neutral'} size="sm">
-              {t(published ? 'app.coursePublished' : 'app.courseDraft')}
-            </Badge>
-          }
+          right={<CourseStateBadge course={course} />}
         />
       }
       footer={
-        tab === 'days' && !compiled ? (
+        tab === 'days' && !readOnly ? (
           <Button
             size="lg"
             fullWidth
@@ -402,6 +492,19 @@ export default function AdminCourseScreen() {
       {/* On every tab, not only «Публикация»: the edits the notice is about happen on the other two. */}
       <CompiledCourseNotice slugId={course.slugId} />
 
+      {/* Why a creator cannot edit their own course right now (0065). */}
+      {lock ? (
+        <p className="border-b border-border py-3 text-[13px] leading-[1.3] text-muted">
+          {t(
+            lock === 'published'
+              ? 'app.courseLockPublished'
+              : lock === 'review'
+                ? 'app.courseLockReview'
+                : 'app.courseLockPaused',
+          )}
+        </p>
+      ) : null}
+
       {/*
        * «Пишем на» — под вкладками и над формой, и только там, где действительно печатают текст.
        * На вкладке «Публикация» переключать нечего, и лишняя полоска там читалась бы как ещё одна
@@ -419,8 +522,13 @@ export default function AdminCourseScreen() {
        * button inside the editors at once, and `patchCourse` / `patchDay` refuse the write anyway.
        */}
       {tab === 'meta' ? (
-        <fieldset disabled={compiled} className="min-w-0">
-          <CourseMetaEditor course={course} onPatch={patchCourse} />
+        <fieldset disabled={readOnly} className="min-w-0">
+          <CourseMetaEditor
+            course={course}
+            mediaPrefix={prefix}
+            withPaymentUrl={scope.kind === 'admin'}
+            onPatch={patchCourse}
+          />
         </fieldset>
       ) : null}
 
@@ -469,9 +577,11 @@ export default function AdminCourseScreen() {
                     {t('app.courseTabDays')}
                   </Button>
                 </div>
-                <fieldset disabled={compiled} className="min-w-0">
+                <fieldset disabled={readOnly} className="min-w-0">
                   <DayEditor
                     courseSlugId={course.slugId}
+                    mediaPrefix={prefix}
+                    workoutOwner={creatorId}
                     day={openDay}
                     workout={workouts.find((w) => w.id === openDay.customWorkoutId) ?? null}
                     onPatch={(patch) => patchDay(openDay.id, patch)}
@@ -527,46 +637,107 @@ export default function AdminCourseScreen() {
             </div>
           )}
 
-          {/*
-           * Publishing is instant in the app and not on the website; say so where it is decided.
-           * Not on a compiled course: Publish is off there, and neither the catalogue nor the site
-           * would show its draft, so both sentences would describe something that cannot happen.
-           */}
-          {compiled ? null : (
+          {scope.kind === 'creator' ? (
+            /*
+             * The creator's side (0065): no Publish. The neon action is «Отправить на проверку»,
+             * the one thing this tab is for them; once sent, a secondary takes it back. A published
+             * course has nothing to press: it is the owner's from then on.
+             */
             <>
-              <p className="text-[15px] text-muted">{t('app.coursePublishExplain')}</p>
-              <p className="text-[15px] text-muted">{t('app.coursePublishSite')}</p>
+              <p className="text-[15px] text-muted">{t('app.courseReviewExplain')}</p>
+              {lock === 'published' ? null : inReview(course) ? (
+                <>
+                  <p className="text-[15px] text-muted">
+                    {t('app.courseReviewSince', {
+                      date: formatDate(locale, (course.reviewRequestedAt ?? '').slice(0, 10)),
+                    })}
+                  </p>
+                  <Button
+                    variant="secondary"
+                    size="lg"
+                    loading={publishing}
+                    disabled={!scope.open}
+                    onClick={() => void endReview()}
+                  >
+                    {t('app.courseReviewWithdraw')}
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  size="lg"
+                  variant="action"
+                  loading={publishing}
+                  disabled={readOnly || !canPublish(course.slugId, issues)}
+                  onClick={() => void sendForReview()}
+                >
+                  {t('app.courseReviewSend')}
+                </Button>
+              )}
+            </>
+          ) : (
+            <>
+              {/*
+               * Publishing is instant in the app and not on the website; say so where it is
+               * decided. Not on a compiled course: Publish is off there, and neither the catalogue
+               * nor the site would show its draft, so both sentences would describe something that
+               * cannot happen.
+               */}
+              {compiled ? null : (
+                <>
+                  <p className="text-[15px] text-muted">{t('app.coursePublishExplain')}</p>
+                  <p className="text-[15px] text-muted">{t('app.coursePublishSite')}</p>
+                </>
+              )}
+
+              {/* A creator sent this one (0065): say since when, and offer to hand it back. */}
+              {inReview(course) && !published ? (
+                <p className="border-y border-border py-3 text-[13px] leading-[1.3] text-warning">
+                  {t('app.courseReviewWaiting', {
+                    date: formatDate(locale, (course.reviewRequestedAt ?? '').slice(0, 10)),
+                  })}
+                </p>
+              ) : null}
+
+              {/*
+               * Publish is the one neon button on this tab — neon is the palette's colour for
+               * action, and this is the action the whole tab exists for. Taking it back is a
+               * secondary. The ink is #111111 (17.3).
+               */}
+              {published ? (
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  loading={publishing}
+                  disabled={compiled}
+                  onClick={() => setConfirm({ kind: 'unpublish' })}
+                >
+                  {t('app.courseUnpublish')}
+                </Button>
+              ) : (
+                <Button
+                  size="lg"
+                  variant="action"
+                  loading={publishing}
+                  disabled={!canPublish(course.slugId, issues)}
+                  onClick={() => void publish()}
+                >
+                  {t('app.coursePublish')}
+                </Button>
+              )}
+              {inReview(course) && !published ? (
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  loading={publishing}
+                  onClick={() => void endReview()}
+                >
+                  {t('app.courseReturn')}
+                </Button>
+              ) : null}
             </>
           )}
 
-          {/*
-           * Publish is the one neon button on this tab — neon is the palette's colour for action,
-           * and this is the action the whole tab exists for. Taking it back is a secondary. The `!`
-           * is there because the primary variant sets its own fill; the ink is #111111 (17.3).
-           */}
-          {published ? (
-            <Button
-              variant="secondary"
-              size="lg"
-              loading={publishing}
-              disabled={compiled}
-              onClick={() => setConfirm({ kind: 'unpublish' })}
-            >
-              {t('app.courseUnpublish')}
-            </Button>
-          ) : (
-            <Button
-              size="lg"
-              variant="action"
-              loading={publishing}
-              disabled={!canPublish(course.slugId, issues)}
-              onClick={() => void publish()}
-            >
-              {t('app.coursePublish')}
-            </Button>
-          )}
-
-          {!published && days.length === 0 && !compiled ? (
+          {!published && days.length === 0 && !readOnly ? (
             <Button
               variant="danger"
               size="sm"

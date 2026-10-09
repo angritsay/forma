@@ -45,6 +45,13 @@ const HEX_RE = /^#[0-9a-f]{6}$/i;
 export interface CourseMetaEditorProps {
   course: AdminCourseRow;
   onPatch: (patch: AdminCoursePatch) => void;
+  /**
+   * The storage folder every upload goes under: empty for the owner, `creators/<id>/` for a
+   * creator, who may write nowhere else (0065, `builderScope.ts`).
+   */
+  mediaPrefix?: string;
+  /** Show the payment link; off for a creator, whose course the owner links to a till (0065). */
+  withPaymentUrl?: boolean;
 }
 
 /** A single-line field of the content blob, in whichever language the admin is writing. */
@@ -59,7 +66,12 @@ function useContentField(course: AdminCourseRow, onPatch: (p: AdminCoursePatch) 
   };
 }
 
-export function CourseMetaEditor({ course, onPatch }: CourseMetaEditorProps) {
+export function CourseMetaEditor({
+  course,
+  onPatch,
+  mediaPrefix = '',
+  withPaymentUrl = true,
+}: CourseMetaEditorProps) {
   const { t } = useT();
   const editing = useAdminLocale((s) => s.editing);
   const setText = useContentField(course, onPatch);
@@ -313,7 +325,7 @@ export function CourseMetaEditor({ course, onPatch }: CourseMetaEditorProps) {
           value={c.coverImage ?? null}
           onChange={(coverImage) => onPatch({ content: { ...c, coverImage } })}
           bucket={PUBLIC_BUCKET}
-          pathBase={`courses/${course.slugId}/cover`}
+          pathBase={`${mediaPrefix}courses/${course.slugId}/cover`}
           accept="image/*"
           maxBytes={8 * 1024 * 1024}
         />
@@ -325,24 +337,30 @@ export function CourseMetaEditor({ course, onPatch }: CourseMetaEditorProps) {
             onPatch({ content: { ...c, introVideo: ref ? { ru: ref } : undefined } })
           }
           bucket={PRIVATE_BUCKET}
-          pathBase={`${course.slugId}/intro.ru`}
+          pathBase={`${mediaPrefix}${course.slugId}/intro.ru`}
           accept="video/*"
         />
       </div>
 
-      <Input
-        label={t('app.coursePaymentUrl')}
-        hint={t('app.coursePaymentUrlHint')}
-        type="url"
-        inputMode="url"
-        placeholder="https://…"
-        value={c.paymentUrl?.ru ?? ''}
-        onChange={(e) =>
-          onPatch({
-            content: { ...c, paymentUrl: e.target.value ? { ru: e.target.value } : undefined },
-          })
-        }
-      />
+      {/*
+       * The payment link decides whose till a sale lands in, so it is the owner's to set (0065):
+       * a creator's builder does not show it, and the server refuses it from them.
+       */}
+      {withPaymentUrl ? (
+        <Input
+          label={t('app.coursePaymentUrl')}
+          hint={t('app.coursePaymentUrlHint')}
+          type="url"
+          inputMode="url"
+          placeholder="https://…"
+          value={c.paymentUrl?.ru ?? ''}
+          onChange={(e) =>
+            onPatch({
+              content: { ...c, paymentUrl: e.target.value ? { ru: e.target.value } : undefined },
+            })
+          }
+        />
+      ) : null}
 
       <div className="flex flex-col gap-3">
         <FieldLabel label={t('app.courseFaq')} hint={t('app.courseFaqHint')} />

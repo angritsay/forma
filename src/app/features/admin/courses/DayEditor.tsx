@@ -35,6 +35,10 @@ export const TRAINING_KINDS: readonly CourseDayKind[] = ['workout', 'test', 'ben
 
 export interface DayEditorProps {
   courseSlugId: string;
+  /** The storage folder uploads go under; `creators/<id>/` for a creator (0065). */
+  mediaPrefix?: string;
+  /** Whose workouts the picker offers: Forma's (null) or this creator's own (0065). */
+  workoutOwner?: string | null;
   day: AdminCourseDayRow;
   /** The workout this day plays, when it has one. */
   workout: CustomWorkoutSummary | null;
@@ -46,6 +50,8 @@ export interface DayEditorProps {
 
 export function DayEditor({
   courseSlugId,
+  mediaPrefix = '',
+  workoutOwner = null,
   day,
   workout,
   onPatch,
@@ -200,7 +206,7 @@ export function DayEditor({
         value={content.image ?? null}
         onChange={(image) => setContent({ image })}
         bucket={PUBLIC_BUCKET}
-        pathBase={`courses/${courseSlugId}/${day.nodeId}`}
+        pathBase={`${mediaPrefix}courses/${courseSlugId}/${day.nodeId}`}
         accept="image/*"
         maxBytes={8 * 1024 * 1024}
       />
@@ -210,6 +216,7 @@ export function DayEditor({
       </Button>
 
       <WorkoutPickerSheet
+        owner={workoutOwner}
         open={picking}
         onClose={() => setPicking(false)}
         onPick={(w) => {

@@ -67,10 +67,46 @@ write.
 
 Order matters, because each step needs the one before it.
 
-1. **Creator-scoped builder.** Today the builder RPCs check `is_admin()`. They should also admit
-   the creator, limited to `admin_courses.creator_id = my creator` (and the days, workouts and
-   exercises under those courses). Publishing a creator's course stays a review step for the
-   owner, one tap, because health content goes out under the platform's name.
+1. **Creator-scoped builder. Done (0065).** An open creator builds their own courses in «Кабинет
+   автора» → «Мои курсы» (`/creator/courses`), the owner's builder screens in the creator's scope.
+   Publishing stays a review step for the owner, one tap, because health content goes out under
+   the platform's name. Exactly what a creator can and cannot do:
+   - **Courses.** An open creator (status `active`) creates a course, which is theirs
+     (`creator_id`), and edits its catalogue fields, prose and days while it is an editable
+     draft: never published and not waiting for review. They cannot set `status`,
+     `published_at`, `sort_order` (the catalogue order is the owner's), `creator_id` or
+     `review_requested_at` by writing the row, cannot price a course above 100 000 ₽ / $1 000,
+     cannot set the payment link (`content.paymentUrl`, whose till a sale lands in — the owner
+     sets it at review), and cannot take a course id that already exists in `public.courses` (the
+     compiled courses and everything ever published) or a path word (`custom`, `shared`,
+     `creators`, …). They delete a draft of theirs; never anything else.
+   - **Days** only in their own editable course, and a training day only plays a workout of their
+     own — never Forma's or another creator's.
+   - **Workouts** are theirs by `custom_workouts.creator_id`. They are built from the shared
+     exercise library, never shared by link, never assigned to people, and never credited to one
+     of Forma's authors. A workout that a published, once-published or in-review course plays
+     cannot be changed or deleted by the creator.
+   - **Exercises stay admin-curated.** The library is readable by everyone signed in and written
+     by admins only. A creator who needs a movement that is not there asks the owner.
+   - **Media** go under `creators/<creator_id>/…` in the `images`, `videos` and `audio` buckets
+     (`images/creators/<id>/courses/<course id>/…`, `videos|audio/creators/<id>/<course id>/…`).
+     The creator writes, overwrites and deletes only there, only in the folder of a course they
+     can still edit (media freeze with the course in review and once published), and only image,
+     video or audio files by extension (images: jpg, jpeg, png, webp, avif; videos: mp4, webm,
+     mov, m4v; audio: mp3, m4a, aac, ogg, wav). Paid clips live at
+     `videos/creators/<creator_id>/<course id>/…`: the creator reads their own folder, and a buyer
+     reads a clip when they hold that course and the course belongs to that creator.
+   - **Review, not publish.** «Отправить на проверку» (`creator_request_review`) needs the four
+     days and filled workouts a publish needs, and freezes the course for its creator. They can
+     take it back to edit («Забрать с проверки»). The owner sees «на проверке» in «Авторы» and in
+     the course list, and publishes with the usual button (which clears the request) or presses
+     «Вернуть автору».
+   - **Once published, a creator's course is read-only to its creator**, also after an unpublish:
+     changing live health content needs a versioning step this phase does not have. The owner
+     can still edit it.
+   - **A paused creator** keeps reading their courses, days, workouts and clips and changes
+     nothing. Applied and declined creators have no access at all.
+   - **Admins keep full access**, exactly as before.
 2. **Public creator pages.** _Done in `0068_creator_pages.sql`._ `forma-app.co/c/<slug>/` shows
    the creator's name, their line about themselves, a link to their audience and their published
    courses, each with the free first workout and a buy button. Pages are built at build time from
