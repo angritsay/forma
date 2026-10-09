@@ -62,6 +62,7 @@ import { CREATOR_CONTACT } from '@content/site/links';
 import { NASTIA } from '@content/site/nastia';
 import { CREATOR_TIERS, percent, proBreakEven } from '@content/site/creatorTerms';
 import { PLAN_BY_ID, planMonthlyPrice } from '@content/site/plans';
+import { renewalKey } from '@/lib/renewal';
 import { formatPrice, PRICING, priceForLocale } from '@content/site/pricing';
 
 export function getStaticPaths() {
@@ -92,7 +93,7 @@ const clubPrice =
   annual && monthly
     ? {
         value: k('creatorsClubPrice', { year: formatPrice(locale, annual.price) }),
-        note: k('creatorsClubPriceNote', {
+        note: t(locale, renewalKey('creatorsClubPriceNote'), {
           month: formatPrice(locale, planMonthlyPrice(annual)),
           month30: formatPrice(locale, monthly.price),
         }),

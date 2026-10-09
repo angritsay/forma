@@ -47,7 +47,54 @@ agreed to the new one.
 - **Subscription** (terms §1, §4, §5; refund policy §1a): automatic renewal at the sign-up price,
   14 days' notice before a price change, cancellation keeps the paid period, only the first payment
   is refundable under the course rule, renewals are not. Check against consumer law on recurring
-  payments and on the notice a seller must give before each charge.
+  payments and on the notice a seller must give before each charge. The clauses are written — see
+  the next section.
+
+## Automatic monthly renewal — draft for the lawyer, not shown until `RENEWAL = 'auto'`
+
+Today every subscription period is a one-off payment and the published texts say so («Подписка не
+списывается автоматически», «автосписания нет»). Automatic renewal of the **30-day plan only** is
+prepared behind one switch, `RENEWAL` in `content/site/plans.ts` (procedure: `docs/SETUP.md`
+§7.18). The year stays a one-off payment in both modes. Until the switch is flipped none of the
+text below is published; when it is, `PRICING.legalUpdatedAt` is bumped in the same commit (a test
+refuses the flip otherwise), so consents name the version that contains these clauses.
+
+What replaces what, all in `src/components/landing/legal.ts` (the block above `termsDocument`,
+marked «DRAFT FOR THE LAWYER»):
+
+- **Terms §4** (`AUTO_TERM_OF_ACCESS`): the 30-day Subscription renews for the next 30 days until
+  the User cancels; the annual one does not.
+- **Terms §5** (`AUTO_PRICE_CLAUSES`), replacing «не списывается автоматически»: consent to a
+  charge every 30 days to the same card at the sign-up price; card details held by Prodamus, not
+  by us; a reminder at least 3 days before each charge; cancellation at any time through the link
+  in the payment receipt email or by writing to the support address, the paid period kept; a new
+  price notified by email at least `PRICING.priceChangeNoticeDays` (14) days before the first
+  charge at it; a failed charge ends the Subscription at the end of the paid period.
+- **Terms §9**: adds «automatic renewals of a 30-day Subscription are not refunded: only its first
+  payment is».
+- **Refund policy §1a** (`AUTO_REFUND_SUBSCRIPTION`): the year's payment and the first 30-day
+  payment are refundable on the course rule; automatic renewals are not; cancel ahead to avoid the
+  next charge.
+
+The same promises in short form, for the lawyer to read with the clauses: the monthly plan's note
+(`plansFor` in `plans.ts`), the `…Auto` keys in `src/i18n/{ru,en}/landing.ts` and `app.ts`, the
+home FAQ (`autoRenewalFaq` in `content/site/faq.ts`) and the bot's reminder
+(`subscriptionRenewing*` in `supabase/functions/telegram-notify/copy.ts`).
+
+Questions for the lawyer:
+
+- **The reminder reaches only people who connected the Telegram bot.** Is a reminder before each
+  charge required by law, and if so, is a bot message enough or must it be email for everyone? (No
+  email reminder exists today.)
+- **The reminder states no amount** — «столько же, сколько в прошлый раз» — because the queue does
+  not know whether the person paid in roubles or dollars. Is that sufficient?
+- **«Only the first payment is refundable»** against ЗоЗПП art. 32 (withdrawal at any time, paying
+  the costs actually incurred), which refund policy §6 keeps. A renewal charged yesterday and
+  unused is probably refundable pro rata by statute whatever our rule says.
+- **Cancellation by writing to support** — we then cancel by hand in Prodamus; is a written
+  request enough, and how fast must it take effect before a charge?
+- **The 14-day price-change notice** is new: the manual texts never promised it (they quote the
+  price at the time of each payment).
 - **Refund rule** (14 days / fewer than 3 completed workouts) versus statutory consumer rights for
   digital content in the target countries.
 - **Health disclaimer** (terms §6) wording for the target market.

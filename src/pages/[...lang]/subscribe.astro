@@ -63,6 +63,7 @@ import { COURSE_BY_ID } from '@/content/registry';
 import { SITE_COURSES } from '@/content/published';
 import type { Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
+import { renewalKey } from '@/lib/renewal';
 import { exerciseStillUrl } from '@/lib/api/storage';
 import { canonicalUrl } from '@/lib/seo/urls';
 import { appHref, href, localeStaticPaths, withBase } from '@/lib/util/paths';
@@ -87,7 +88,7 @@ export function getStaticPaths() {
 const locale: Locale = Astro.params.lang === 'en' ? 'en' : 'ru';
 const site = (Astro.site?.toString() ?? 'http://localhost:4321').replace(/\/$/, '');
 const title = t(locale, 'landing.subscribeTitle');
-const description = t(locale, 'landing.subscribeDescription');
+const description = t(locale, renewalKey('subscribeDescription'));
 const supportEmail = LINKS.supportEmail || BRAND.contactEmail;
 const supportTelegram = LINKS.supportTelegram || BRAND.telegram || undefined;
 const club = clubPriceLabels(locale);
@@ -124,10 +125,16 @@ const features = [
   { kind: 'flame', n: 3 },
 ] as const;
 
-/* The six questions in the order the synthesis gives: task, prize, renewal, +30, end, why. */
+/*
+ * The six questions in the order the synthesis gives: task, prize, renewal, +30, end, why. The
+ * renewal answer follows the switch (`renewalKey`); its auto variant names the support address.
+ */
 const faq = [1, 4, 5, 6, 2, 3].map((n) => ({
   q: t(locale, `landing.subscribeFaq${n}Q` as 'landing.subscribeFaq1Q'),
-  a: t(locale, `landing.subscribeFaq${n}A` as 'landing.subscribeFaq1A'),
+  a:
+    n === 5
+      ? t(locale, renewalKey('subscribeFaq5A'), { email: supportEmail })
+      : t(locale, `landing.subscribeFaq${n}A` as 'landing.subscribeFaq1A'),
 }));
 
 const quietLink =
@@ -365,7 +372,7 @@ const jsonLd = [
             notConfigured: t(locale, 'landing.orderNotConfigured'),
             payAnyway: t(locale, 'landing.orderPayAnyway'),
             tryAgain: t(locale, 'landing.orderTryAgain'),
-            lifetimeNote: t(locale, 'landing.subscribeNote'),
+            lifetimeNote: t(locale, renewalKey('subscribeNote')),
             telegramLabel: t(locale, 'landing.contactTelegram'),
             plansLabel: t(locale, 'landing.subscribePlanLabel'),
           }}

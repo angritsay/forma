@@ -1984,39 +1984,88 @@ label; everybody before it is `unknown`.
 
 Verify on a database: `supabase/tests/99_money_reports.sql` (§2).
 
-## 7.18 Automatic monthly renewal through Prodamus — what switching it on takes
+## 7.18 Automatic monthly renewal through Prodamus — one switch, ready to flip
 
 Today the 30-day plan is a one-off payment, «renewed by hand» (`content/site/plans.ts`): Prodamus
 charges a card again only through its subscription module, which is applied for and paid for
 separately. lava.top already renews on its own (§7.9). Renewal by hand loses far more people every
-month than a saved card does, so this is the biggest money lever there is — and almost all of it is
-on the Prodamus side:
+month than a saved card does, so this is the biggest money lever there is.
 
-1. **Apply for Prodamus subscriptions** (the recurring module) in the Prodamus account and create
-   two subscription products at exactly **1 990 ₽ / month** and **7 990 ₽ / year**. Each gets its
-   own payment link.
-2. **Nothing changes in the webhook.** A renewal arrives as an ordinary payment notification at the
+**Everything on our side is already built and switched off.** One constant decides it:
+`RENEWAL` in `content/site/plans.ts`, `'manual'` today. With `'manual'` every page, the app and the
+bot say exactly what they always have (every built page is byte-identical); every string for
+`'auto'` is written, in Russian and English, next to its manual twin, and is tested while the
+switch is off (`content/site/renewal.test.ts`, `src/app/features/profile/subscription.renewal.test.ts`,
+`supabase/functions/telegram-notify/renewal.test.ts`).
+
+**What `'auto'` covers: the 30-day plan only.** The annual plan stays a one-off payment with the
+manual renewal reminder. A silent 7 990 ₽ charge a year after somebody last thought about the club
+is the textbook chargeback, and the year is the plan the club is sold with — «Одна оплата: 7 990 ₽
+за год» is the promise the selling screen is built on. Making the year recurring too is a separate
+decision with its own wording; nothing here does it.
+
+### What the switch changes
+
+| Where                                                                             | Manual (today)                                                                                                                                    | Auto                                                                                                                                                                                                                                               |
+| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `plans.ts`, the 30-day plan                                                       | note «Автосписаний нет — продлевается вручную», the one-off link                                                                                  | «Продлевается сам каждые 30 дней, пока не отменишь», `MONTHLY_AUTO_PAYMENT_URL`                                                                                                                                                                    |
+| Offer (`legal.ts`, §4, §5, §9)                                                    | «Подписка не списывается автоматически»                                                                                                           | renewal until cancelled, a reminder 3 days before each charge, how to cancel, 14 days' notice of a new price, a failed charge ends the period                                                                                                      |
+| Refund policy (`legal.ts`, §1a)                                                   | any period's payment is refundable; nothing to cancel                                                                                             | the year's payment and the _first_ 30-day payment are refundable; automatic renewals are not                                                                                                                                                       |
+| Site strings (`src/lib/renewal.ts` → the `…Auto` keys in `src/i18n/*/landing.ts`) | `clubNoAutoRenew`, `ladderFootnoteShort`, `subscribeFaq5A`, `creatorsClubPriceNote`, `subscribeDescription` (also the sitemap's), `subscribeNote` | the `…Auto` twin of each                                                                                                                                                                                                                           |
+| Home FAQ (`content/site/faq.ts`, `autoRenewalFaq`)                                | «Нет. … отменять нечего»                                                                                                                          | «Только у доступа на 30 дней…», how to cancel                                                                                                                                                                                                      |
+| App (`ClubRenew.tsx`, `profile/subscription.ts`)                                  | «Продлить» in the last week                                                                                                                       | for a live, **not cancelled** monthly subscription: «Продление {date}», the amount and how to cancel — **no pay button** (it would charge twice); the account row reads «продление {date} · 1 990 ₽». Annual and cancelled monthly keep «Продлить» |
+| Bot (`telegram-notify/copy.ts`, `subscription_ending`)                            | «Автопродления нет: … продли»                                                                                                                     | for an active monthly subscription: «Клуб продлится {date}. В этот день спишем … Не хочешь продлевать — отмени …»                                                                                                                                  |
+
+The bot can tell an active monthly subscription from the rest because, since
+`0068_renewal_reminder_params.sql`, the queued row carries the subscription's `plan` and `status`.
+**Apply 0068 now** (Actions → Supabase apply → `migration`, or paste it) — it changes no message
+while the switch is off.
+
+How to cancel, everywhere: through the link in the payment receipt email (the payer's Prodamus
+account) or by writing to the support address (`LINKS.supportEmail`, mirrored as `SUPPORT_EMAIL` in
+the bot).
+
+### The flip, in order
+
+1. **Prodamus.** Apply for the subscriptions (recurring) module. Once approved, create a
+   subscription product at exactly **1 990 ₽ every 30 days** (the monthly plan's price and the
+   `PLAN_MONTHLY_RUB` secret — the webhook matches by amount). Copy its payment link.
+2. **A lawyer reads the auto-mode wording** — every place in the table above; in code each is
+   marked «draft for the lawyer — not shown until RENEWAL = 'auto'», and `docs/LEGAL.md` lists the
+   open questions. Their edits go into the auto variants only.
+3. **One commit**, which must contain all of:
+   - `content/site/plans.ts`: `RENEWAL = 'auto'` and `MONTHLY_AUTO_PAYMENT_URL = { ru: '<the new link>' }`;
+   - `supabase/functions/telegram-notify/copy.ts`: its mirror `RENEWAL = 'auto'`;
+   - `content/site/pricing.ts`: `PRICING.legalUpdatedAt` set to the day of the flip — never older
+     than `AUTO_RENEW_TEXT_DATE` (plans.ts; move that date too if the lawyer changed the wording).
+     The offer changes with the switch, and every consent row is stamped with this date.
+
+   `npm run test` refuses a half-done flip: auto mode without the newer `legalUpdatedAt`, without a
+   subscription link (or with the one-off link in its place), or with the bot's mirror still
+   `'manual'`.
+
+4. **Before deploying**, in the admin («Подписки»): press «Отменить» on every live **monthly**
+   subscription bought through the old one-off link. Access stays to the end of the paid period,
+   and in auto mode a cancelled subscription keeps the manual path — the «Продлить» button and the
+   «renew by hand» reminder — which is the truth for them. Without this the app would tell them
+   their card will be charged, and it will not.
+5. **Deploy** the site (the push does it) and redeploy `telegram-notify`
+   (`supabase functions deploy telegram-notify`, or Actions).
+6. **Nothing changes in the webhook.** A renewal arrives as an ordinary payment notification at the
    plan's amount; `prodamus-webhook` recognises the plan by amount, as today, and
    `apply_subscription_payment()` extends the period. Make the first real renewal the test: Logs
-   should read `ok: monthly for …` a month after the first payment. A cancellation or a declined
-   card arrives as a non-success notification and goes to the owner's channel as «Возврат или
-   отмена в кассе» (0057) — it opens and closes nothing; the paid period runs out by itself.
-3. **The words change together, in one pull request, after a lawyer has read them.** Every place
-   that promises «автосписаний нет» has to say instead that the plan renews until cancelled and
-   how to cancel (in the Prodamus receipt or by writing to support):
-   - `content/site/plans.ts` — the two `paymentUrl` links and the monthly plan's `note`;
-   - the offer and the refund policy, `src/components/landing/legal.ts` (the subscription clause
-     and the refund clause for a period) — `docs/LEGAL.md` already lists auto-renewal as a point
-     for the lawyer, including the notice a seller must give before each charge;
-   - `src/i18n/*/landing.ts`: `clubNoAutoRenew`, `ladderFootnoteShort`, the FAQ answer about
-     auto-renewal, `creatorsClubPriceNote` and the club's meta description;
-   - the app: `clubRenewNote` and the renewal row (`src/app/features/marathon/ClubRenew.tsx`,
-     `src/app/features/profile/subscription.ts`) — with a saved card a «renew now» button three
-     days before the end would charge some people twice;
-   - the bot's `subscription_ending` message (`supabase/functions/telegram-notify`), which then
-     becomes «your card will be charged on …» rather than «renew or lose access».
-4. Keep the old one-off links working until the last period bought through them has run out —
-   the webhook matches by amount, so both kinds of payment extend the same subscription.
+   should read `ok: monthly for …` thirty days after the first payment.
+7. **Every cancellation from now on:** a cancellation or a declined card arrives as a non-success
+   notification and goes to the owner's channel as «Возврат или отмена в кассе» (0057) — it opens
+   and closes nothing. Press «Отменить» on that person's subscription in the admin, so the app and
+   the bot stop announcing a charge that will not come.
+8. Keep the old one-off link working until the last period bought through it has run out — the
+   webhook matches by amount, so both kinds of payment extend the same subscription. (It is no
+   longer on the site after the flip; `MONTHLY_ONE_OFF_PAYMENT_URL` keeps it on record.)
+
+To switch back, set both `RENEWAL`s to `'manual'` and bump `legalUpdatedAt` again: the texts return
+to «автосписаний нет», which is then untrue for whoever still has a live Prodamus subscription —
+cancel those in Prodamus first.
 
 ## 7.19 Creators: applications, courses, monthly invoices (0064)
 

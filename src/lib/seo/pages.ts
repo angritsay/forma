@@ -9,6 +9,7 @@ import { FILMED_EXERCISES } from '@/content/registry';
 import { SITE_COURSES } from '@/content/published';
 import { l, t } from '@/i18n/index';
 import { localePath } from '@/lib/util/paths';
+import { renewalKey } from '@/lib/renewal';
 import { BRAND } from '@content/site/brand';
 import { PLANS_ENABLED } from '@content/site/plans';
 import { type GuideCluster } from './clusters';
@@ -102,7 +103,7 @@ const STATIC_PAGES: StaticDef[] = [
           changefreq: 'monthly',
           priority: 0.8,
           title: (loc: Locale) => t(loc, 'landing.subscribeTitle'),
-          description: (loc: Locale) => t(loc, 'landing.subscribeDescription'),
+          description: (loc: Locale) => t(loc, renewalKey('subscribeDescription')),
         } satisfies StaticDef,
       ]
     : []),

@@ -23,6 +23,7 @@
  */
 import type { Locale } from '@/content/schema';
 import { t } from '@/i18n/index';
+import { renewalKey } from '@/lib/renewal';
 import { href } from '@/lib/util/paths';
 import { clubPitchPhotos } from '@content/site/club';
 import Button from '../Button.astro';
@@ -89,9 +90,9 @@ const strip = photos.map((p) => ({
             <div class="flex flex-col gap-1.5">
               <p class="numeral text-5xl leading-none md:text-6xl">{club.headline}</p>
               <p class="text-[14px] leading-snug text-text">{club.chargeShort}</p>
-              {club.chargeShort !== t(locale, 'landing.clubNoAutoRenew') && (
+              {club.chargeShort !== t(locale, renewalKey('clubNoAutoRenew')) && (
                 <p class="text-[13px] leading-snug text-muted">
-                  {t(locale, 'landing.clubNoAutoRenew')}
+                  {t(locale, renewalKey('clubNoAutoRenew'))}
                 </p>
               )}
             </div>

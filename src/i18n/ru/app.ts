@@ -599,6 +599,8 @@ export const app = {
   // Меньше недели до конца, автопродления нет: строка ведёт в кассу заранее.
   profileSubscriptionRenewSoon: 'до {date} · продлить',
   profileSubscriptionCharge: 'Одна оплата: {price} за год',
+  // Месячная подписка с автопродлением (RENEWAL = 'auto') — черновик, до включения не показывается.
+  profileSubscriptionAutoRenews: 'продление {date} · {price}',
   planMonthly: 'Месяц',
   planAnnual: 'Год',
 
@@ -2107,6 +2109,12 @@ export const app = {
   clubRenewTitle: 'Клуб открыт до {date}',
   clubRenewNote: 'Автопродления нет — продли заранее, и дни не прервутся.',
   clubRenewCta: 'Продлить',
+  // Автопродление (RENEWAL = 'auto', content/site/plans.ts) — черновик для юриста, до включения
+  // не показывается. Месячной подписке, которая списывается сама, кнопку «Продлить» не даём: она
+  // списала бы дважды. Вместо неё — дата и как отменить.
+  clubRenewAutoTitle: 'Продление {date}',
+  clubRenewAutoNote:
+    'В этот день спишем {price} за следующие 30 дней — с той же карты. Отменить можно до этого — по ссылке в письме с чеком или написав на {email}; оплаченные дни останутся.',
   // --- Club, the selling screen's demo chat and features (stream: club-pitch-chat) ---
   // The owner: «Он абсолютно не продаёт клуб». So the screen now opens on what a day in the club
   // looks like — a short exchange with the coach that plays itself — and then says the four things

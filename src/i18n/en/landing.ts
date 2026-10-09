@@ -208,6 +208,21 @@ export const landing = {
   // This line sits under the pay button and promised auto-renewal, which does not exist — see
   // `content/site/plans.ts`. The plan card said the opposite two rows above it.
   subscribeNote: 'One payment · access for the whole paid period · renew whenever you want',
+  /*
+   * Automatic monthly renewal (RENEWAL = 'auto', content/site/plans.ts): every `…Auto` key below
+   * replaces its manual twin only then. Draft for the lawyer — not shown until RENEWAL = 'auto'.
+   * The year stays one payment in both modes; only the 30 days renew.
+   */
+  subscribeDescriptionAuto:
+    'The Small Steps Club: one small task a day, a streak, a weekly board and a prize — an hour with the coach. The Start course is inside. A year in one payment, or 30 days that renew until you cancel.',
+  subscribeNoteAuto:
+    'The year is one payment · 30 days renew until you cancel · cancel any time, the paid days stay',
+  subscribeFaq5AAuto:
+    'Only 30 days of access does: it renews at the same price every 30 days until you cancel, and the bot reminds you three days before each charge. Cancel through the link in your payment receipt email or by writing to {email}; the days you paid for stay. A year is paid once and simply ends.',
+  clubNoAutoRenewAuto: 'The year does not renew by itself',
+  ladderFootnoteShortAuto:
+    '30 days renew until you cancel; the year does not. A first payment is refunded within {days} days if under {n} workouts are done.',
+  creatorsClubPriceNoteAuto: '≈ {month} a month · or {month30} every 30 days until cancelled',
   subscribeSuccessText:
     'We have recorded {course} for {email}. Once the payment lands, access opens automatically — sign in to the app with this email.',
   subscribeVsTitle: 'Course or club?',
