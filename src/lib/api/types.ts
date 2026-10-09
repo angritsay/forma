@@ -1036,10 +1036,15 @@ export interface CreatorApplication {
 export interface CreatorStatementRow {
   month: string;
   currency: string;
+  /** The plan in force that month (0067: plan history). */
   tier: CreatorTier;
   feePct: number;
+  /** Course sales. */
   sales: number;
   gross: number;
+  /** Paid 1:1 sessions with the creator's coaches (0067), counted at the sessions share. */
+  sessionSales: number;
+  sessionGross: number;
   formaShare: number;
   creatorShare: number;
   monthlyFee: number;
@@ -1055,11 +1060,22 @@ export interface CreatorInvoice {
   tier: CreatorTier;
   sales: number;
   gross: number;
+  sessionSales: number;
+  sessionGross: number;
   formaShare: number;
   creatorShare: number;
   monthlyFee: number;
   balance: number;
   settledAt: string | null;
+}
+
+/** A coach and whose they are (`admin_creator_coaches`, 0067); `creatorId` null is Forma's. */
+export interface CreatorCoach {
+  id: string;
+  name: string;
+  nameEn: string | null;
+  active: boolean;
+  creatorId: string | null;
 }
 
 /** A creator in the owner's «Авторы» list. */
