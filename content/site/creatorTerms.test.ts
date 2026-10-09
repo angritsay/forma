@@ -26,3 +26,20 @@ describe('creator tiers', () => {
     expect(percent(0.2)).toBe('20%');
   });
 });
+
+describe('the database agrees', () => {
+  it('has the same shares and fees in creator_terms (0064)', async () => {
+    const { readFileSync } = await import('node:fs');
+    const sql = readFileSync('supabase/migrations/0064_creators.sql', 'utf8');
+    for (const tier of CREATOR_TIERS) {
+      const row = new RegExp(
+        `\\('${tier.id}',\\s*([\\d.]+)::numeric,\\s*([\\d.]+)::numeric,\\s*([\\d.]+)::numeric,\\s*([\\d.]+)::numeric\\)`,
+      ).exec(sql);
+      expect(row, `creator_terms row for ${tier.id}`).not.toBeNull();
+      expect(Number(row![1])).toBe(tier.salesShare);
+      expect(Number(row![2])).toBe(tier.sessionsShare);
+      expect(Number(row![3])).toBe(tier.monthlyFee.rub);
+      expect(Number(row![4])).toBe(tier.monthlyFee.usd);
+    }
+  });
+});

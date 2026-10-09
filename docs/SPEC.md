@@ -590,11 +590,13 @@ was ever linked or bookmarked broke:
 /achievements              the catalogue of achievements, from the 🏅 in the header of «Курсы»
 /marathon  /marathon/board «Клуб»
 /book                      «Тренер» — one-to-one session with the coach
+/creator                   «Кабинет автора» — apply as a creator, then sales and settlement (0064)
 /leaderboard
 /assigned/:id  /shared/:token
 /admin  /admin/workouts  /admin/exercises  /admin/courses[/:id]  /admin/marathons[/:id]
 /admin/media               «Медиатека» — файлы бакетов videos / audio / images по папкам, кто их использует
 /admin/stats               «Аналитика» — деньги по месяцам, воронка по когортам, каналы, люди
+/admin/creators            «Авторы» — заявки, тарифы, курсы и счета авторов (0064, docs/PLATFORM.md)
 ```
 
 Gone with the four-tab shell: `/` as «Сегодня», `/stats` («Прогресс»), `/profile` (a sheet behind

@@ -24,6 +24,8 @@ import type {
 interface DbCourse {
   id: string;
   slug_id: string;
+  /** Whose course (0064); absent on a database before it. */
+  creator_id?: string | null;
   status: AdminCourseRow['status'];
   sort_order: number;
   level: number;
@@ -72,6 +74,7 @@ function courseFromDb(r: DbCourse): AdminCourseRow {
     priceUsd: num(r.price_usd),
     content: parseCourseContent(r.content),
     publishedAt: r.published_at,
+    creatorId: r.creator_id ?? null,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
   };

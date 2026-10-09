@@ -18,6 +18,7 @@ const ITEMS: readonly AdminItem[] = [
   { to: '/admin/studio', labelKey: 'app.studioTitle' },
   { to: '/admin/marathons', labelKey: 'app.mAdminNav' },
   { to: '/admin/stats', labelKey: 'app.adminStatsTitle' },
+  { to: '/admin/creators', labelKey: 'app.creatorsNav' },
   { to: '/admin/support', labelKey: 'app.inboxNav' },
   { to: '/admin/bookings', labelKey: 'app.bookingsNav' },
 ];

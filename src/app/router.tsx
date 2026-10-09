@@ -260,6 +260,8 @@ export function AppRoutes() {
                 <Route path="/duo" element={<LazyScreen name="DuoInviteScreen" />} />
                 {/* «Позови друга» — the referral link and what it has brought (0051). */}
                 <Route path="/invite" element={<LazyScreen name="ClubInviteScreen" />} />
+                {/* «Кабинет автора» (0064): apply, wait, then sales and settlement. */}
+                <Route path="/creator" element={<LazyScreen name="CreatorScreen" />} />
                 {/* Booking switched off (`BOOKING.enabled`): the address stays, the offer does not. */}
                 <Route
                   path="/book"
@@ -273,6 +275,7 @@ export function AppRoutes() {
                   element={<LazyScreen name="AdminWorkoutsScreen" />}
                 />
                 <Route path="/admin/stats" element={<LazyScreen name="AdminStatsScreen" />} />
+                <Route path="/admin/creators" element={<LazyScreen name="AdminCreatorsScreen" />} />
                 <Route path="/admin/support" element={<LazyScreen name="AdminSupportScreen" />} />
                 <Route path="/admin/bookings" element={<LazyScreen name="AdminBookingsScreen" />} />
                 {/* One person, by the address (encodeURIComponent'd — see features/admin/person/path.ts). */}

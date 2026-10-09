@@ -480,6 +480,8 @@ export interface AdminCourseRow {
   priceUsd: number;
   content: CourseDraftContent;
   publishedAt: string | null;
+  /** The creator whose course this is (0064); null or absent for Forma's own. */
+  creatorId?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -992,4 +994,78 @@ export interface MarathonWinner {
   displayName: string;
   note: string | null;
   announcedAt: string;
+}
+
+// --- creators (0064) ---------------------------------------------------------
+
+export type CreatorTier = 'start' | 'pro';
+export type CreatorStatus = 'applied' | 'active' | 'paused' | 'declined';
+
+/** A creator's own row, as `my_creator()` returns it. */
+export interface MyCreator {
+  id: string;
+  slug: string;
+  name: string;
+  tier: CreatorTier;
+  status: CreatorStatus;
+  about: string | null;
+  audienceUrl: string | null;
+  followers: number | null;
+  /** The processor's fee in percent that shares are counted after; set by the owner. */
+  feePct: number;
+  createdAt: string;
+  approvedAt: string | null;
+  courses: number;
+  buyers: number;
+}
+
+/** What a person sends to apply (`creator_apply`). */
+export interface CreatorApplication {
+  slug: string;
+  name: string;
+  about?: string | null;
+  audienceUrl?: string | null;
+  followers?: number | null;
+}
+
+/**
+ * One Moscow month in one currency of a creator's statement (0064). `balance` is positive when
+ * the creator owes Forma (Pro: the money is theirs, Forma's share and the fee are owed) and
+ * negative when Forma owes the creator (Start: the money went through Forma's till).
+ */
+export interface CreatorStatementRow {
+  month: string;
+  currency: string;
+  tier: CreatorTier;
+  feePct: number;
+  sales: number;
+  gross: number;
+  formaShare: number;
+  creatorShare: number;
+  monthlyFee: number;
+  balance: number;
+}
+
+/** A closed month, frozen and numbered (`creator_invoices`). */
+export interface CreatorInvoice {
+  id: string;
+  number: string;
+  month: string;
+  currency: string;
+  tier: CreatorTier;
+  sales: number;
+  gross: number;
+  formaShare: number;
+  creatorShare: number;
+  monthlyFee: number;
+  balance: number;
+  settledAt: string | null;
+}
+
+/** A creator in the owner's «Авторы» list. */
+export interface AdminCreator extends Omit<MyCreator, 'buyers'> {
+  ownerEmail: string | null;
+  house: boolean;
+  /** Unsettled invoices in roubles: positive — the creator owes Forma; negative — Forma owes. */
+  openBalance: number;
 }
