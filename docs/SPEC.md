@@ -466,8 +466,13 @@ Tables (all with RLS enabled):
 
 - `profiles` (`id uuid pk → auth.users`, `email text`, `display_name text`, `avatar_seed text`,
   `locale text default 'ru'`, `training_profile jsonb` (UserTrainingProfile), `fitness_index int`,
-  `fitness_level int`, `onboarded_at timestamptz`, timestamps). Own row read/write. Created by trigger
-  on `auth.users` insert.
+  `fitness_level int`, `onboarded_at timestamptz`, `first_source text`, timestamps). Own row
+  read/write. Created by trigger on `auth.users` insert. `first_source` (0063) is the first-touch
+  channel the browser remembered (`forma.src`: `utm_source-utm_campaign`, `?src=`,
+  `?startapp=src_…`, or the landing page), written once through `set_my_first_source()` after
+  sign-in; «Аналитика» reports money and paying people per channel by it (`admin_sources`), next to
+  money per month and paying club members per month (`admin_money_months`,
+  `admin_members_months`, all built from `payments`).
 - `purchases` (`id uuid`, `email citext`, `course_id text`, `status text` in
   `pending|active|refunded`, `source text`, `locale text`, `note text`, `created_at`,
   `activated_at`). Unique `(email, course_id)`. Anonymous inserts only through RPC
@@ -589,7 +594,7 @@ was ever linked or bookmarked broke:
 /assigned/:id  /shared/:token
 /admin  /admin/workouts  /admin/exercises  /admin/courses[/:id]  /admin/marathons[/:id]
 /admin/media               «Медиатека» — файлы бакетов videos / audio / images по папкам, кто их использует
-/admin/stats               «Аналитика» — воронка по когортам недели входа + прогресс людей
+/admin/stats               «Аналитика» — деньги по месяцам, воронка по когортам, каналы, люди
 ```
 
 Gone with the four-tab shell: `/` as «Сегодня», `/stats` («Прогресс»), `/profile` (a sheet behind

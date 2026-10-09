@@ -17,6 +17,15 @@
  *   SDK's value in main.tsx.
  * * `?src=<slug>` — which page or campaign sent them. First touch only: the first source is the one
  *   that found the person; later ones are just the way back.
+ * * `?utm_source=…&utm_campaign=…` — an ad that links straight into the app rather than through a
+ *   site page. The same label the site makes of them (`visitSource` in
+ *   `src/components/landing/visit.ts`), and `?src=` wins when a link carries both. The `utm_*`
+ *   keys stay in the address: they belong to whoever placed the ad.
+ * * `?startapp=src_<slug>` — the same label for a Mini App link, where a launch parameter is the
+ *   only thing a link can carry: `t.me/<bot>/<app>?startapp=src_tgads-oct`.
+ *
+ * The label reaches the profile once, after sign-in (`useSaveFirstSource`, 0063), which is what
+ * lets «Аналитика» say which channel brought the people who pay.
  *
  * The parse is pure and tested; {@link applyEntryParams} is the thin wrapper with the side effects.
  */
@@ -31,6 +40,27 @@ export const SRC_KEY = 'forma.src';
 const SRC_RE = /^[a-z0-9_-]{1,40}$/;
 /** A launch parameter is 64 characters at most in Telegram; anything longer is not one. */
 const START_RE = /^[A-Za-z0-9_-]{1,64}$/;
+
+/** A Mini App launch parameter that carries a channel label, not an invite. */
+export const SRC_START_PREFIX = 'src_';
+
+/** Any text → a label in our shape, or '' — the same rule as the site's `slugSource`. */
+export function slugSource(raw: string): string {
+  return raw
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, '-')
+    .replace(/-{2,}/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40)
+    .replace(/-+$/, '');
+}
+
+/** `src_<slug>` → the slug, or null for any other launch parameter. */
+export function sourceFromStartParam(param: string | null | undefined): string | null {
+  if (!param?.startsWith(SRC_START_PREFIX)) return null;
+  const src = param.slice(SRC_START_PREFIX.length);
+  return SRC_RE.test(src) ? src : null;
+}
 
 /** The keys this module reads — and the only ones it removes from the address. */
 const OWN_KEYS = ['lang', 'ref', 'startapp', 'src'] as const;
@@ -49,11 +79,13 @@ export function parseEntryParams(search: string): EntryParams {
   const ref = q.get('ref');
   const start = q.get('startapp') ?? q.get('tgWebAppStartParam');
   const src = q.get('src');
+  const utm = slugSource([q.get('utm_source'), q.get('utm_campaign')].filter(Boolean).join('-'));
+  const startParam = start && START_RE.test(start) ? start : null;
   return {
     lang: isLocale(lang) ? lang : null,
     ref: isReferralCode(ref) ? ref : null,
-    startParam: start && START_RE.test(start) ? start : null,
-    src: src && SRC_RE.test(src) ? src : null,
+    startParam,
+    src: src && SRC_RE.test(src) ? src : utm || sourceFromStartParam(startParam),
   };
 }
 
@@ -89,6 +121,40 @@ export function rememberSource(src: string, store = localStore()): boolean {
     return true;
   } catch {
     return false;
+  }
+}
+
+/** The remembered first touch, or null (no storage, nothing written, or not our shape). */
+export function rememberedSource(store = localStore()): string | null {
+  if (!store) return null;
+  try {
+    const src = store.getItem(SRC_KEY);
+    return src && SRC_RE.test(src) ? src : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Set once the profile has answered for this label, so a launch does not ask again. */
+export const SRC_SAVED_KEY = 'forma.srcSaved';
+
+/** The label still to be sent to the profile, or null when there is none or it went already. */
+export function sourceToSave(store = localStore()): string | null {
+  const src = rememberedSource(store);
+  if (!src || !store) return null;
+  try {
+    return store.getItem(SRC_SAVED_KEY) === src ? null : src;
+  } catch {
+    return null;
+  }
+}
+
+/** The profile answered for this label — written or already set, it is done either way. */
+export function markSourceSaved(src: string, store = localStore()): void {
+  try {
+    store?.setItem(SRC_SAVED_KEY, src);
+  } catch {
+    /* Private mode: the next launch asks again, and the database answers «already set». */
   }
 }
 
