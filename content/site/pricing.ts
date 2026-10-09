@@ -34,6 +34,12 @@ export const PRICING = {
   minimumAge: 18,
   /** Notice period (days) before the service is discontinued, promised in the terms. */
   shutdownNoticeDays: 30,
+  /**
+   * Notice (days) before a renewing subscription is charged at a new price — the figure
+   * docs/LEGAL.md puts to the lawyer. Printed only by the auto-renewal clauses of the offer, which
+   * are not shown until `RENEWAL` is `'auto'` (content/site/plans.ts).
+   */
+  priceChangeNoticeDays: 14,
 } as const;
 
 export interface CoursePrice {

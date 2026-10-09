@@ -19,7 +19,17 @@
 import type { FaqItem, L10n } from '@/content/schema';
 import { l, t } from '@/i18n/index';
 import { COURSE_START } from '../courses/start';
-import { CLUB_PLAN_ID, PLAN_BY_ID, PLANS, PLANS_ENABLED, planMonthlyPrice } from './plans';
+import { BRAND } from './brand';
+import { LINKS } from './links';
+import {
+  CLUB_PLAN_ID,
+  PLAN_BY_ID,
+  PLANS,
+  PLANS_ENABLED,
+  planMonthlyPrice,
+  RENEWAL,
+  type RenewalMode,
+} from './plans';
 import { formatPrice, type CoursePrice } from './pricing';
 
 /** Both locales' spelling of one price. */
@@ -55,17 +65,45 @@ const together: FaqItem = {
   },
 };
 
-const autoRenewal: FaqItem[] = clubPlan
-  ? [
+/**
+ * «Есть автосписание?» under the renewal mode (`RENEWAL`, plans.ts). In auto mode only the 30 days
+ * renew — the year stays one payment — so the answer is «only the 30 days», how to cancel, and the
+ * reminder before each charge. The auto answer is a draft for the lawyer, not shown until
+ * RENEWAL = 'auto'. Exported with the mode as a parameter so the test reads both.
+ */
+export function autoRenewalFaq(
+  mode: RenewalMode,
+  plans: { club: boolean; thirtyDays: boolean } = {
+    club: Boolean(clubPlan),
+    thirtyDays: Boolean(thirtyDays),
+  },
+): FaqItem[] {
+  if (!plans.club) return [];
+  const q = { ru: 'Есть автосписание?', en: 'Is there auto-renewal?' };
+  const email = LINKS.supportEmail || BRAND.contactEmail;
+  if (plans.thirtyDays && mode === 'auto') {
+    return [
       {
-        q: { ru: 'Есть автосписание?', en: 'Is there auto-renewal?' },
+        q,
         a: {
-          ru: `Нет. Доступ ${thirtyDays ? 'на 30 дней или на год' : 'на год'} оплачивается один раз и просто заканчивается — отменять нечего.`,
-          en: `No. ${thirtyDays ? 'Thirty days or a year of access is' : 'A year of access is'} paid once and simply ends — there is nothing to cancel.`,
+          ru: `Только у доступа на 30 дней: он продлевается по той же цене каждые 30 дней, пока не отменишь, а за три дня до списания бот напомнит. Отменить — по ссылке в письме с чеком или написав на ${email}; оплаченные дни останутся. Год оплачивается один раз и просто заканчивается.`,
+          en: `Only 30 days of access has it: it renews at the same price every 30 days until you cancel, and the bot reminds you three days before each charge. Cancel through the link in your payment receipt email or by writing to ${email}; the days you paid for stay. A year is paid once and simply ends.`,
         },
       },
-    ]
-  : [];
+    ];
+  }
+  return [
+    {
+      q,
+      a: {
+        ru: `Нет. Доступ ${plans.thirtyDays ? 'на 30 дней или на год' : 'на год'} оплачивается один раз и просто заканчивается — отменять нечего.`,
+        en: `No. ${plans.thirtyDays ? 'Thirty days or a year of access is' : 'A year of access is'} paid once and simply ends — there is nothing to cancel.`,
+      },
+    },
+  ];
+}
+
+const autoRenewal: FaqItem[] = autoRenewalFaq(RENEWAL);
 
 const free: FaqItem = {
   q: { ru: 'Что бесплатно?', en: 'What is free?' },

@@ -8,6 +8,7 @@ import { BRAND } from '@content/site/brand';
 import { entityLines, entityName, hasLegalEntity } from '@content/site/legalEntity';
 import { LINKS } from '@content/site/links';
 import { BOOKING } from '@content/site/booking';
+import { byRenewal, RENEWAL, type RenewalMode } from '@content/site/plans';
 import { formatPrice, PRICING } from '@content/site/pricing';
 import { HOLD_MINUTES } from '@/lib/coach/slots';
 import { GAME_TRIAL_DAYS } from '@/app/features/marathon/gameAccess';
@@ -478,7 +479,56 @@ export function privacyDocument(): LegalDocument {
   };
 }
 
-export function termsDocument(): LegalDocument {
+/*
+ * ============================================================================================
+ * Automatic monthly renewal — DRAFT FOR THE LAWYER, NOT SHOWN UNTIL RENEWAL = 'auto'
+ * (content/site/plans.ts; the procedure is docs/SETUP.md §7.18, the open questions docs/LEGAL.md).
+ *
+ * In manual mode (today) the offer says a Subscription is never charged automatically and the
+ * refund policy says there is nothing to cancel. These are the clauses that replace those
+ * sentences when the switch is flipped — and `PRICING.legalUpdatedAt` must be bumped in the same
+ * commit (`renewal.test.ts`). Only the 30-day Subscription renews; the year stays one payment.
+ * ============================================================================================
+ */
+const priceNotice = PRICING.priceChangeNoticeDays;
+
+/** Terms §4: what a period is, once the 30 days renew. Replaces the manual «closes by itself». */
+const AUTO_TERM_OF_ACCESS: L10n = {
+  ru: 'Подписка открывает клуб и все Курсы на оплаченный период. Подписка на 30 дней продлевается автоматически на следующие 30 дней, пока Пользователь не отменит продление (раздел 5). Подписка на год автоматически не продлевается: в конце года доступ закрывается сам, и чтобы продолжить, Пользователь оплачивает следующий период. Прогресс и статистика сохраняются и после окончания Подписки, а Курсы, купленные отдельно, остаются открытыми.',
+  en: 'A Subscription opens the club and every Course for the paid period. A 30-day Subscription renews automatically for the next 30 days until the User cancels the renewal (section 5). An annual Subscription does not renew automatically: at the end of the year access closes by itself, and to continue the User pays for the next period. Progress and statistics are kept after the Subscription ends, and Courses bought separately stay open.',
+};
+
+/** Terms §5: consent to recurring charges, the reminder, cancellation, price changes, failures. */
+const AUTO_PRICE_CLAUSES: L10n[] = [
+  {
+    ru: 'Автоматическое продление. Оплачивая Подписку на 30 дней, Пользователь соглашается, что каждые 30 дней, в последний день оплаченного периода, с той же карты списывается цена следующих 30 дней — та, что действовала при оформлении, если Пользователь не был уведомлён о новой цене в порядке ниже. Списания продолжаются, пока Пользователь не отменит продление. Реквизиты карты хранит платёжный сервис (Prodamus); Исполнитель их не получает и не хранит. Подписка на год автоматически не продлевается.',
+    en: 'Automatic renewal. By paying for a 30-day Subscription the User agrees that every 30 days, on the last day of the paid period, the price of the next 30 days is charged to the same card — the price in force at sign-up, unless the User has been notified of a new price as set out below. Charges continue until the User cancels the renewal. Card details are kept by the payment service (Prodamus); the Provider neither receives nor stores them. An annual Subscription does not renew automatically.',
+  },
+  {
+    ru: 'Напоминание. Не позднее чем за 3 дня до каждого списания Исполнитель напоминает о нём — дату и сумму — сообщением в Telegram-боте Приложения, если Пользователь его подключил.',
+    en: 'Reminder. At least 3 days before each charge the Provider sends a reminder of it — the date and the amount — through the App’s Telegram bot, if the User has connected it.',
+  },
+  {
+    ru: `Отмена. Пользователь может отменить продление в любой момент: по ссылке в письме с чеком об оплате (кабинет плательщика платёжного сервиса) или написав на ${email}. После отмены новых списаний нет, а доступ сохраняется до конца уже оплаченного периода.`,
+    en: `Cancellation. The User may cancel the renewal at any time: through the link in the payment receipt email (the payment service’s payer account) or by writing to ${email}. After cancellation nothing more is charged, and access stays until the end of the period already paid for.`,
+  },
+  {
+    ru: `Изменение цены. О новой цене Подписки Исполнитель уведомляет Пользователя по e-mail не менее чем за ${priceNotice} дней до первого списания по ней. Пользователь, не согласный с новой ценой, может отменить продление до этого списания.`,
+    en: `Price changes. The Provider notifies the User of a new Subscription price by email at least ${priceNotice} days before the first charge at that price. A User who does not accept the new price may cancel the renewal before that charge.`,
+  },
+  {
+    ru: 'Если списание не прошло (например, на карте недостаточно средств или карта заблокирована), продление не происходит и доступ закрывается в конце оплаченного периода. Чтобы продолжить, Пользователь оплачивает Подписку заново.',
+    en: 'If a charge fails (for example, the card has insufficient funds or is blocked), the Subscription does not renew and access closes at the end of the paid period. To continue, the User pays for the Subscription again.',
+  },
+];
+
+/** Refund policy §1a: the first payment is refundable; automatic renewals are not. */
+const AUTO_REFUND_SUBSCRIPTION: L10n = {
+  ru: `Оплата года и первая оплата Подписки на 30 дней возвращаются на тех же условиях: не больше ${days} дней с момента оплаты и меньше ${maxWorkouts} выполненных тренировок за этот период. Автоматические продления Подписки на 30 дней не возвращаются — чтобы следующего списания не было, отмени продление заранее: по ссылке в письме с чеком или написав на ${email}. Оплаченный период после отмены сохраняется до конца.`,
+  en: `A payment for a year and the first payment for a 30-day Subscription are refundable on the same terms: no more than ${days} days since the payment and fewer than ${maxWorkouts} workouts completed within that period. Automatic renewals of a 30-day Subscription are not refunded — to avoid the next charge, cancel the renewal in advance: through the link in the payment receipt email or by writing to ${email}. After cancellation the paid period runs to its end.`,
+};
+
+export function termsDocument(mode: RenewalMode = RENEWAL): LegalDocument {
   return {
     sections: sections([
       {
@@ -559,10 +609,16 @@ export function termsDocument(): LegalDocument {
             ru: 'Купленный Курс доступен Пользователю без ограничения срока и без дополнительной платы, пока существует Приложение. Обновления Курса (исправления, новые описания, видео) включены.',
             en: 'A purchased Course is available to the User with no time limit and no extra charge for as long as the App exists. Course updates (fixes, new descriptions, videos) are included.',
           },
-          {
-            ru: 'Подписка открывает клуб и все Курсы на оплаченный период. В конце периода доступ закрывается сам — отменять ничего не нужно и отписываться не от чего. Чтобы продолжить, Пользователь оплачивает следующий период. Прогресс и статистика сохраняются и после окончания Подписки, а Курсы, купленные отдельно, остаются открытыми.',
-            en: 'A Subscription opens the club and every Course for the paid period. At the end of that period access closes by itself — there is nothing to cancel and nothing to unsubscribe from. To continue, the User pays for the next period. Progress and statistics are kept after the Subscription ends, and Courses bought separately stay open.',
-          },
+          byRenewal(
+            {
+              manual: {
+                ru: 'Подписка открывает клуб и все Курсы на оплаченный период. В конце периода доступ закрывается сам — отменять ничего не нужно и отписываться не от чего. Чтобы продолжить, Пользователь оплачивает следующий период. Прогресс и статистика сохраняются и после окончания Подписки, а Курсы, купленные отдельно, остаются открытыми.',
+                en: 'A Subscription opens the club and every Course for the paid period. At the end of that period access closes by itself — there is nothing to cancel and nothing to unsubscribe from. To continue, the User pays for the next period. Progress and statistics are kept after the Subscription ends, and Courses bought separately stay open.',
+              },
+              auto: AUTO_TERM_OF_ACCESS,
+            },
+            mode,
+          ),
           {
             ru: `Если Исполнитель решит прекратить работу Приложения, он уведомит Пользователей по e-mail не менее чем за ${notice} дней.`,
             en: `Should the Provider decide to discontinue the App, it will notify Users by email at least ${notice} days in advance.`,
@@ -577,10 +633,18 @@ export function termsDocument(): LegalDocument {
             ru: 'Цена каждого Курса, Подписки и занятия с тренером указана на его странице в валюте этой страницы: в рублях (₽) на русской версии, в долларах США ($) на английской. Оплата проходит через внешний платёжный сервис по ссылке со страницы: Prodamus — для оплаты в рублях, lava.top — для оплаты в долларах; чек или подтверждение выдаёт этот сервис. Если платёжная ссылка не подключена, порядок оплаты согласовывается по e-mail.',
             en: 'Each Course, Subscription and coaching session price is given in the currency shown on the page (₽ in Russian, $ in English). Payment goes through an external payment service linked from that page: Prodamus for payments in roubles, lava.top for payments in dollars; the receipt or confirmation is issued by that service. If no payment link is connected, payment is arranged by email.',
           },
-          {
-            ru: 'Подписка не списывается автоматически: каждый период Пользователь оплачивает сам, по цене, указанной на странице на момент оплаты. Мы не храним реквизиты карт и не можем списать деньги без нового действия Пользователя. Если автосписание когда-нибудь появится, оно будет отдельно включаемой опцией, а не изменением этих условий.',
-            en: 'A Subscription is not charged automatically: the User pays for each period themselves, at the price shown on the page at the time of payment. We do not store card details and cannot take money without a fresh action by the User. Should automatic renewal ever be introduced, it will be an option to switch on, not a change to these terms.',
-          },
+          ...byRenewal<L10n[]>(
+            {
+              manual: [
+                {
+                  ru: 'Подписка не списывается автоматически: каждый период Пользователь оплачивает сам, по цене, указанной на странице на момент оплаты. Мы не храним реквизиты карт и не можем списать деньги без нового действия Пользователя. Если автосписание когда-нибудь появится, оно будет отдельно включаемой опцией, а не изменением этих условий.',
+                  en: 'A Subscription is not charged automatically: the User pays for each period themselves, at the price shown on the page at the time of payment. We do not store card details and cannot take money without a fresh action by the User. Should automatic renewal ever be introduced, it will be an option to switch on, not a change to these terms.',
+                },
+              ],
+              auto: AUTO_PRICE_CLAUSES,
+            },
+            mode,
+          ),
         ],
       },
       /*
@@ -728,10 +792,20 @@ export function termsDocument(): LegalDocument {
         id: 'refund',
         heading: { ru: '9. Возврат средств', en: '9. Refunds' },
         paragraphs: [
-          {
-            ru: `Возврат возможен в течение ${days} дней после активации доступа (для Подписки — с момента оплаты), если выполнено меньше ${maxWorkouts} тренировок Курса (для Подписки — за оплаченный период). Для занятий с тренером действует раздел 5в. Подробности — в политике возврата на странице /refund/.`,
-            en: `A refund is possible within ${days} days of activation (for a Subscription, from payment) if fewer than ${maxWorkouts} workouts of the Course are completed (for a Subscription, within the paid period). Coaching sessions follow section 5c. Details are in the refund policy at /refund/.`,
-          },
+          byRenewal(
+            {
+              manual: {
+                ru: `Возврат возможен в течение ${days} дней после активации доступа (для Подписки — с момента оплаты), если выполнено меньше ${maxWorkouts} тренировок Курса (для Подписки — за оплаченный период). Для занятий с тренером действует раздел 5в. Подробности — в политике возврата на странице /refund/.`,
+                en: `A refund is possible within ${days} days of activation (for a Subscription, from payment) if fewer than ${maxWorkouts} workouts of the Course are completed (for a Subscription, within the paid period). Coaching sessions follow section 5c. Details are in the refund policy at /refund/.`,
+              },
+              // Draft for the lawyer — not shown until RENEWAL = 'auto' (see the block above termsDocument).
+              auto: {
+                ru: `Возврат возможен в течение ${days} дней после активации доступа (для Подписки — с момента оплаты), если выполнено меньше ${maxWorkouts} тренировок Курса (для Подписки — за оплаченный период). Автоматические продления Подписки на 30 дней не возвращаются: возвращается только её первая оплата. Для занятий с тренером действует раздел 5в. Подробности — в политике возврата на странице /refund/.`,
+                en: `A refund is possible within ${days} days of activation (for a Subscription, from payment) if fewer than ${maxWorkouts} workouts of the Course are completed (for a Subscription, within the paid period). Automatic renewals of a 30-day Subscription are not refunded: only its first payment is. Coaching sessions follow section 5c. Details are in the refund policy at /refund/.`,
+              },
+            },
+            mode,
+          ),
           {
             ru: 'Это наше правило, а не предел твоих прав. По ст. 32 Закона «О защите прав потребителей» ты можешь отказаться от услуги в любой момент, оплатив фактически понесённые нами расходы. Правило выше проще и в большинстве случаев выгоднее; если оно не подходит, напиши — будем считать по закону.',
             en: 'That is our rule, not the limit of your rights. Under ЗоЗПП art. 32 you may withdraw from the service at any time, paying the costs we have actually incurred. The rule above is simpler and usually better for you; if it does not fit your case, write to us and we will apply the statute.',
@@ -778,7 +852,7 @@ export function termsDocument(): LegalDocument {
   };
 }
 
-export function refundDocument(): LegalDocument {
+export function refundDocument(mode: RenewalMode = RENEWAL): LegalDocument {
   return {
     sections: sections([
       {
@@ -799,10 +873,16 @@ export function refundDocument(): LegalDocument {
         id: 'subscription',
         heading: { ru: '1а. Подписка', en: '1a. Subscription' },
         paragraphs: [
-          {
-            ru: `Оплата периода возвращается на тех же условиях: не больше ${days} дней с момента оплаты и меньше ${maxWorkouts} выполненных тренировок за этот период. Отменять подписку не нужно и отписываться не от чего: автосписания нет, период просто заканчивается.`,
-            en: `A payment for a period is refundable on the same terms: no more than ${days} days since the payment and fewer than ${maxWorkouts} workouts completed within it. There is no subscription to cancel and nothing to unsubscribe from: nothing is charged automatically, the period simply ends.`,
-          },
+          byRenewal(
+            {
+              manual: {
+                ru: `Оплата периода возвращается на тех же условиях: не больше ${days} дней с момента оплаты и меньше ${maxWorkouts} выполненных тренировок за этот период. Отменять подписку не нужно и отписываться не от чего: автосписания нет, период просто заканчивается.`,
+                en: `A payment for a period is refundable on the same terms: no more than ${days} days since the payment and fewer than ${maxWorkouts} workouts completed within it. There is no subscription to cancel and nothing to unsubscribe from: nothing is charged automatically, the period simply ends.`,
+              },
+              auto: AUTO_REFUND_SUBSCRIPTION,
+            },
+            mode,
+          ),
         ],
       },
       {

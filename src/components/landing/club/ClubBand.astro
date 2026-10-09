@@ -17,6 +17,7 @@
  */
 import type { Locale } from '@/content/schema';
 import { t } from '@/i18n/index';
+import { renewalKey } from '@/lib/renewal';
 import { href } from '@/lib/util/paths';
 import Button from '../Button.astro';
 import IconTiles from '../IconTiles.astro';
@@ -60,7 +61,7 @@ const quietLink =
             <p class="numeral text-5xl leading-none md:text-6xl">{club.headline}</p>
             <p class="text-[14px] leading-snug text-text">{club.charge}</p>
             <p class="text-[13px] leading-snug text-muted">
-              {t(locale, 'landing.clubNoAutoRenew')}
+              {t(locale, renewalKey('clubNoAutoRenew'))}
             </p>
           </div>
         </div>
