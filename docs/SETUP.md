@@ -303,7 +303,10 @@ over its own old time, the reminder's lifetime) and `96_booking_edge_cases.sql` 
 anti-squat answer, a coach without a room link, booking a payment for the person the admin picked,
 a late confirmation, who has Telegram), and `99_money_reports.sql` for 0063 (the first touch, money
 per month, paying members and churn, money per channel), and `99_creators.sql` for 0064
-(applying, opening, a creator's statement on Start and on Pro, closing a month).
+(applying, opening, a creator's statement on Start and on Pro, closing a month), and
+`99_creator_sessions.sql` for 0067 (a creator's coach's sessions at the sessions share, a plan
+change billing each month by its own plan, invoices with sessions), and `99_creator_pages.sql`
+for 0068 (what anon reads about a creator, who gets a page, the catalogue listing switch).
 Each ends with a "PASSED" line. The test files are **not** idempotent — they insert fixtures — so
 rebuild the database for each run.
 
@@ -2042,9 +2045,9 @@ Apply **`0064_creators.sql`** after 0063, then deploy the site. What it is and w
 
 Verify on a database: `supabase/tests/99_creators.sql` (§2).
 
-## 7.21 Creator pages and the catalogue (0066)
+## 7.21 Creator pages and the catalogue (0068)
 
-Apply **`0066_creator_pages.sql`** after 0064, then deploy the site. What it is and why:
+Apply **`0068_creator_pages.sql`** after 0067, then deploy the site. What it is and why:
 docs/PLATFORM.md, phase 2, steps 2 and 6.
 
 - **A creator's page** is `forma-app.co/c/<slug>/` (and `/en/c/<slug>/`): their name, the line
@@ -2054,7 +2057,7 @@ docs/PLATFORM.md, phase 2, steps 2 and 6.
   courses). Only an **open** creator other than Forma with **at least one published course** gets
   a page and a sitemap entry; a course published or given to a creator reaches the site with the
   next deploy. Without `PUBLIC_SUPABASE_URL` / `PUBLIC_SUPABASE_ANON_KEY` at build time, or before
-  0066 is applied, the site builds with no creator pages and says so in the build log.
+  0068 is applied, the site builds with no creator pages and says so in the build log.
 - **What anybody can read** is exactly five fields: slug, name, about, audience link and the ids
   of the published courses. Never the owner's address, the plan, the fee, followers or money.
 - **«Также в Forma»** on «Курсы» lists other creators' published courses, grouped by creator
@@ -2064,6 +2067,30 @@ docs/PLATFORM.md, phase 2, steps 2 and 6.
   course; until then it says the page appears with the first published course.
 
 Verify on a database: `supabase/tests/99_creator_pages.sql` (§2).
+
+## 7.22 Sessions and plan changes for creators (0067)
+
+Apply **`0067_creator_sessions.sql`** after 0064, then deploy the site. What it is and why:
+docs/PLATFORM.md, phase 2, steps 4 and 7.
+
+- **A creator's coach.** In Admin → **Авторы**, under a creator, «Отдать тренера автору…» gives
+  them a coach from «Тренеры»; «Вернуть Forma» takes the coach back. Sergey and Nastia stay
+  Forma's (no creator) unless you move them. Add a creator's own coach first in the coach editor
+  (§7.16), then link them here.
+- **Their sessions count.** A paid 1:1 session booked with that coach — confirmed by the webhook
+  or booked by you from «Записи» — lands in the creator's statement for the month it was paid,
+  at the plan's sessions share (Start 10%, Pro 5%), on a line of its own under the course sales.
+  A payment that is not yet bound to a booking counts nowhere until it is; a dismissed payment
+  never counts. The club is still not per creator.
+- **Plan changes are dated.** Switching Start ↔ Pro in «Авторы» applies from the current Moscow
+  month; earlier months keep the plan they were on, and Pro's 4 990 ₽ fee is charged only in Pro
+  months. The screen always dates a change to the current month; to date one back (say, it was
+  agreed last month), `admin_set_creator` takes `p_from_month` (`fromMonth` in `setCreator`), and
+  the history is the table `creator_tier_changes` (one row per month a plan starts), which the SQL
+  editor can correct directly. Invoices already closed do not change.
+- Existing creators get their current plan on record from the month they were opened.
+
+Verify on a database: `supabase/tests/99_creator_sessions.sql` (§2).
 
 ## 7.10 What is still only in Russian
 

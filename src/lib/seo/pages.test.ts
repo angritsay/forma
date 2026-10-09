@@ -130,7 +130,7 @@ describe('buildPages', () => {
   });
 
   /*
-   * Creator pages (0066) enter the sitemap only through `SITE_CREATORS`, which holds creators with
+   * Creator pages (0068) enter the sitemap only through `SITE_CREATORS`, which holds creators with
    * at least one course that has a page. With none — the build with no backend — there are none.
    */
   it('lists a creator page in both languages, and none without creators', () => {

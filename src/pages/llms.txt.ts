@@ -32,7 +32,7 @@ export const GET: APIRoute = async ({ site }) => {
     lines.push(
       `- [${t(locale, 'seo.coursesHubTitle')}](${link(locale, '/courses/')}): ${t(locale, 'seo.coursesHubDescription')}`,
     );
-    // Creator pages (0066): only creators with a published course have one.
+    // Creator pages (0068): only creators with a published course have one.
     for (const c of SITE_CREATORS) {
       lines.push(
         `- [${c.name}](${link(locale, creatorSitePath(c.slug))}): ${creatorPageDescription(c, locale)}`,

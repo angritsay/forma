@@ -3,7 +3,7 @@
  * time** — the same arrangement as `published.ts` for the courses, and for the same reason: the
  * site is static HTML, so a creator who lives in the database has to be read while it is built.
  *
- * What this reads is `public_creators()` (0066) with the anon key: open creators other than Forma
+ * What this reads is `public_creators()` (0068) with the anon key: open creators other than Forma
  * itself who have at least one published course, and of each only the slug, the name, the line
  * about them, the link to their audience and the ids of their published courses. Never the owner's
  * address, the tier, the fee or a balance — the function does not return them, so there is nothing

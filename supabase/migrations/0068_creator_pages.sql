@@ -1,5 +1,5 @@
 -- =============================================================================
--- 0066 — creator pages and the «also on Forma» catalogue: what anybody may read about a creator.
+-- 0068 — creator pages and the «also on Forma» catalogue: what anybody may read about a creator.
 --
 -- docs/PLATFORM.md, phase 2, steps 2 and 6:
 --
@@ -35,10 +35,10 @@
 --   * `creators.listed boolean not null default true`.
 --   * `creator_set_listed(p_listed)` — the creator's own switch in «Кабинет автора». Pro only:
 --     a Start creator gets `start_always_listed`.
---   * `admin_set_creator(..., p_listed)` — the owner's, in «Авторы». The signature grows by one
---     defaulted argument, so the old one is dropped explicitly first (0038 explains why
---     `create or replace` would leave two overloads and PostgREST would answer `PGRST203`); the
---     grants are made again. Turning a Start creator's listing off is refused the same way.
+--   * `admin_set_creator(..., p_listed)` — the owner's, in «Авторы». It is 0067's function (dated
+--     plan changes) with one more defaulted argument, so 0067's signature is dropped explicitly
+--     first (0038 explains why `create or replace` would leave two overloads and PostgREST would
+--     answer `PGRST203`); the grants are made again. Turning a Start creator's listing off is refused the same way.
 --     Moving an unlisted Pro creator to Start keeps the stored `false`, and the catalogue's rule
 --     lists them anyway; back on Pro, their earlier choice holds.
 --   * `my_creator()` and `admin_creators()` gain `listed` and `published` (how many of their
@@ -46,7 +46,8 @@
 --     function's columns cannot change in place, so both are dropped and created again, with
 --     their grants.
 --
--- Requires 0008, 0064. Idempotent.
+-- Requires 0008, 0064, 0067 (runs after it everywhere: it rebuilds 0067's admin_set_creator).
+-- Idempotent.
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------
@@ -56,7 +57,7 @@ alter table public.creators
   add column if not exists listed boolean not null default true;
 
 comment on column public.creators.listed is
-  'Pro creators may opt out of the in-app «Также в Forma» catalogue (0066). Start is listed whatever this says.';
+  'Pro creators may opt out of the in-app «Также в Forma» catalogue (0068). Start is listed whatever this says.';
 
 -- -----------------------------------------------------------------------------
 -- 2. What anybody may read: creators with a page, and the ones the catalogue lists.
@@ -88,7 +89,7 @@ as $$
 $$;
 
 comment on function public.public_creators() is
-  'Active, non-house creators with a published course: slug, name, about, audience link, course ids. Anon-callable; built into /c/<slug>/ (0066).';
+  'Active, non-house creators with a published course: slug, name, about, audience link, course ids. Anon-callable; built into /c/<slug>/ (0068).';
 
 revoke execute on function public.public_creators() from public;
 grant execute on function public.public_creators() to anon, authenticated;
@@ -113,7 +114,7 @@ as $$
 $$;
 
 comment on function public.catalogue_creators() is
-  'public_creators() minus Pro creators who switched their listing off: the app''s «Также в Forma» (0066).';
+  'public_creators() minus Pro creators who switched their listing off: the app''s «Также в Forma» (0068).';
 
 revoke execute on function public.catalogue_creators() from public;
 grant execute on function public.catalogue_creators() to anon, authenticated;
@@ -149,22 +150,29 @@ end;
 $$;
 
 comment on function public.creator_set_listed(boolean) is
-  'A Pro creator switches their «Также в Forma» listing on or off; Start is always listed (0066).';
+  'A Pro creator switches their «Также в Forma» listing on or off; Start is always listed (0068).';
 
 revoke execute on function public.creator_set_listed(boolean) from public, anon;
 grant execute on function public.creator_set_listed(boolean) to authenticated;
 
 -- -----------------------------------------------------------------------------
 -- 4. The owner's switch: admin_set_creator grows `p_listed`.
+--
+--    0067 (already applied in production) made it `(uuid, text, text, numeric, date)` with the
+--    dated plan history (`p_from_month`, `creator_tier_changes`). This is 0067's function, body
+--    unchanged, plus `p_listed` as a sixth defaulted argument: its old signature is dropped first
+--    so exactly one overload remains (0038), and the grants are made again as 0067 makes them.
 -- -----------------------------------------------------------------------------
 drop function if exists public.admin_set_creator(uuid, text, text, numeric);
+drop function if exists public.admin_set_creator(uuid, text, text, numeric, date);
 
 create or replace function public.admin_set_creator(
-  p_id      uuid,
-  p_status  text default null,
-  p_tier    text default null,
-  p_fee_pct numeric default null,
-  p_listed  boolean default null
+  p_id         uuid,
+  p_status     text default null,
+  p_tier       text default null,
+  p_fee_pct    numeric default null,
+  p_from_month date default null,
+  p_listed     boolean default null
 )
 returns void
 language plpgsql
@@ -172,7 +180,11 @@ security definer
 set search_path = pg_catalog, public, extensions
 as $$
 declare
-  v_c public.creators;
+  v_c     public.creators;
+  v_this  date := date_trunc('month', now() at time zone 'Europe/Moscow')::date;
+  v_from  date;
+  v_start date;
+  v_base  date;
 begin
   if not public.is_admin() then
     raise exception 'not_admin' using errcode = '42501';
@@ -193,8 +205,35 @@ begin
   if p_fee_pct is not null and p_fee_pct not between 0 and 20 then
     raise exception 'invalid_fee' using errcode = 'P0001';
   end if;
+  v_from := date_trunc('month', coalesce(p_from_month, v_this))::date;
+  if v_from > v_this then
+    raise exception 'invalid_month' using errcode = 'P0001';
+  end if;
+  -- 0068: a Start creator is always listed; only Pro (now, or after this very call) may opt out.
   if p_listed is not null and not p_listed and coalesce(p_tier, v_c.tier) <> 'pro' then
     raise exception 'start_always_listed' using errcode = 'P0001';
+  end if;
+
+  if p_tier is not null and p_tier <> v_c.tier then
+    v_start := date_trunc('month', coalesce(v_c.approved_at, v_c.created_at) at time zone 'Europe/Moscow')::date;
+    v_base  := least(v_start, v_from);
+    -- The plan before this change, on record from the creator's start.
+    if not exists (select 1 from public.creator_tier_changes t where t.creator_id = p_id) then
+      insert into public.creator_tier_changes (creator_id, tier, from_month)
+      values (p_id, v_c.tier, v_base);
+    else
+      update public.creator_tier_changes t
+         set from_month = v_base
+       where t.creator_id = p_id
+         and t.from_month > v_base
+         and t.from_month = (select min(x.from_month) from public.creator_tier_changes x
+                             where x.creator_id = p_id);
+    end if;
+    -- From v_from on the new plan is the current one: later rows no longer hold.
+    delete from public.creator_tier_changes t where t.creator_id = p_id and t.from_month > v_from;
+    insert into public.creator_tier_changes (creator_id, tier, from_month)
+    values (p_id, p_tier, v_from)
+    on conflict (creator_id, from_month) do update set tier = excluded.tier, created_at = now();
   end if;
 
   update public.creators
@@ -210,8 +249,11 @@ begin
 end;
 $$;
 
-revoke execute on function public.admin_set_creator(uuid, text, text, numeric, boolean) from public, anon;
-grant execute on function public.admin_set_creator(uuid, text, text, numeric, boolean) to authenticated;
+comment on function public.admin_set_creator(uuid, text, text, numeric, date, boolean) is
+  'Owner: status, plan (from a Moscow month, default the current one), processor fee, catalogue listing (0064, 0067, 0068).';
+
+revoke execute on function public.admin_set_creator(uuid, text, text, numeric, date, boolean) from public, anon;
+grant execute on function public.admin_set_creator(uuid, text, text, numeric, date, boolean) to authenticated;
 
 -- -----------------------------------------------------------------------------
 -- 5. my_creator() and admin_creators() answer `listed` and `published` too.

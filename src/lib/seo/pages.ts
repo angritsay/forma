@@ -217,7 +217,7 @@ export function buildPages(
   }
 
   /*
-   * Creator pages (0066). `SITE_CREATORS` already holds only creators with at least one course
+   * Creator pages (0068). `SITE_CREATORS` already holds only creators with at least one course
    * that has a page, so a creator enters the sitemap exactly when their page has something on it.
    */
   for (const c of creators) {

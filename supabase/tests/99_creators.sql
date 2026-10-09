@@ -158,9 +158,12 @@ begin
 end $$;
 
 -- Pro with a 5% processor fee: the money is Alla's, she owes Forma 10% of the net plus the fee.
+-- Since 0067 a plan change is dated (current month by default); this one is back-dated to her
+-- opening month so that last month is billed as Pro.
 select pg_temp.as_user('00000000-0000-0000-0000-000000064000', 'creator-admin@example.com');
 select public.admin_set_creator((select id from public.admin_creators() where slug = 'alla-yoga'),
-                                null, 'pro', 5);
+                                null, 'pro', 5,
+                                (date_trunc('month', now() at time zone 'Europe/Moscow') - interval '2 months')::date);
 do $$
 declare
   m1 date := (date_trunc('month', now() at time zone 'Europe/Moscow') - interval '1 month')::date;

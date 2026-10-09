@@ -21,7 +21,7 @@
  * every other course offers its path instead of a start. The rule is derived in exactly one place;
  * this screen reads it and never re-decides it.
  *
- * Under the deck, «Также в Forma» (0066): other creators' courses as a few quiet rows, grouped by
+ * Under the deck, «Также в Forma» (0068): other creators' courses as a few quiet rows, grouped by
  * creator (`features/courses/AlsoOnForma`). It is the network the platform's Start tier promises,
  * kept a footnote so the screen stays about the member's own progress.
  */

@@ -1018,7 +1018,7 @@ export interface MyCreator {
   courses: number;
   buyers: number;
   /**
-   * In the app's «Также в Forma» catalogue (0066). Only a Pro creator can switch it off; a Start
+   * In the app's «Также в Forma» catalogue (0068). Only a Pro creator can switch it off; a Start
    * creator is listed whatever this says.
    */
   listed: boolean;
@@ -1027,7 +1027,7 @@ export interface MyCreator {
 }
 
 /**
- * A creator as anybody may see them (0066, `public_creators()` / `catalogue_creators()`): no
+ * A creator as anybody may see them (0068, `public_creators()` / `catalogue_creators()`): no
  * owner address, tier, fee or follower count. `courses` are the published courses' ids, in order.
  */
 export interface PublicCreator {
@@ -1055,10 +1055,15 @@ export interface CreatorApplication {
 export interface CreatorStatementRow {
   month: string;
   currency: string;
+  /** The plan in force that month (0067: plan history). */
   tier: CreatorTier;
   feePct: number;
+  /** Course sales. */
   sales: number;
   gross: number;
+  /** Paid 1:1 sessions with the creator's coaches (0067), counted at the sessions share. */
+  sessionSales: number;
+  sessionGross: number;
   formaShare: number;
   creatorShare: number;
   monthlyFee: number;
@@ -1074,11 +1079,22 @@ export interface CreatorInvoice {
   tier: CreatorTier;
   sales: number;
   gross: number;
+  sessionSales: number;
+  sessionGross: number;
   formaShare: number;
   creatorShare: number;
   monthlyFee: number;
   balance: number;
   settledAt: string | null;
+}
+
+/** A coach and whose they are (`admin_creator_coaches`, 0067); `creatorId` null is Forma's. */
+export interface CreatorCoach {
+  id: string;
+  name: string;
+  nameEn: string | null;
+  active: boolean;
+  creatorId: string | null;
 }
 
 /** A creator in the owner's «Авторы» list. */

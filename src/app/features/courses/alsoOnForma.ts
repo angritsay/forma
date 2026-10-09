@@ -1,5 +1,5 @@
 /**
- * «Также в Forma» (0066, docs/PLATFORM.md phase 2 step 6): other creators' published courses,
+ * «Также в Forma» (0068, docs/PLATFORM.md phase 2 step 6): other creators' published courses,
  * grouped by creator, under the member's own deck on «Курсы».
  *
  * The server decides who is listed (`catalogue_creators()`: open, not Forma itself, a published

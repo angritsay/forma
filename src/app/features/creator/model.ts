@@ -1,5 +1,5 @@
 /**
- * The arithmetic of a creator's statement (0064), shared by «Кабинет автора» and «Авторы».
+ * The arithmetic of a creator's statement (0064, 0067), shared by «Кабинет автора» and «Авторы».
  *
  * The database answers per month × currency; the screens want «this month», «who owes whom», and
  * a line per month. Currencies stay apart here as everywhere in the money reports (0063).
@@ -33,9 +33,12 @@ export function statementMonths(rows: readonly CreatorStatementRow[]): MonthLine
     .sort((a, b) => b.month.localeCompare(a.month));
 }
 
-/** Sales of a month across currencies: a count of payments, not of money. */
+/**
+ * Sales of a month across currencies — courses and 1:1 sessions (0067): a count of payments, not
+ * of money.
+ */
 export function salesCount(line: MonthLine | undefined): number {
-  return line ? line.rows.reduce((n, r) => n + r.sales, 0) : 0;
+  return line ? line.rows.reduce((n, r) => n + r.sales + r.sessionSales, 0) : 0;
 }
 
 /**
@@ -64,7 +67,7 @@ export function creatorAddress(domain: string, slug: string): string {
 }
 
 /**
- * Whether the creator's public page exists (0066): it is built for open creators with at least one
+ * Whether the creator's public page exists (0068): it is built for open creators with at least one
  * published course, so the cabinet links the address only then — a link to a 404 would be the
  * first thing a new creator shares. A course published a moment ago reaches the site with the
  * deploy its publishing asks for.

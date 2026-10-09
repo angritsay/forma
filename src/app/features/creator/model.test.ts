@@ -15,6 +15,7 @@ const row = (
   currency: string,
   sales: number,
   balance: number,
+  sessionSales = 0,
 ): CreatorStatementRow => ({
   month,
   currency,
@@ -22,6 +23,8 @@ const row = (
   feePct: 0,
   sales,
   gross: sales * 100,
+  sessionSales,
+  sessionGross: sessionSales * 50,
   formaShare: sales * 10,
   creatorShare: sales * 90,
   monthlyFee: 0,
@@ -39,6 +42,14 @@ describe('statementMonths', () => {
     expect(lines[0]!.rows.map((r) => r.currency)).toEqual(['RUB', 'USD']);
     expect(salesCount(lines[0])).toBe(5);
     expect(salesCount(undefined)).toBe(0);
+  });
+
+  it('counts paid sessions as sales of the month', () => {
+    const lines = statementMonths([
+      row('2026-09-01', 'RUB', 1, 10, 2),
+      row('2026-09-01', 'XTS', 0, 0, 1),
+    ]);
+    expect(salesCount(lines[0])).toBe(4);
   });
 });
 

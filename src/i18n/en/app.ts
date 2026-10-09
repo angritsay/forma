@@ -792,7 +792,7 @@ export const app = {
   creatorNoCourses: 'No courses yet — Nastia connects your course once it is built.',
   creatorMonths: 'By month',
   creatorMonthsNote:
-    'Course sales. Shares are counted after the payment processor’s fee ({fee}). The club and 1:1 sessions appear here once creators have their own.',
+    'Course sales and paid 1:1 sessions with your coaches, each month on that month’s plan. Shares are counted after the payment processor’s fee ({fee}). The club appears here once creators have their own.',
   creatorNoSales: 'No sales yet.',
   creatorMonthLine: '{sales} sales · {gross} · yours {yours}',
   creatorFeeLine: 'plan {fee}',
@@ -803,7 +803,7 @@ export const app = {
   creatorNoInvoices: 'A month closes on the 1st — a numbered invoice appears here.',
   creatorOpen: 'open',
   creatorSettled: 'settled {date}',
-  // Creator pages and “Also on Forma” (0066).
+  // Creator pages and “Also on Forma” (0068).
   creatorPage: 'Your page',
   creatorListed: 'Listed in “Also on Forma”',
   creatorListedPro:
@@ -816,10 +816,16 @@ export const app = {
   alsoNote: 'Courses by other creators. Workout 1 of each is free.',
   creatorsNav: 'Creators',
   creatorsNote:
-    'Applications first. Opening is one button; give a course with the picker below. Months close by themselves on the 1st.',
+    'Applications first. Opening is one button; give a course or a coach with the pickers below. A plan change applies from the current month. Months close by themselves on the 1st.',
   creatorsClose: 'Close last month',
   creatorsClosed: 'Invoices written: {n}',
   creatorsEmpty: 'No applications yet. The creator area is in the profile, «For creators».',
+  creatorSessionsLine: '1:1 sessions: {n} · {gross}',
+  creatorsCoaches: 'Creator’s coaches',
+  creatorsCoachesHint:
+    'Paid 1:1 sessions with them count in the creator’s statement at the sessions share.',
+  creatorsNoCoaches: 'None yet — sessions are with Forma’s coaches',
+  creatorsAssignCoach: 'Give a coach to this creator…',
   creatorsHouse: 'Forma — our own courses. No invoices.',
   creatorsStatusApplied: 'applied',
   creatorsStatusActive: 'open',

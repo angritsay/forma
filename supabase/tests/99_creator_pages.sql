@@ -1,6 +1,6 @@
 -- =============================================================================
--- Creator pages and the «also on Forma» catalogue (0066).
--- Run on a database with every migration applied (0064 and 0066 included); it can follow the other
+-- Creator pages and the «also on Forma» catalogue (0068).
+-- Run on a database with every migration applied (0064 and 0068 included); it can follow the other
 -- suites.
 --
 -- What this can get wrong:
@@ -11,7 +11,8 @@
 --   * a Pro creator's opt-out does not take them out of the catalogue, or takes their page away;
 --   * a Start creator (or the owner, for one) switches the listing off;
 --   * somebody other than the creator or the owner flips the switch;
---   * `admin_set_creator` keeps its old four-argument overload next to the new one.
+--   * `admin_set_creator` keeps 0067's five-argument overload next to the new one, or loses
+--     0067's dated plan change (`p_from_month`, `creator_tier_changes`).
 -- =============================================================================
 \set ON_ERROR_STOP on
 \set QUIET on
@@ -170,7 +171,7 @@ end $$;
 -- -----------------------------------------------------------------------------
 select pg_temp.as_user('00000000-0000-0000-0000-0000000660a1', 'cp-start@example.com');
 select pg_temp.expect_error(
-  $$select public.admin_set_creator(gen_random_uuid(), null, null, null, false)$$,
+  $$select public.admin_set_creator(gen_random_uuid(), p_listed => false)$$,
   'not_admin');
 
 select pg_temp.as_user('00000000-0000-0000-0000-000000066000', 'cp-admin@example.com');
@@ -183,20 +184,25 @@ begin
   assert (select published from public.admin_creators() where id = v_start) = 2, 'published count';
 
   perform pg_temp.expect_error(
-    format('select public.admin_set_creator(%L, null, null, null, false)', v_start),
+    format('select public.admin_set_creator(%L, p_listed => false)', v_start),
     'start_always_listed');
-  -- Moving to Pro and switching off in one call is allowed.
-  perform public.admin_set_creator(v_start, null, 'pro', null, false);
+  -- Moving to Pro and switching off in one call is allowed (0067's plan history is checked below,
+  -- as the table owner: the table is closed to clients).
+  perform public.admin_set_creator(v_start, null, 'pro', p_listed => false);
   assert not (select listed from public.admin_creators() where id = v_start), 'owner switched off';
+  perform pg_temp.expect_error(
+    format('select public.admin_set_creator(%L, null, ''start'', null, %L)', v_start,
+           (date_trunc('month', now() at time zone 'Europe/Moscow') + interval '1 month')::date),
+    'invalid_month');
   -- Back to Start: the stored choice stays, but Start is listed whatever it says.
   perform public.admin_set_creator(v_start, null, 'start');
   assert (select tier from public.admin_creators() where id = v_start) = 'start', 'back on Start';
 
-  -- The old four-argument call still resolves (defaulted p_listed) and changes nothing else.
+  -- A positional four-argument call still resolves (defaulted p_from_month, p_listed).
   perform public.admin_set_creator(v_pro, null, null, 4);
   assert (select fee_pct from public.admin_creators() where id = v_pro) = 4, 'fee kept';
   assert not (select listed from public.admin_creators() where id = v_pro), 'listing kept';
-  perform public.admin_set_creator(v_pro, null, null, null, true);
+  perform public.admin_set_creator(v_pro, p_listed => true);
   assert (select listed from public.admin_creators() where id = v_pro), 'owner switched back on';
 end $$;
 
@@ -206,6 +212,20 @@ begin
   assert exists (select 1 from public.catalogue_creators() where slug = 'cp-start'),
     'a Start creator with a stored false is listed anyway';
   assert exists (select 1 from public.catalogue_creators() where slug = 'cp-pro'), 'Pro back on';
+end $$;
+
+select pg_temp.as_super();
+do $$
+declare
+  v_start uuid := (select id from public.creators where slug = 'cp-start');
+  this_m  date := date_trunc('month', now() at time zone 'Europe/Moscow')::date;
+begin
+  -- Pro then Start again in the same month: one row for this month, holding the latest plan, and
+  -- the Start it began on recorded from its start (0067's rules, kept by 0068's rebuild).
+  assert (select tier from public.creator_tier_changes
+          where creator_id = v_start and from_month = this_m) = 'start',
+    format('dated plan history: %s', (select array_agg(t) from public.creator_tier_changes t
+                                      where creator_id = v_start));
 end $$;
 
 -- Pausing takes the page and the listing away; a course going back to draft does the same.
