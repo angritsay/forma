@@ -1,5 +1,5 @@
 -- =============================================================================
--- 0068 — the renewal reminder knows which plan it is about.
+-- 0069 — the renewal reminder knows which plan it is about.
 --
 -- `subscription_ending` (0054, restated in 0062) carried only `expires_at`, which was enough while
 -- every subscription ended by itself: the bot said «Автопродления нет — продли в приложении».
@@ -59,7 +59,7 @@ begin
         v_row.email::text,
         'subscription_ending',
         v_key,
-        -- `plan` and `status` since 0068: whether the period renews by itself (the bot decides,
+        -- `plan` and `status` since 0069: whether the period renews by itself (the bot decides,
         -- by the `RENEWAL` switch).
         jsonb_build_object(
           'expires_at', v_row.expires_at,
@@ -88,4 +88,4 @@ revoke execute on function public.club_enqueue_access_ending(timestamptz) from p
 grant execute on function public.club_enqueue_access_ending(timestamptz) to service_role;
 
 comment on function public.club_enqueue_access_ending(timestamptz) is
-  'Queue subscription_ending (3 days before expires_at), once per period (0054); params carry expires_at, plan and status (0068) so the bot can tell a self-renewing period from one that ends. Since 0062 club_trial_tomorrow is no longer queued. Service role only; returns how many rows were queued.';
+  'Queue subscription_ending (3 days before expires_at), once per period (0054); params carry expires_at, plan and status (0069) so the bot can tell a self-renewing period from one that ends. Since 0062 club_trial_tomorrow is no longer queued. Service role only; returns how many rows were queued.';

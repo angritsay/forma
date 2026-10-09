@@ -520,7 +520,7 @@ export function messageFor(
 /**
  * Will the subscription a `subscription_ending` row warns about be charged again by itself? Only
  * with the switch on, and only a monthly subscription that is active — not cancelled. `plan` and
- * `status` arrive in the row since 0068; a row without them (queued before it) is treated as
+ * `status` arrive in the row since 0069; a row without them (queued before it) is treated as
  * manual, which is what every subscription was then.
  */
 export function renewsByItself(params: Record<string, unknown>, renewal: RenewalMode): boolean {

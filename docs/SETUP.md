@@ -305,7 +305,8 @@ a late confirmation, who has Telegram), and `99_money_reports.sql` for 0063 (the
 per month, paying members and churn, money per channel), and `99_creators.sql` for 0064
 (applying, opening, a creator's statement on Start and on Pro, closing a month), and
 `99_creator_sessions.sql` for 0067 (a creator's coach's sessions at the sessions share, a plan
-change billing each month by its own plan, invoices with sessions).
+change billing each month by its own plan, invoices with sessions). `93_outbox_kinds.sql` also
+covers 0069 (the renewal reminder carries the subscription's `plan` and `status`, §7.18).
 Each ends with a "PASSED" line. The test files are **not** idempotent — they insert fixtures — so
 rebuild the database for each run.
 
@@ -2017,8 +2018,8 @@ decision with its own wording; nothing here does it.
 | Bot (`telegram-notify/copy.ts`, `subscription_ending`)                            | «Автопродления нет: … продли»                                                                                                                     | for an active monthly subscription: «Клуб продлится {date}. В этот день спишем … Не хочешь продлевать — отмени …»                                                                                                                                  |
 
 The bot can tell an active monthly subscription from the rest because, since
-`0068_renewal_reminder_params.sql`, the queued row carries the subscription's `plan` and `status`.
-**Apply 0068 now** (Actions → Supabase apply → `migration`, or paste it) — it changes no message
+`0069_renewal_reminder_params.sql`, the queued row carries the subscription's `plan` and `status`.
+**Apply 0069 now** (Actions → Supabase apply → `migration`, or paste it) — it changes no message
 while the switch is off.
 
 How to cancel, everywhere: through the link in the payment receipt email (the payer's Prodamus

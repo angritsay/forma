@@ -1,6 +1,6 @@
 /**
  * The renewal reminder under automatic monthly renewal (`RENEWAL`, off today; docs/SETUP.md
- * §7.18). Since 0068 the queue row carries the subscription's `plan` and `status`; the mode is
+ * §7.18). Since 0069 the queue row carries the subscription's `plan` and `status`; the mode is
  * passed explicitly, so the auto message is tested while the switch stays `'manual'`.
  */
 import { describe, expect, it } from 'vitest';
@@ -18,7 +18,7 @@ describe('renewsByItself', () => {
     expect(renewsByItself({ plan: 'monthly', status: 'active' }, 'manual')).toBe(false);
     expect(renewsByItself({ plan: 'monthly', status: 'cancelled' }, 'auto')).toBe(false);
     expect(renewsByItself({ plan: 'annual', status: 'active' }, 'auto')).toBe(false);
-    // A row queued before 0068 has neither field: it was manual renewal then.
+    // A row queued before 0069 has neither field: it was manual renewal then.
     expect(renewsByItself({}, 'auto')).toBe(false);
   });
 });
