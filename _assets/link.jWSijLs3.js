@@ -1,0 +1,1 @@
+import{bg as e,bh as t,b7 as a}from"./main.DbviAoWN.js";import{k as f,z as s}from"./mine.wcUfbqid.js";function m(){return typeof window>"u"?`https://${t.domain}`:window.location.origin}function g(r,i,n){const o=f(m(),n,{ref:r,from:s(i)});return e(r,o,a.telegramMiniApp)}export{g as r};
