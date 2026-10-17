@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /app/
+Disallow: /preview/
+
+Sitemap: https://forma-app.co/sitemap.xml
+Host: https://forma-app.co
