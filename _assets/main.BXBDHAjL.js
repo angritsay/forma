@@ -1,0 +1,1 @@
+import{cX as f}from"./main.DbviAoWN.js";import"./jsx-runtime.D_zvdyIk.js";import"./index.CUr1qghD.js";import"./consents.DTj5bz9Z.js";import"./mine.wcUfbqid.js";import"./prescribe.DJQNS7de.js";import"./index.BpcFep4_.js";export{f as default};

@@ -1,0 +1,1 @@
+import{j as o}from"./jsx-runtime.D_zvdyIk.js";import{ar as r}from"./main.DbviAoWN.js";function t(){return o.jsx("div",{className:"flex justify-center py-10",children:o.jsx(r,{className:"text-3xl"})})}export{t as L};

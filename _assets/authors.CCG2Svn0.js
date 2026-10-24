@@ -1,0 +1,1 @@
+import{aO as o}from"./main.DbviAoWN.js";const n=[{id:"sergey",name:o.name,role:o.formaRole,photo:o.photo},{id:"nastia",name:{ru:"Настя",en:"Nastia"}}],e=new Map(n.map(a=>[a.id,a]));function r(a){return a?e.get(a)??null:null}export{n as A,r as a};
